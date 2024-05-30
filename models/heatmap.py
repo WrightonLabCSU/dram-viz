@@ -141,7 +141,7 @@ def heatmap(df, x_col, y_col, c_col, tooltip_cols, title="", rect_kw=None, c_min
         toolbar_location=None,
         tooltips=tooltips,
         title=title,
-        title_location="left",
+        title_location="right",
         **fig_kwargs
     )
 
@@ -163,7 +163,7 @@ def heatmap(df, x_col, y_col, c_col, tooltip_cols, title="", rect_kw=None, c_min
            **rect_kw
            )
 
-    p.title.align = "right"
+    p.title.align = "left"
 
     p.grid.grid_line_color = None
     p.axis.axis_line_color = None
@@ -178,6 +178,8 @@ def make_product_heatmap(
         module_df: pd.DataFrame,
         etc_df: pd.DataFrame,
         function_df: pd.DataFrame,
+        y_col: str = "genome",
+        taxonomy_labels: pd.Series | None = None,
 ):
     """
     Make a product heatmap group from the module_coverage_df, etc_coverage_df, and functional_df
@@ -190,27 +192,35 @@ def make_product_heatmap(
         A dataframe of ETC coverage information
     function_df : pd.DataFrame
         A dataframe of functional coverage information
+    y_col : str
+        The column to use for the y-axis in the heatmaps, must be present in all dataframes
+        default: "genome"
+    taxonomy_labels : pd.Series
+        A series of taxonomy labels to use for the y-axis in the heatmaps
 
     Returns
     -------
     pn.Row
         A panel row of heatmaps
     """
-    module_charts = make_heatmap_groups(module_df, x_col="module_name", y_col="genome", c_col="step_coverage",
-                                        tooltip_cols=["genome", "module_name", "steps", "steps_present"],
+
+    extra_tooltip_cols = ["taxonomy"] if "taxonomy" in module_df.columns else []
+    module_charts = make_heatmap_groups(module_df, x_col="module_name", y_col=y_col, c_col="step_coverage",
+                                        tooltip_cols=["genome", "module_name", "steps", "steps_present", *extra_tooltip_cols],
                                         title="Module")
-    etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col="genome", c_col="percent_coverage",
+    etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
                                      groupby="complex",
                                      tooltip_cols=["genome", "module_name", "path_length", "path_length_coverage",
-                                                   "genes", "missing_genes"],
+                                                   "genes", "missing_genes", *extra_tooltip_cols],
                                                   y_axis_location=None,),
                               index=-1)
     #
-    function_charts = add_legend(make_heatmap_groups(function_df, x_col="function_name", y_col="genome", c_col="present",
+    function_charts = add_legend(make_heatmap_groups(function_df, x_col="function_name", y_col=y_col, c_col="present",
                                           groupby="category",
                                           tooltip_cols=["genome", "category", "subcategory",
                                                         ("Function IDs", "@function_ids"),
-                                                        "function_name", "long_function_name", "gene_symbol"],
+                                                        "function_name", "long_function_name", "gene_symbol",
+                                                        *extra_tooltip_cols],
                                           y_axis_location=None,),
                                 "present", side="right", index=-1)
 
@@ -220,6 +230,7 @@ def make_product_heatmap(
         format_chart_group([p for p in etc_charts], title="ETC Complexes"),
         format_chart_group([p for p in function_charts]),
     ]
+    return charts
 
-    plot = pn.Row(*charts)
-    return plot
+    # plot = pn.Row(*charts)
+    # return plot
