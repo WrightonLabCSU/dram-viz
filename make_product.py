@@ -139,6 +139,14 @@ class Dashboard(pn.viewable.Viewer):
 
         self.redraw_button.on_click(self.make_plot)
 
+        self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy", value=False)
+        self.tax_axis_rank = pn.widgets.Select(name='Taxonomy Label', options=list(TAXONOMY_RANKS), visible=False, value="genus")
+        self.show_tax_box = pn.Row(
+            self.tax_axis_filter,
+            self.tax_axis_rank
+        )
+        pn.bind(self.set_taxonomy_axis_filter, self.tax_axis_filter, watch=True)
+
         regex = "".join([f"(?P<{rank}>{regex})" for rank, regex in TAXONOMY_RANKS.items()])
         # self.module_df["taxonomy"].str.extractall(regex)
 
@@ -179,7 +187,6 @@ class Dashboard(pn.viewable.Viewer):
             etc_df.loc[self.etc_df["percent_coverage"] < self.min_coverage, "percent_coverage"] = 0
         print("making plot")
 
-        taxonomy_labels = None
         if self.taxonomy_ranks != list(TAXONOMY_RANKS.values()):
             if "taxonomy" not in self.module_df.columns:
                 additional_sidebar.append(pn.pane.Alert("Taxonomy column not found in supplied data", alert_type='warning'))
@@ -190,8 +197,13 @@ class Dashboard(pn.viewable.Viewer):
                 function_df["taxonomy"] = function_df["taxonomy"].str.replace(regex, "", regex=True)
 
         module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
+        module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.y_axis_col)
+        # if "taxonomy" in module_df.columns:
+        #     for df in [module_df, etc_df, function_df]:
+        #         self.set_multi_index(df, ["genome", *list(TAXONOMY_RANKS.keys())])
 
-        charts = make_product_heatmap(module_df, etc_df, function_df, y_col=self.y_axis_col, taxonomy_labels=taxonomy_labels)
+
+        charts = make_product_heatmap(module_df, etc_df, function_df, y_col=self.y_axis_col, taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value)
 
         self.plot_view[:] = charts
 
@@ -209,11 +221,12 @@ class Dashboard(pn.viewable.Viewer):
                     ("Heatmap", self.plot_view),
                     ("Module Coverage DF", pn.widgets.Tabulator(module_df, page_size=50)),
                     ("ETC Coverage DF", pn.widgets.Tabulator(etc_df, page_size=50)),
-                    ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50))
+                    ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50)),
                 )
             ],
             sidebar=[
                 pn.Row(self.redraw_button, self.reset_button),
+                self.show_tax_box,
                 self.param.min_coverage,
                 self.param.y_axis_col,
                 *additional_sidebar,
@@ -251,6 +264,28 @@ class Dashboard(pn.viewable.Viewer):
 
         return module_df, etc_df, function_df
 
+    def set_taxonomy_axis_filter(self, event=None):
+        """
+        Set the taxonomy filter
+        """
+        if self.tax_axis_filter.value:
+            self.tax_axis_rank.visible = True
+            return
+        self.tax_axis_rank.visible = False
+
+    def get_sorted_dfs(self, module_df, etc_df, function_df, by=None):
+        """
+        Sort the dataframes by taxonomy
+        """
+        if by is None:
+            by = self.y_axis_col
+        return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
+
+    def set_multi_index(self, df, levels):
+        """
+        Set a multi index on a dataframe
+        """
+        return df.set_index(levels)
 
 def main(annotations_tsv_path,
          groupby_column=DEFAULT_GROUPBY_COLUMN,
@@ -349,10 +384,15 @@ def main(annotations_tsv_path,
     )
 
     if "taxonomy" in annotations:
-        tax_df = annotations[[groupby_column, "taxonomy"]].drop_duplicates()
+        cols = [ groupby_column, "taxonomy"]
+        if "Completeness" in annotations.columns:
+            cols.append("Completeness")
+        if "Contamination" in annotations.columns:
+            cols.append("Contamination")
+        tax_df = annotations[cols].drop_duplicates()
         tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
 
-        module_coverage_df =tax_df.merge(module_coverage_df, on="genome", how="left")
+        module_coverage_df = tax_df.merge(module_coverage_df, on="genome", how="left")
         etc_coverage_df = tax_df.merge(etc_coverage_df, on="genome", how="left")
         function_df = tax_df.merge(function_df, on="genome", how="left")
 
@@ -365,12 +405,6 @@ def main(annotations_tsv_path,
         function_df = rename_genomes_to_taxa(function_df, labels)
 
     app = Dashboard(module_coverage_df, etc_coverage_df, function_df)
-
-    # plot = make_plot(
-    #     module_coverage_df,
-    #     etc_coverage_df,
-    #     function_df,
-    # )
 
     if dashboard:
         pn.serve(app.view, port=5006)
