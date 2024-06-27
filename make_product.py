@@ -165,8 +165,12 @@ class Dashboard(pn.viewable.Viewer):
             )
             sort_oprtions = ["genome", *list(TAXONOMY_RANKS.keys())]
 
+            self.remove_all = pn.widgets.Button(name="Remove All Shown", button_type="warning")
+            self.remove_all.on_click(self.remove_tax_filter)
+
         else:
             self.taxonomy_filter = None
+            self.remove_all = None
             sort_oprtions = ["genome"]
         if "Completeness" in self.module_df.columns:
             sort_oprtions.append("Completeness")
@@ -179,11 +183,8 @@ class Dashboard(pn.viewable.Viewer):
         # self.sort_by = pn.widgets.Select(name="Sort By", options=sort_oprtions, value=sort_oprtions[0])
         # self.sort_by.on_click(self.update_sort_by_widget_name)
 
-
         self.make_plot()
 
-
-    # @param.depends("min_coverage", "y_axis_col", "taxonomy_ranks", watch=True)
     def make_plot(self, event=None):
         """
         Make the product plot
@@ -227,6 +228,7 @@ class Dashboard(pn.viewable.Viewer):
 
             additional_sidebar.append(self.param.taxonomy_ranks)
             additional_sidebar.append("## Taxonomy Filter")
+            additional_sidebar.append(self.remove_all)
             additional_sidebar.append(self.taxonomy_filter)
 
         self.view = pn.template.FastListTemplate(
@@ -263,6 +265,13 @@ class Dashboard(pn.viewable.Viewer):
                 multiselect.value = multiselect.options
 
         self.sort_by.value = []
+
+    def remove_tax_filter(self, event=None):
+        """
+        Remove all shown values from the active taxonomy filter
+        """
+        self.taxonomy_filter[self.taxonomy_filter.active].value = []
+
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
         """

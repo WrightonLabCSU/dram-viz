@@ -31,6 +31,8 @@ def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right",
     if isinstance(p_orig, list) and index is None:
         raise ValueError("If p is a list, i must be an integer")
     if isinstance(p_orig, list):
+        if len(p_orig) == 0:
+            return p_orig
         p = p_orig[index]
     else:
         p = p_orig
@@ -75,6 +77,8 @@ def add_colorbar(p_orig: Plot | list[Plot], index: Optional[int] = None):
     if isinstance(p_orig, list) and index is None:
         raise ValueError("If p is a list, i must be an integer")
     if isinstance(p_orig, list):
+        if len(p_orig) == 0:
+            return p_orig
         p = p_orig[index]
     else:
         p = p_orig
