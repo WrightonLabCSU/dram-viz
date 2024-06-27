@@ -163,8 +163,22 @@ class Dashboard(pn.viewable.Viewer):
                                          )
                   for rank in TAXONOMY_RANKS]
             )
+            sort_oprtions = ["genome", *list(TAXONOMY_RANKS.keys())]
+
         else:
             self.taxonomy_filter = None
+            sort_oprtions = ["genome"]
+        if "Completeness" in self.module_df.columns:
+            sort_oprtions.append("Completeness")
+        if "Contamination" in self.module_df.columns:
+            sort_oprtions.append("Contamination")
+
+        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_oprtions)
+        # self.sort_by = pn.widgets.MultiChoice(name='Sort  By', options=sort_oprtions, button_type='primary')
+        # pn.bind(self.update_sort_by_widget_name, self.sort_by, watch=True)
+        # self.sort_by = pn.widgets.Select(name="Sort By", options=sort_oprtions, value=sort_oprtions[0])
+        # self.sort_by.on_click(self.update_sort_by_widget_name)
+
 
         self.make_plot()
 
@@ -197,7 +211,7 @@ class Dashboard(pn.viewable.Viewer):
                 function_df["taxonomy"] = function_df["taxonomy"].str.replace(regex, "", regex=True)
 
         module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
-        module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.y_axis_col)
+        module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
         # if "taxonomy" in module_df.columns:
         #     for df in [module_df, etc_df, function_df]:
         #         self.set_multi_index(df, ["genome", *list(TAXONOMY_RANKS.keys())])
@@ -210,7 +224,9 @@ class Dashboard(pn.viewable.Viewer):
         # return p
         # # plot.save(output_dir / "product.html", resources=INLINE_RESOURCES)
         if "taxonomy" in self.module_df.columns:
+
             additional_sidebar.append(self.param.taxonomy_ranks)
+            additional_sidebar.append("## Taxonomy Filter")
             additional_sidebar.append(self.taxonomy_filter)
 
         self.view = pn.template.FastListTemplate(
@@ -227,6 +243,7 @@ class Dashboard(pn.viewable.Viewer):
             sidebar=[
                 pn.Row(self.redraw_button, self.reset_button),
                 self.show_tax_box,
+                self.sort_by,
                 self.param.min_coverage,
                 self.param.y_axis_col,
                 *additional_sidebar,
@@ -244,6 +261,8 @@ class Dashboard(pn.viewable.Viewer):
         if self.taxonomy_filter is not None:
             for multiselect in self.taxonomy_filter:
                 multiselect.value = multiselect.options
+
+        self.sort_by.value = []
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
         """
@@ -277,7 +296,7 @@ class Dashboard(pn.viewable.Viewer):
         """
         Sort the dataframes by taxonomy
         """
-        if by is None:
+        if by is None or not len(by):
             by = self.y_axis_col
         return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
 
@@ -286,6 +305,11 @@ class Dashboard(pn.viewable.Viewer):
         Set a multi index on a dataframe
         """
         return df.set_index(levels)
+
+
+    def update_sort_by_widget_name(self, event=None):
+        self.sort_by.name = f"Sort  By: {self.sort_by.value}"
+
 
 def main(annotations_tsv_path,
          groupby_column=DEFAULT_GROUPBY_COLUMN,
