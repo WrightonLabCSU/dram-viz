@@ -122,7 +122,7 @@ def heatmap(df, y_col, tooltip_cols, title="", rect_kw=None, c_min=0, c_max=1, c
     """
 
     if x_cols:
-        df = pd.melt(df, id_vars=[col for col in df.columns if col not in x_cols], value_vars=x_cols, var_name="x_col")
+        df = pd.melt(df, id_vars=y_col, value_vars=x_cols, var_name="x_col").drop_duplicates()
         x_col = "x_col"
         c_col = "value"
         tooltip_cols = [y_col, "value"]
@@ -153,8 +153,9 @@ def heatmap(df, y_col, tooltip_cols, title="", rect_kw=None, c_min=0, c_max=1, c
         tools="hover",
         toolbar_location=None,
         tooltips=tooltips,
+        # title="\n".join(char for char in title),
         title=title,
-        title_location="right",
+        # title_location="right",
         **fig_kwargs
     )
     #
@@ -267,12 +268,17 @@ def make_product_heatmap(
                                         y_axis_location=None,
                                         **fig1_kw,
                                         title="Module")
-    etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
+    # etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
+    #                                  groupby="complex",
+    #                                  tooltip_cols=["genome", "module_name", "path_length", "path_length_coverage",
+    #                                                "genes", "missing_genes", *extra_tooltip_cols],
+    #                                               y_axis_location=None,),
+    #                           index=-1)
+    etc_charts = make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
                                      groupby="complex",
                                      tooltip_cols=["genome", "module_name", "path_length", "path_length_coverage",
                                                    "genes", "missing_genes", *extra_tooltip_cols],
-                                                  y_axis_location=None,),
-                              index=-1)
+                                                  y_axis_location=None,)
     #
     function_charts = add_legend(make_heatmap_groups(function_df, x_col="function_name", y_col=y_col, c_col="present",
                                           groupby="category",
@@ -282,7 +288,7 @@ def make_product_heatmap(
                                                         *extra_tooltip_cols],
                                           y_axis_location=None,),
                                 "present", side="right", index=-1)
-
+    return [*completeness_charts, *module_charts, *etc_charts, *function_charts]
 
     charts = [
         format_chart_group([p for p in completeness_charts]),

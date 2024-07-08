@@ -8,3 +8,4 @@ dependencies:
   - panel>1,<2
   - bokeh>3,<4
   - param>2
+  - panel-jstree==0.3.5
