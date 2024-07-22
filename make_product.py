@@ -160,13 +160,6 @@ class Dashboard(pn.viewable.Viewer):
 
     min_coverage = param.Number(default=0, bounds=(0, 1), label="Minimum Coverage")
     y_axis_col = param.Selector(objects=["genome", "taxonomy"], default="genome", label="Y Axis Column")
-    taxonomy_ranks = param.ListSelector(
-        # objects={"domain": "d__", "phylum": "p__", "class": "c__", "order": "o__", "family": "f__", "genus": "g__", "species": "s__"},
-        objects=TAXONOMY_RANKS_REGEX,
-        default=list(TAXONOMY_RANKS_REGEX.values()),
-        # default=["domain", "phylum", "class", "order", "family", "genus", "species"],
-        label="Taxonomy Group By Ranks",
-    )
 
     view = param.ClassSelector(class_=pn.template.FastListTemplate)
 
@@ -209,13 +202,10 @@ class Dashboard(pn.viewable.Viewer):
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
 
-            self.remove_all = pn.widgets.Button(name="Remove All Shown", button_type="warning")
-            self.remove_all.on_click(self.remove_tax_filter)
-
         else:
             self.taxonomy_filter = None
-            self.remove_all = None
             sort_options = ["genome"]
+        self._taxonomy_filter_initiated = False
         if "Completeness" in self.module_df.columns:
             sort_options.append("Completeness")
         if "Contamination" in self.module_df.columns:
@@ -238,7 +228,13 @@ class Dashboard(pn.viewable.Viewer):
         etc_df = self.etc_df.copy()
         function_df = self.function_df.copy()
 
-        if event:  # don't filter on initial load
+        if event:  # don't filter on initial load (These are filters after browser load)
+            # This is a hack to make sure the taxonomy filter tree.value is set.
+            # It is not set on the first load, even though we pass in the data as selected,
+            # Those aren't currently back propagated to the python side
+            if not self._taxonomy_filter_initiated and "taxonomy" in self.module_df.columns:
+                self.reset_taxonomy()
+                self._taxonomy_filter_initiated = True
 
             if self.min_coverage > 0:
                 print(self.min_coverage)
@@ -250,10 +246,6 @@ class Dashboard(pn.viewable.Viewer):
 
             module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
             module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
-            # if "taxonomy" in module_df.columns:
-            #     for df in [module_df, etc_df, function_df]:
-            #         self.set_multi_index(df, ["genome", *list(TAXONOMY_RANKS.keys())])
-
 
         charts = make_product_heatmap(module_df, etc_df, function_df, y_col=self.y_axis_col, taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value)
 
@@ -265,9 +257,7 @@ class Dashboard(pn.viewable.Viewer):
             i = 50
             from pprint import pprint
 
-            additional_sidebar.append(self.param.taxonomy_ranks)
             additional_sidebar.append("## Taxonomy Filter")
-            additional_sidebar.append(self.remove_all)
             additional_sidebar.append(self.taxonomy_filter)
             # additional_sidebar.append(Tree(data=self.tax_tree_data, show_icons=False,))
             # additional_sidebar.append(Tree(data=self.tax_tree_data[:i], show_icons=False,))
@@ -317,21 +307,14 @@ class Dashboard(pn.viewable.Viewer):
         """
         self.min_coverage = self.param.min_coverage.default
         self.y_axis_col = self.param.y_axis_col.default
-        self.taxonomy_ranks = self.param.taxonomy_ranks.default
 
         if self.taxonomy_filter is not None:
-            self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
-
+            self.reset_taxonomy()
 
         self.sort_by.value = []
 
-    def remove_tax_filter(self, event=None):
-        """
-        Remove all shown values from the active taxonomy filter
-        """
-        for active in self.taxonomy_filter.active:
-            self.taxonomy_filter[active].value = []
-
+    def reset_taxonomy(self):
+        self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
         """
@@ -369,7 +352,6 @@ class Dashboard(pn.viewable.Viewer):
         Set a multi index on a dataframe
         """
         return df.set_index(levels)
-
 
     def update_sort_by_widget_name(self, event=None):
         self.sort_by.name = f"Sort  By: {self.sort_by.value}"
