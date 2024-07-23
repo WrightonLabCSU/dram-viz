@@ -67,99 +67,12 @@ TAXONOMY_RANKS_REGEX = {
 
 NO_TAXONOMY_RANKS = len(TAXONOMY_RANKS_REGEX)
 
-# #
-#
-# class Tree(pn.widgets.tree._TreeBase):
-#     nodes = param.List(
-#         default=[],
-#         doc="Hierarchical tree structure of data. See "
-#         " `jsTree <https://www.jstree.com>`_ for more"
-#         " details on formatting",
-#     )
-#
-#     cascade = param.Boolean(default=True)
-#
-#     def __init__(
-#         self, **params):
-#         self._index = {}
-#         super().__init__(**params)
-#         self._reindex()
-#
-#     @property
-#     def _nodes(self):
-#         return self.nodes
-#
-#     @_nodes.setter
-#     def _nodes(self, nodes):
-#         self.nodes = nodes
-#
-#     def _process_param_change(self, params):
-#         props = super()._process_param_change(params)
-#         if 'value' in props:
-#             props['checked'] = props.pop('value')
-#         return props
-#
-#     def _process_property_change(self, msg):
-#         props = super()._process_property_change(msg)
-#         if "value" in props:
-#             for v in self.value:
-#                 if v in self._index and v not in props['value']:
-#                     self._index[v]["state"]["selected"] = False
-#             for v in props["value"]:
-#                 if v in self._index:
-#                     self._index[v]["state"] = dict(self._index[v].get("state", {}), selected=True)
-#         return props
-
-
-
-# def make_plot(
-#         module_df: pd.DataFrame,
-#         etc_df: pd.DataFrame,
-#         function_df: pd.DataFrame,
-# ):
-#     """
-#     Make a product heatmap group from the module_coverage_df, etc_coverage_df, and functional_df
-#
-#     Parameters
-#     ----------
-#     module_df : pd.DataFrame
-#         A dataframe of module coverage information
-#     etc_df : pd.DataFrame
-#         A dataframe of ETC coverage information
-#     function_df : pd.DataFrame
-#         A dataframe of functional coverage information
-#
-#     Returns
-#     -------
-#     pn.Row
-#         A panel row of heatmaps
-#     """
-#     # chart_type = pn.widgets.Select(name="Chart Type", options=["Heatmap", "Barchart"], value="Heatmap")
-#
-#     coverage_slider = pn.widgets.RangeSlider(name="Coverage Range", start=0, end=1, value=(0, 1), step=0.01)
-#
-#     widgets = [
-#         # chart_type
-#     ]
-#
-#     p = make_product_heatmap(module_df, etc_df, function_df)
-#     # return p
-#     # # plot.save(output_dir / "product.html", resources=INLINE_RESOURCES)
-#     return pn.template.FastListTemplate(
-#         title="DRAM2 Product Visualization",
-#         main=[p],
-#         sidebar=[
-#             *widgets
-#         ]
-#     )
-
 class Dashboard(pn.viewable.Viewer):
     """
     A parameterized class for the product visualization
     """
 
     min_coverage = param.Number(default=0, bounds=(0, 1), label="Minimum Coverage")
-    y_axis_col = param.Selector(objects=["genome", "taxonomy"], default="genome", label="Y Axis Column")
 
     view = param.ClassSelector(class_=pn.template.FastListTemplate)
 
@@ -181,23 +94,13 @@ class Dashboard(pn.viewable.Viewer):
 
         self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy", value=False)
         self.tax_axis_rank = pn.widgets.Select(name='Taxonomy Label', options=list(TAXONOMY_RANKS_REGEX), visible=False, value="genus")
-        self.show_tax_box = pn.Row(
+        self.show_tax_box = pn.Column(
             self.tax_axis_filter,
             self.tax_axis_rank
         )
         pn.bind(self.set_taxonomy_axis_filter, self.tax_axis_filter, watch=True)
 
         if "taxonomy" in self.module_df.columns:
-
-            # self.taxonomy_filter = pn.Accordion(
-            #     *[pn.widgets.MultiChoice(name=rank,
-            #                              value=self.module_df[rank].unique().tolist(),
-            #                              options=self.module_df[rank].unique().tolist(),
-            #                              )
-            #       for rank in TAXONOMY_RANKS_REGEX],
-            #     sizing_mode="stretch_width"
-            # )
-            # self.taxonomy_filter = Tree(nodes=self.tax_tree_data, show_icons=False, cascade=True)
 
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
@@ -212,10 +115,6 @@ class Dashboard(pn.viewable.Viewer):
             sort_options.append("Contamination")
 
         self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
-        # self.sort_by = pn.widgets.MultiChoice(name='Sort  By', options=sort_oprtions, button_type='primary')
-        # pn.bind(self.update_sort_by_widget_name, self.sort_by, watch=True)
-        # self.sort_by = pn.widgets.Select(name="Sort By", options=sort_oprtions, value=sort_oprtions[0])
-        # self.sort_by.on_click(self.update_sort_by_widget_name)
 
         self.make_plot()
 
@@ -247,38 +146,15 @@ class Dashboard(pn.viewable.Viewer):
             module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
             module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
 
-        charts = make_product_heatmap(module_df, etc_df, function_df, y_col=self.y_axis_col, taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value)
+        charts = make_product_heatmap(module_df, etc_df, function_df, taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value)
 
         self.plot_view[:] = charts
 
-        # return p
-        # # plot.save(output_dir / "product.html", resources=INLINE_RESOURCES)
         if "taxonomy" in self.module_df.columns:
-            i = 50
-            from pprint import pprint
 
             additional_sidebar.append("## Taxonomy Filter")
             additional_sidebar.append(self.taxonomy_filter)
-            # additional_sidebar.append(Tree(data=self.tax_tree_data, show_icons=False,))
-            # additional_sidebar.append(Tree(data=self.tax_tree_data[:i], show_icons=False,))
-            # pprint(self.tax_tree_data[:i])
-            # print(len(self.tax_tree_data))
 
-
-            # additional_sidebar.append(Tree(data=[
-            #     {'id': 'Archaea', 'parent': '#', 'text': 'Archaea'},
-            #     {'id': 'Bacteria', 'parent': '#', 'text': 'Bacteria'},
-            #     {'id': 'Halobacteriota', 'parent': 'Archaea', 'text': 'Halobacteriota'},
-            #     {'id': 'Thermoplasmatota', 'parent': 'Archaea', 'text': 'Thermoplasmatota'},
-            #     {'id': 'Methanobacteriota', 'parent': 'Archaea', 'text': 'Methanobacteriota'},
-            #     {'id': 'Actinomycetota', 'parent': 'Bacteria', 'text': 'Actinomycetota'},
-            #     {'id': 'Chloroflexota', 'parent': 'Bacteria', 'text': 'Chloroflexota'},
-            #     {'id': 'Bacteroidota', 'parent': 'Bacteria', 'text': 'Bacteroidota'},
-            #     {'id': 'Acidobacteriota', 'parent': 'Bacteria', 'text': 'Acidobacteriota'},
-            #
-            # ],
-            #     show_icons=False,
-            #                                ))
 
         self.view = pn.template.FastListTemplate(
             title="DRAM2 Product Visualization",
@@ -296,7 +172,6 @@ class Dashboard(pn.viewable.Viewer):
                 self.show_tax_box,
                 self.sort_by,
                 self.param.min_coverage,
-                self.param.y_axis_col,
                 *additional_sidebar,
             ]
         )
@@ -306,7 +181,6 @@ class Dashboard(pn.viewable.Viewer):
         Reset the taxonomy filter
         """
         self.min_coverage = self.param.min_coverage.default
-        self.y_axis_col = self.param.y_axis_col.default
 
         if self.taxonomy_filter is not None:
             self.reset_taxonomy()
@@ -339,12 +213,10 @@ class Dashboard(pn.viewable.Viewer):
             return
         self.tax_axis_rank.visible = False
 
-    def get_sorted_dfs(self, module_df, etc_df, function_df, by=None):
+    def get_sorted_dfs(self, module_df, etc_df, function_df, by="genome"):
         """
         Sort the dataframes by taxonomy
         """
-        if by is None or not len(by):
-            by = self.y_axis_col
         return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
 
     def set_multi_index(self, df, levels):
@@ -382,24 +254,6 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
     # tree_data = [{"id": root, "text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": {"opened": False, "disable": False, "selected": False}} for root in roots]
     # tree_data = [{"text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": state} for root in roots]
     return tree_data
-
-# def build_tree2(edge_df, source_col: str = "source", target_col: str = "target"):  # maybe a fast implementation
-#     """
-#     Build a tree from an edge dataframe
-#     """
-#     def recurse_tree(source):
-#         try:
-#             children = edge_df.loc[source, target_col]
-#         except KeyError:
-#             return []
-#         if isinstance(children, str):  # if only one child
-#             return [{"text": children, "children": recurse_tree(children)}]
-#         return [{"text": child, "children": recurse_tree(child)} for child in children]
-#
-#     roots = edge_df.loc[~edge_df[source_col].isin(edge_df[target_col]), source_col].unique()
-#     edge_df = edge_df.set_index(source_col)
-#     tree_data = [{"text": root, "children": recurse_tree(root)} for root in roots]
-#     return tree_data
 
 
 def main(annotations_tsv_path,
