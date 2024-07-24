@@ -23,14 +23,14 @@ try:
         ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
         get_phylum_and_most_specific,
         make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
-    from .models.heatmap import make_product_heatmap
+    from .apps.heatmap import make_product_heatmap
 except ImportError:
     from definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN
     from processing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
         ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
         get_phylum_and_most_specific,
         make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
-    from models.heatmap import make_product_heatmap
+    from apps.heatmap import make_product_heatmap
 
 __authors__ = ["Madeline Scyphers", "Rory Flynn"]
 __copyright__ = "Copyright 2024, Wrighton Lab"
@@ -55,6 +55,8 @@ HEATMAP_MODULES = [
     "M00567",
 ]
 
+# regex portion not used right now, but could be useful in the future
+# captures in named pandas columns that remove the prefix string (e.g. "d__")
 TAXONOMY_RANKS_REGEX = {
     "domain": r"(?:;?d__)(?P<domain>.*?)",
     "phylum": r"(?:;?p__)(?P<phylum>.*?)",
@@ -66,6 +68,7 @@ TAXONOMY_RANKS_REGEX = {
 }
 
 NO_TAXONOMY_RANKS = len(TAXONOMY_RANKS_REGEX)
+
 
 class Dashboard(pn.viewable.Viewer):
     """
@@ -219,20 +222,8 @@ class Dashboard(pn.viewable.Viewer):
         """
         return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
 
-    def set_multi_index(self, df, levels):
-        """
-        Set a multi index on a dataframe
-        """
-        return df.set_index(levels)
-
-    def update_sort_by_widget_name(self, event=None):
-        self.sort_by.name = f"Sort  By: {self.sort_by.value}"
-
 
 def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
-    """
-    Build a tree from an edge dataframe
-    """
     def recurse_tree(source, id_cb, parent_id=None):
         target_nodes = edge_df.loc[edge_df[source_col] == source, target_col]
         # if id_cb is not None:
@@ -362,9 +353,8 @@ def main(annotations_tsv_path,
         tax_df = annotations[cols].drop_duplicates()
         tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
 
-        # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])
+        # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])  # regex that might be useful later
         # tree = tax_df["taxonomy"].str.extractall(regex)
-        # tree = tree.fillna(value={column: f"Uknown {column}" for column in tree.columns})
         tree = pd.DataFrame(tax_df["taxonomy"].str.split(";").to_list(), columns=["domain", "phylum", "class", "order", "family", "genus", "species"], index=tax_df.index)
         tax_df = tax_df.merge(tree, left_index=True, right_index=True, validate="1:1")
         tax_df["taxonomy"] = tax_df["domain"] + "; " + tax_df["phylum"] + "; " + tax_df["class"] + "; " + tax_df["order"] + "; " + tax_df["family"] + "; " + tax_df["genus"] + "; " + tax_df["species"]
@@ -378,17 +368,12 @@ def main(annotations_tsv_path,
              tree[["genus", "species"]].rename(columns={"genus": "source", "species": "target"})]
         ).drop_duplicates().reset_index(drop=True)
 
-        # roots = tax_edge_df.loc[~tax_edge_df["source"].isin(tax_edge_df["target"]), "source"].unique()
-
         tax_tree_data = build_tree(tax_edge_df, state={"opened": False, "selected": True}, id_cb=lambda source, child, parent_id: f"{parent_id}; {child}")
 
         module_coverage_df = tax_df.merge(module_coverage_df, on="genome", how="left")
         etc_coverage_df = tax_df.merge(etc_coverage_df, on="genome", how="left")
         function_df = tax_df.merge(function_df, on="genome", how="left")
 
-    # module_coverage_df.to_csv(output_dir / "module_coverage.tsv", sep="\t", index=False)
-    # etc_coverage_df.to_csv(output_dir / "etc_coverage.tsv", sep="\t", index=False)
-    # function_df.to_csv(output_dir / "function_coverage.tsv", sep="\t", index=False)
     product_df = make_product_df(module_coverage_df, etc_coverage_df, function_df)
 
     if labels is not None:
