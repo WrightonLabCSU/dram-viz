@@ -10,6 +10,20 @@ from bokeh.models import Plot, Legend, LegendItem, ColorBar, LinearColorMapper
 from bokeh.palettes import BuGn, Cividis256
 from bokeh.plotting import figure
 from bokeh.transform import linear_cmap, factor_cmap
+import param
+from panel_jstree import Tree
+
+
+try:
+    from ..definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES, TAXONOMY_RANKS_REGEX, NO_TAXONOMY_RANKS
+except ImportError:
+    import os
+    import sys
+
+    sys.path.insert(0, os.path.abspath(".."))
+    from viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES, TAXONOMY_RANKS_REGEX, NO_TAXONOMY_RANKS
+
+pn.extension('tabulator', 'katex', template='bootstrap')
 
 PALETTE_CATEGORICAL = BuGn
 PALETTE_CONTINUOUS = Cividis256
@@ -300,3 +314,158 @@ def make_product_heatmap(
 
     # plot = pn.Row(*charts)
     # return plot
+
+
+
+
+class Dashboard(pn.viewable.Viewer):
+    """
+    A parameterized class for the product visualization
+    """
+
+    min_coverage = param.Number(default=0, bounds=(0, 1), label="Minimum Coverage")
+
+    view = param.ClassSelector(class_=pn.template.FastListTemplate)
+
+    plot_view = param.ClassSelector(class_=pn.Row)
+
+    def __init__(self, module_df: pd.DataFrame, etc_df: pd.DataFrame, function_df: pd.DataFrame, tax_tree_data=None):
+        super().__init__()
+        self.module_df = module_df
+        self.etc_df = etc_df
+        self.function_df = function_df
+        self.tax_tree_data = tax_tree_data
+        self.plot_view = pn.Row()
+
+        self.redraw_button = pn.widgets.Button(name="Redraw", button_type="primary")
+        self.reset_button = pn.widgets.Button(name="Reset Filters", button_type="primary")
+        self.reset_button.on_click(self.reset_filters)
+
+        self.redraw_button.on_click(self.make_plot)
+
+        self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy", value=False)
+        self.tax_axis_rank = pn.widgets.Select(name='Taxonomy Label', options=list(TAXONOMY_RANKS_REGEX), visible=False, value="genus")
+        self.show_tax_box = pn.Column(
+            self.tax_axis_filter,
+            self.tax_axis_rank
+        )
+        pn.bind(self.set_taxonomy_axis_filter, self.tax_axis_filter, watch=True)
+
+        if "taxonomy" in self.module_df.columns:
+
+            self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
+            sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
+
+        else:
+            self.taxonomy_filter = None
+            sort_options = ["genome"]
+        self._taxonomy_filter_initiated = False
+        if "Completeness" in self.module_df.columns:
+            sort_options.append("Completeness")
+        if "Contamination" in self.module_df.columns:
+            sort_options.append("Contamination")
+
+        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
+
+        self.make_plot()
+
+    def make_plot(self, event=None):
+        """
+        Make the product plot
+        """
+        additional_sidebar = []
+        module_df = self.module_df.copy()
+        etc_df = self.etc_df.copy()
+        function_df = self.function_df.copy()
+
+        if event:  # don't filter on initial load (These are filters after browser load)
+            # This is a hack to make sure the taxonomy filter tree.value is set.
+            # It is not set on the first load, even though we pass in the data as selected,
+            # Those aren't currently back propagated to the python side
+            if not self._taxonomy_filter_initiated and "taxonomy" in self.module_df.columns:
+                self.reset_taxonomy()
+                self._taxonomy_filter_initiated = True
+
+            if self.min_coverage > 0:
+                print(self.min_coverage)
+                # module_df = self.module_df[self.module_df["step_coverage"] >= self.min_coverage]
+                module_df.loc[self.module_df["step_coverage"] < self.min_coverage, "step_coverage"] = 0
+                # etc_df = self.etc_df[self.etc_df["percent_coverage"] >= self.min_coverage]
+                etc_df.loc[self.etc_df["percent_coverage"] < self.min_coverage, "percent_coverage"] = 0
+            print("making plot")
+
+            module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
+            module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
+
+        charts = make_product_heatmap(module_df, etc_df, function_df, taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value)
+
+        self.plot_view[:] = charts
+
+        if "taxonomy" in self.module_df.columns:
+
+            additional_sidebar.append("## Taxonomy Filter")
+            additional_sidebar.append(self.taxonomy_filter)
+
+
+        self.view = pn.template.FastListTemplate(
+            title="DRAM2 Product Visualization",
+            # main=[self.plot_view],
+            main=[
+                pn.Tabs(
+                    ("Heatmap", self.plot_view),
+                    ("Module Coverage DF", pn.widgets.Tabulator(module_df, page_size=50)),
+                    ("ETC Coverage DF", pn.widgets.Tabulator(etc_df, page_size=50)),
+                    ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50)),
+                )
+            ],
+            sidebar=[
+                pn.Row(self.redraw_button, self.reset_button),
+                self.show_tax_box,
+                self.sort_by,
+                self.param.min_coverage,
+                *additional_sidebar,
+            ]
+        )
+
+    def reset_filters(self, event=None):
+        """
+        Reset the taxonomy filter
+        """
+        self.min_coverage = self.param.min_coverage.default
+
+        if self.taxonomy_filter is not None:
+            self.reset_taxonomy()
+
+        self.sort_by.value = []
+
+    def reset_taxonomy(self):
+        self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
+
+    def filter_by_taxonomy(self, module_df, etc_df, function_df):
+        """
+        Filter the dataframes by selected taxonomy ranks
+        """
+        if self.taxonomy_filter is None:
+            return module_df, etc_df, function_df
+        selected = self.taxonomy_filter.value
+        leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        module_df = module_df.loc[module_df["taxonomy"].isin(leaves)]
+        etc_df = etc_df.loc[etc_df["taxonomy"].isin(leaves)]
+        function_df = function_df.loc[function_df["taxonomy"].isin(leaves)]
+
+        return module_df, etc_df, function_df
+
+    def set_taxonomy_axis_filter(self, event=None):
+        """
+        Set the taxonomy filter
+        """
+        if self.tax_axis_filter.value:
+            self.tax_axis_rank.visible = True
+            return
+        self.tax_axis_rank.visible = False
+
+    def get_sorted_dfs(self, module_df, etc_df, function_df, by="genome"):
+        """
+        Sort the dataframes by taxonomy
+        """
+        return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
