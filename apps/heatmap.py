@@ -33,6 +33,18 @@ HEATMAP_CELL_WIDTH = 15
 
 
 def make_heatmap_groups(df: pd.DataFrame, groupby: Optional[str] = None, title: Optional[str] = None, **kwargs):
+    """
+    Generate a list of heatmaps based on the given DataFrame and grouping.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame containing the data for the heatmaps.
+    - groupby (Optional[str]): The column name to group the data by. If not provided, a single heatmap will be generated for the entire DataFrame.
+    - title (Optional[str]): The title for the heatmaps. If provided, it will be used as the title for all heatmaps. If not provided, the groups will be used as titles.
+    - **kwargs: Additional keyword arguments to be passed to the heatmap function.
+
+    Returns:
+    - List[plt.Figure]: A list of heatmaps, each represented as a matplotlib Figure object.
+    """
     if title:
         kwargs["title"] = title
     if not groupby:
@@ -42,6 +54,19 @@ def make_heatmap_groups(df: pd.DataFrame, groupby: Optional[str] = None, title: 
 
 
 def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right", index: Optional[int] = None):
+    """
+    Add a legend to a Bokeh plot.
+
+    Parameters:
+    - p_orig (Plot | list[Plot]): The Bokeh plot or a list of Bokeh plots to add the legend to.
+    - labels (str | list[str]): The label(s) to display in the legend. Can be a single string or a list of strings.
+    - side (str): The side of the plot where the legend should be placed. Default is "right".
+    - index (Optional[int]): The index of the plot in the list of plots (if p_orig is a list). Default is None.
+
+    Returns:
+    - p_orig: The original Bokeh plot(s) with the legend added.
+    """
+
     if isinstance(p_orig, list) and index is None:
         raise ValueError("If p is a list, i must be an integer")
     if isinstance(p_orig, list):
@@ -317,16 +342,25 @@ def make_product_heatmap(
 
 
 
-
 class Dashboard(pn.viewable.Viewer):
     """
-    A parameterized class for the product visualization
+    A class representing a dashboard for visualizing data.
+
+    Parameters:
+    -----------
+    module_df : pd.DataFrame
+        The module dataframe.
+    etc_df : pd.DataFrame
+        The etc dataframe.
+    function_df : pd.DataFrame
+        The function dataframe.
+    tax_tree_data : optional
+        The taxonomy tree data.
     """
 
+
     min_coverage = param.Number(default=0, bounds=(0, 1), label="Minimum Coverage")
-
     view = param.ClassSelector(class_=pn.template.FastListTemplate)
-
     plot_view = param.ClassSelector(class_=pn.Row)
 
     def __init__(self, module_df: pd.DataFrame, etc_df: pd.DataFrame, function_df: pd.DataFrame, tax_tree_data=None):
@@ -352,10 +386,8 @@ class Dashboard(pn.viewable.Viewer):
         pn.bind(self.set_taxonomy_axis_filter, self.tax_axis_filter, watch=True)
 
         if "taxonomy" in self.module_df.columns:
-
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
-
         else:
             self.taxonomy_filter = None
             sort_options = ["genome"]
@@ -402,10 +434,8 @@ class Dashboard(pn.viewable.Viewer):
         self.plot_view[:] = charts
 
         if "taxonomy" in self.module_df.columns:
-
             additional_sidebar.append("## Taxonomy Filter")
             additional_sidebar.append(self.taxonomy_filter)
-
 
         self.view = pn.template.FastListTemplate(
             title="DRAM2 Product Visualization",
@@ -428,17 +458,26 @@ class Dashboard(pn.viewable.Viewer):
         )
 
     def reset_filters(self, event=None):
-        """
-        Reset the taxonomy filter
-        """
-        self.min_coverage = self.param.min_coverage.default
+            """
+            Resets the filters applied to the heatmap.
 
-        if self.taxonomy_filter is not None:
-            self.reset_taxonomy()
+            Parameters:
+            - event (optional): The event that triggered the reset. Defaults to None.
+            """
 
-        self.sort_by.value = []
+            self.min_coverage = self.param.min_coverage.default
+
+            if self.taxonomy_filter is not None:
+                self.reset_taxonomy()
+
+            self.sort_by.value = []
 
     def reset_taxonomy(self):
+        """
+        Resets the taxonomy filter to its initial state.
+
+        This method sets the value of the `taxonomy_filter` attribute to the list of IDs of all nodes in the flat tree.
+        """
         self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
