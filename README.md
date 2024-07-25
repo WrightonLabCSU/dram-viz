@@ -1,5 +1,3 @@
-<img src="../../assets/images/DRAM2_large.png" alt="DRAM2 logo" width=400/>
-
 # DRAM2 Visualization Library
 
 This directory contains the visualization code for DRAM2. The visualization code is written in Python and uses the [Bokeh](https://bokeh.org) and [Panel](https://panel.holoviz.org) libraries. The visualization code is used to generate the figures 
