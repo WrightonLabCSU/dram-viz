@@ -17,7 +17,7 @@ import pandas as pd
 import panel as pn
 
 from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES
-from dram2_viz.proccessing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
+from dram2_viz.processing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
     ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
     get_phylum_and_most_specific,
     make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
@@ -73,37 +73,22 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
     return tree_data
 
 
-
-
-    parser = argparse.ArgumentParser(description="Generate a product visualization from the DRAM output.")
-    parser.add_argument("--annotations", help="Path to the annotations tsv file")
-    parser.add_argument("--groupby_column", help="Column to group by", default=DEFAULT_GROUPBY_COLUMN)
-    parser.add_argument("--output_dir", help="Output directory", default=Path.cwd().resolve())
-    parser.add_argument("--module_steps_form", help="Module Step Database TSV",
-                        default=FILES_NAMES[MODULE_STEPS_FORM_TAG])
-    parser.add_argument("--etc_steps_form", help="ETC Step Database TSV", default=FILES_NAMES[ETC_MODULE_DF_TAG])
-    parser.add_argument("--function_steps_form", help="Function Step Database TSV",
-                        default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG])
-    parser.add_argument("--dashboard", help="Launch as dashboard", action='store_true')
-
-
 @click.command()
 @click.option(
     "--annotations",
     "-a",
     type=Path,
-    exists=True,
     help="Path to the annotations tsv file"
 )
 @click.option(
-    "--groupby_column",
+    "--groupby-column",
     "-g",
     type=str,
     default=DEFAULT_GROUPBY_COLUMN,
     help="Column to group by"
 )
 @click.option(
-    "--output_dir",
+    "--output-dir",
     "-o",
     type=Path,
     help="Path to the output directory",
@@ -130,8 +115,9 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
 @click.option(
     "--dashboard",
     "-d",
+    is_flag=True,
 )
-def main(annotations_tsv_path,
+def main(annotations,
          groupby_column=DEFAULT_GROUPBY_COLUMN,
          output_dir=None,
          module_steps_form: Optional[Path] = None,
@@ -161,7 +147,7 @@ def main(annotations_tsv_path,
     """
 
     output_dir = output_dir or Path.cwd().resolve()
-    annotations = pd.read_csv(annotations_tsv_path, sep="\t", index_col=0)
+    annotations = pd.read_csv(annotations, sep="\t", index_col=0)
 
     db_id_sets: pd.Series = get_annotation_ids_by_row(
         annotations
