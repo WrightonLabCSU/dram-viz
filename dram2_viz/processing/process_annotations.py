@@ -11,10 +11,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-try:
-    from .definitions import DEFAULT_GROUPBY_COLUMN
-except ImportError:
-    from definitions import DEFAULT_GROUPBY_COLUMN
+from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN
 
 logger = logging.getLogger("dram2_log.viz")
 
