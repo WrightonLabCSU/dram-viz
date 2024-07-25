@@ -33,15 +33,14 @@ mamba activate dram2-viz
 To generate a figure like the one shown above, run the following command:
 
 ```bash
-python make_product.py --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/>
+python -m dram2_viz --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/>
 ```
 
 To launch a dashboard, run the following command:
 
 ```bash
-python make_product.py --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/> --dashboard
+python -m dram2_viz --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/> --dashboard
 ```
-
 This should open your default web browser and display the dashboard. If the dashboard does not open automatically, you can navigate to http://localhost:5006 to view the dashboard.
 
 ### SSH Tunneling
