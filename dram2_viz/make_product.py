@@ -11,24 +11,20 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import click
 from bokeh.resources import INLINE
 import pandas as pd
 import panel as pn
 
-try:
-    from .definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES
-    from .proccessing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
-        ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
-        get_phylum_and_most_specific,
-        make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
-    from .apps.heatmap import make_product_heatmap, Dashboard
-except ImportError:
-    from definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES
-    from processing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
-        ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
-        get_phylum_and_most_specific,
-        make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
-    from apps.heatmap import make_product_heatmap, Dashboard
+from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES
+from dram2_viz.proccessing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
+    ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
+    get_phylum_and_most_specific,
+    make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
+from dram2_viz.apps.heatmap import make_product_heatmap, Dashboard
+
+
+
 
 __authors__ = ["Madeline Scyphers", "Rory Flynn"]
 __copyright__ = "Copyright 2024, Wrighton Lab"
@@ -77,6 +73,64 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
     return tree_data
 
 
+
+
+    parser = argparse.ArgumentParser(description="Generate a product visualization from the DRAM output.")
+    parser.add_argument("--annotations", help="Path to the annotations tsv file")
+    parser.add_argument("--groupby_column", help="Column to group by", default=DEFAULT_GROUPBY_COLUMN)
+    parser.add_argument("--output_dir", help="Output directory", default=Path.cwd().resolve())
+    parser.add_argument("--module_steps_form", help="Module Step Database TSV",
+                        default=FILES_NAMES[MODULE_STEPS_FORM_TAG])
+    parser.add_argument("--etc_steps_form", help="ETC Step Database TSV", default=FILES_NAMES[ETC_MODULE_DF_TAG])
+    parser.add_argument("--function_steps_form", help="Function Step Database TSV",
+                        default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG])
+    parser.add_argument("--dashboard", help="Launch as dashboard", action='store_true')
+
+
+@click.command()
+@click.option(
+    "--annotations",
+    "-a",
+    type=Path,
+    exists=True,
+    help="Path to the annotations tsv file"
+)
+@click.option(
+    "--groupby_column",
+    "-g",
+    type=str,
+    default=DEFAULT_GROUPBY_COLUMN,
+    help="Column to group by"
+)
+@click.option(
+    "--output_dir",
+    "-o",
+    type=Path,
+    help="Path to the output directory",
+    default=Path.cwd().resolve()
+)
+@click.option(
+    "--module-steps-form",
+    type=Path,
+    help="Path to Module Step Database TSV",
+    default=FILES_NAMES[MODULE_STEPS_FORM_TAG]
+)
+@click.option(
+    "--etc-steps-form",
+    type=Path,
+    help="Path to ETC Step Database TSV",
+    default=FILES_NAMES[ETC_MODULE_DF_TAG]
+)
+@click.option(
+    "--function-steps-form",
+    type=Path,
+    help="Path to Function Step Database TSV",
+    default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG]
+)
+@click.option(
+    "--dashboard",
+    "-d",
+)
 def main(annotations_tsv_path,
          groupby_column=DEFAULT_GROUPBY_COLUMN,
          output_dir=None,
@@ -220,18 +274,20 @@ def main(annotations_tsv_path,
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a product visualization from the DRAM output.")
-    parser.add_argument("--annotations", help="Path to the annotations tsv file")
-    parser.add_argument("--groupby_column", help="Column to group by", default=DEFAULT_GROUPBY_COLUMN)
-    parser.add_argument("--output_dir", help="Output directory", default=Path.cwd().resolve())
-    parser.add_argument("--module_steps_form", help="Module Step Database TSV",
-                        default=FILES_NAMES[MODULE_STEPS_FORM_TAG])
-    parser.add_argument("--etc_steps_form", help="ETC Step Database TSV", default=FILES_NAMES[ETC_MODULE_DF_TAG])
-    parser.add_argument("--function_steps_form", help="Function Step Database TSV",
-                        default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG])
-    parser.add_argument("--dashboard", help="Launch as dashboard", action='store_true')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description="Generate a product visualization from the DRAM output.")
+    # parser.add_argument("--annotations", help="Path to the annotations tsv file")
+    # parser.add_argument("--groupby_column", help="Column to group by", default=DEFAULT_GROUPBY_COLUMN)
+    # parser.add_argument("--output_dir", help="Output directory", default=Path.cwd().resolve())
+    # parser.add_argument("--module_steps_form", help="Module Step Database TSV",
+    #                     default=FILES_NAMES[MODULE_STEPS_FORM_TAG])
+    # parser.add_argument("--etc_steps_form", help="ETC Step Database TSV", default=FILES_NAMES[ETC_MODULE_DF_TAG])
+    # parser.add_argument("--function_steps_form", help="Function Step Database TSV",
+    #                     default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG])
+    # parser.add_argument("--dashboard", help="Launch as dashboard", action='store_true')
+    # args = parser.parse_args()
 
-    main(annotations_tsv_path=args.annotations, groupby_column=args.groupby_column, output_dir=args.output_dir,
-         module_steps_form=args.module_steps_form, etc_steps_form=args.etc_steps_form,
-         function_steps_form=args.function_steps_form, dashboard=args.dashboard)
+    # main(annotations_tsv_path=args.annotations, groupby_column=args.groupby_column, output_dir=args.output_dir,
+    #      module_steps_form=args.module_steps_form, etc_steps_form=args.etc_steps_form,
+    #      function_steps_form=args.function_steps_form, dashboard=args.dashboard)
+
+    main()
