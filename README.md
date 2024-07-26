@@ -19,18 +19,27 @@ nextflow run DRAM2.nf --product --help
 ```
 ## Standalone Usage
 
-The DRAM2 Visualization Library can also be used as a standalone Python package to generate figures and dashboards. To install the DRAM2 Visualization Library, navigate to the DRAM2 visualization directory and run the following command using mamba (or conda and replace `mamba` with `conda`):
+The DRAM2 Visualization Library can also be used as a standalone Python package to generate figures and dashboards. First you will need to install the DRAM2 Visualization Library as a standalone package.
 
 ### Installation
 
+The DRAM2 Visualization Library can also be used as a standalone Python package to generate figures and dashboards. To install the DRAM2 Visualization Library stable release, in whatever environment you are using, run:
+
 ```bash
-mamba env create --file  environment.yml
-mamba activate dram2-viz
+pip install git+https://github.com/WrightonLabCSU/dram2_viz.git
 ```
+
+This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository. To install the DRAM2 Visualization Library as a development package, clone the repository, cd into the repository, create your environment, and run:
+
+```bash
+pip install -e .[dev]
+```
+
+This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository, as well as the development dependencies.
 
 ### Usage
 
-To generate a figure like the one shown above, run the following command:
+To generate a figure like the one shown above [TODO: insert figure], run the following command:
 
 ```bash
 python -m dram2_viz --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/>

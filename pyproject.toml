@@ -39,10 +39,8 @@ dependencies = [
 
 
 [project.optional-dependencies]
-tests = [
+dev = [
     'pytest',
-    ]
-package = [
     'black',
     'isort',
     'flake8',
