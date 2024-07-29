@@ -13,7 +13,6 @@ repos:
       - id: check-json
       - id: detect-private-key
       - id: end-of-file-fixer
-        exclude: \.min\.js$
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.5.5
