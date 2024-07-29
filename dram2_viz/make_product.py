@@ -251,11 +251,13 @@ def main(annotations,
 
     app = Dashboard(module_coverage_df, etc_coverage_df, function_df, tax_tree_data=tax_tree_data)
 
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
     app.plot_view.save(output_dir / "product.html", resources=INLINE)
+    product_df.to_csv(output_dir / "product.tsv", sep="\t", index=False)
     if dashboard:
         pn.serve(app.view, port=5006)
         # plot.show(port=5007)
-    product_df.to_csv(output_dir / "product.tsv", sep="\t", index=False)
     logger.info("Completed visualization")
 
 
