@@ -205,11 +205,11 @@ def get_module_coverage(module_net: nx.DiGraph, genes_present: set):
 
 
 def make_module_coverage_frame(
-        annotations, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN
+        annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN
 ):
     # go through each scaffold to check for modules
     module_coverage_dict = dict()
-    for group, frame in annotations.groupby(groupby_column, sort=False):
+    for group, frame in annotations_df.groupby(groupby_column, sort=False):
         module_coverage_dict[group] = make_module_coverage_df(frame, module_nets)
     module_coverage = pd.concat(module_coverage_dict)
     module_coverage.index = module_coverage.index.set_names(["genome", "module"])
@@ -317,7 +317,7 @@ def make_functional_df(
 
 # TODO: refactor this to handle splitting large numbers of genomes into multiple heatmaps here
 def fill_product_dfs(
-        annotations,
+        annotations_df,
         module_nets,
         etc_module_df,
         function_heatmap_form,
@@ -325,7 +325,7 @@ def fill_product_dfs(
         groupby_column=DEFAULT_GROUPBY_COLUMN,
 ):
     module_coverage_frame = make_module_coverage_frame(
-        annotations, module_nets, groupby_column
+        annotations_df, module_nets, groupby_column
     )
 
     # make ETC frame
@@ -433,6 +433,39 @@ def get_ordered_uniques(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x) or pd.isna(x))]
+
+
+def build_taxonomy_df(annotations_df: pd.DataFrame, groupby_column=DEFAULT_GROUPBY_COLUMN):
+    cols = [groupby_column, "taxonomy"]
+    if "Completeness" in annotations_df.columns:
+        cols.append("Completeness")
+    if "Contamination" in annotations_df.columns:
+        cols.append("Contamination")
+    tax_df = annotations_df[cols].drop_duplicates()
+    tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
+    return tax_df
+
+
+def build_tax_edge_df(tax_df,):
+    # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])  # regex that might be useful later
+    # tree = tax_df["taxonomy"].str.extractall(regex)
+    tree = pd.DataFrame(tax_df["taxonomy"].str.split(";").to_list(),
+                        columns=["domain", "phylum", "class", "order", "family", "genus", "species"],
+                        index=tax_df.index)
+    tax_df = tax_df.merge(tree, left_index=True, right_index=True, validate="1:1")
+    tax_df["taxonomy"] = tax_df["domain"] + "; " + tax_df["phylum"] + "; " + tax_df["class"] + "; " + tax_df[
+        "order"] + "; " + tax_df["family"] + "; " + tax_df["genus"] + "; " + tax_df["species"]
+
+    tax_edge_df = pd.concat(
+        [tree[["domain", "phylum"]].rename(columns={"domain": "source", "phylum": "target"}),
+         tree[["phylum", "class"]].rename(columns={"phylum": "source", "class": "target"}),
+         tree[["class", "order"]].rename(columns={"class": "source", "order": "target"}),
+         tree[["order", "family"]].rename(columns={"order": "source", "family": "target"}),
+         tree[["family", "genus"]].rename(columns={"family": "source", "genus": "target"}),
+         tree[["genus", "species"]].rename(columns={"genus": "source", "species": "target"})]
+    ).drop_duplicates().reset_index(drop=True)
+
+    return tax_edge_df
 
 
 def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):

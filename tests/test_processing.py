@@ -6,7 +6,8 @@ from dram2_viz.processing.process_annotations import (
     get_module_step_coverage, make_module_coverage_df, make_module_coverage_frame,
     pairwise, first_open_paren_is_all, split_into_steps, is_ko, make_module_network,
     get_module_coverage, make_etc_coverage_df, make_functional_df, get_phylum_and_most_specific,
-    make_product_df, fill_product_dfs, get_annotation_ids_by_row, get_ordered_uniques
+    make_product_df, fill_product_dfs, get_annotation_ids_by_row, get_ordered_uniques,
+    build_taxonomy_df, build_tax_edge_df, build_tree
 )
 
 
@@ -131,3 +132,66 @@ def test_get_phylum_and_most_specific():
     assert get_phylum_and_most_specific('d__Bacteria;p__Firmicutes;c__Bacilli;o__Lactobacillales;f__Enterococcaceae;'
                                         'g__Enterococcus_D;s__Enterococcus_D gallinarum') == \
         'p__Firmicutes;s__Enterococcus_D gallinarum'
+
+
+def test_build_taxonomy_df(test_annotations_df):
+    test_tax_df = build_taxonomy_df(test_annotations_df, 'scaffold')
+    tax_df = pd.DataFrame([['scaffold_1', 'd__Something;p__Another;c__;o__;f__;g__;s__'],
+                           ['scaffold_1', 'd__More;p__Test;c__Data;o__;f__;g__;s__'],
+                           ['scaffold_1', 'd__Final;p__Test;c__Testing;o__Data;f__;g__;s__']],
+                          index=['gene_1', 'gene_2', 'gene_3'], columns=['genome', 'taxonomy'])
+    pd.testing.assert_frame_equal(test_tax_df, tax_df)
+
+
+def test_build_tax_edge_df(test_annotations_df):
+    test_tax_df = build_taxonomy_df(test_annotations_df, 'scaffold')
+    test_edge_df = build_tax_edge_df(test_tax_df)
+    edge_df = pd.DataFrame(
+        [
+            ['d__Something', 'p__Another'],
+            ['p__Another', 'c__'],
+            ['c__', 'o__'],
+            ['o__', 'f__'],
+            ['f__', 'g__'],
+            ['g__', 's__'],
+            ['d__More', 'p__Test'],
+            ['p__Test', 'c__Data'],
+            ['c__Data', 'o__'],
+            ['d__Final', 'p__Test'],
+            ['p__Test', 'c__Testing'],
+            ['c__Testing', 'o__Data'],
+            ['o__Data', 'f__'],
+        ],
+        columns=['source', 'target'])
+    # sort the dfs to make sure they are equal
+    test_edge_df = test_edge_df.sort_values(by=['source', 'target']).reset_index(drop=True)
+    edge_df = edge_df.sort_values(by=['source', 'target']).reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(test_edge_df, edge_df, check_like=True)
+
+
+def test_build_tree(test_annotations_df):
+    test_tax_df = build_taxonomy_df(test_annotations_df, 'scaffold')
+    edge_df = build_tax_edge_df(test_tax_df)
+    tax_tree_data = build_tree(edge_df, state={"opened": False, "selected": True},
+                               id_cb=lambda source, child, parent_id: f"{parent_id}; {child}")
+
+    assert len(tax_tree_data) == len(
+        test_annotations_df["taxonomy"]  # grab taxonomy column
+        .str.split(";")  # split on semicolons
+        .str[0]  # the domains are the first element of taxonomies, so grab all the first elements
+        .unique()  # the unique domains should be the length of our tree (The number of root nodes)
+    )
+
+    def recursive_check(node):
+        # these should be in each node going down the tree
+        assert "children" in node
+        assert "text" in node
+        assert "id" in node
+        assert "state" in node
+        # eventually this terminates when children is an empty list
+        for child in node["children"]:
+            recursive_check(child)
+
+    for root in tax_tree_data:
+        recursive_check(root)

@@ -41,10 +41,11 @@ def test_module_net():
 
 @pytest.fixture()
 def test_annotations_df():
-    return pd.DataFrame([['', 'scaffold_1'],
-                         ['K12345', 'scaffold_1'],
-                         ['K00001', 'scaffold_1']],
-                        index=['gene_1', 'gene_2', 'gene_3'], columns=['ko_id', 'scaffold'])
+    return pd.DataFrame([['', 'scaffold_1', 'd__Something;p__Another;c__;o__;f__;g__;s__'],
+                         ['K12345', 'scaffold_1', 'd__More;p__Test;c__Data;o__;f__;g__;s__'],
+                         ['K00001', 'scaffold_1', 'd__Final;p__Test;c__Testing;o__Data;f__;g__;s__']],
+                        index=['gene_1', 'gene_2', 'gene_3'], columns=['ko_id', 'scaffold', 'taxonomy'])
+
 
 @pytest.fixture()
 def test_annotations_ids_by_row_df(test_annotations_df):

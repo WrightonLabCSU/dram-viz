@@ -20,7 +20,7 @@ from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN,
 from dram2_viz.processing.process_annotations import (build_module_net, fill_product_dfs, make_product_df,
                                                       get_phylum_and_most_specific,
                                                       make_strings_no_repeats, get_annotation_ids_by_row,
-                                                      rename_genomes_to_taxa, build_tree)
+                                                      rename_genomes_to_taxa, build_tree, build_tax_edge_df, build_taxonomy_df)
 from dram2_viz.apps.heatmap import Dashboard
 
 
@@ -159,7 +159,7 @@ def main(annotations,
     # function_df = pd.read_csv(output_dir / "function_coverage.tsv", sep="\t")
 
     module_coverage_df, etc_coverage_df, function_df = fill_product_dfs(
-        annotations=annotations,
+        annotations_df=annotations,
         module_nets=module_nets,
         etc_module_df=etc_module_df,
         function_heatmap_form=function_heatmap_form,
@@ -169,28 +169,9 @@ def main(annotations,
 
     tax_tree_data = None
     if "taxonomy" in annotations:
-        cols = [ groupby_column, "taxonomy"]
-        if "Completeness" in annotations.columns:
-            cols.append("Completeness")
-        if "Contamination" in annotations.columns:
-            cols.append("Contamination")
-        tax_df = annotations[cols].drop_duplicates()
-        tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
+        tax_df = build_taxonomy_df(annotations, groupby_column)
 
-        # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])  # regex that might be useful later
-        # tree = tax_df["taxonomy"].str.extractall(regex)
-        tree = pd.DataFrame(tax_df["taxonomy"].str.split(";").to_list(), columns=["domain", "phylum", "class", "order", "family", "genus", "species"], index=tax_df.index)
-        tax_df = tax_df.merge(tree, left_index=True, right_index=True, validate="1:1")
-        tax_df["taxonomy"] = tax_df["domain"] + "; " + tax_df["phylum"] + "; " + tax_df["class"] + "; " + tax_df["order"] + "; " + tax_df["family"] + "; " + tax_df["genus"] + "; " + tax_df["species"]
-
-        tax_edge_df = pd.concat(
-            [tree[["domain", "phylum"]].rename(columns={"domain": "source", "phylum": "target"}),
-             tree[["phylum", "class"]].rename(columns={"phylum": "source", "class": "target"}),
-             tree[["class", "order"]].rename(columns={"class": "source", "order": "target"}),
-             tree[["order", "family"]].rename(columns={"order": "source", "family": "target"}),
-             tree[["family", "genus"]].rename(columns={"family": "source", "genus": "target"}),
-             tree[["genus", "species"]].rename(columns={"genus": "source", "species": "target"})]
-        ).drop_duplicates().reset_index(drop=True)
+        tax_edge_df = build_tax_edge_df(tax_df)
 
         tax_tree_data = build_tree(tax_edge_df, state={"opened": False, "selected": True}, id_cb=lambda source, child, parent_id: f"{parent_id}; {child}")
 
