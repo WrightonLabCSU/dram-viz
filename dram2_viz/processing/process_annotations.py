@@ -11,53 +11,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN
+from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, DRAM_DATAFOLDER_TAG, DBSETS_COL, DRAM_SHEET_TAG, FILES_NAMES, \
+    ID_FUNCTION_DICT, KO_REGEX, ETC_COVERAGE_COLUMNS, TAXONOMY_LEVELS, LOCATION_TAG
 
 logger = logging.getLogger("dram2_log.viz")
-
-DRAM_DATAFOLDER_TAG = "dram_data_folder"
-DBSETS_COL = "db_id_sets"
-DRAM_SHEET_TAG = "dram_sheets"
-GENOME_SUMMARY_FORM_TAG = "genome_summary_form"
-MODULE_STEPS_FORM_TAG = "module_step_form"
-FUNCTION_HEATMAP_FORM_TAG = "function_heatmap_form"
-ETC_MODULE_DF_TAG = "etc_module_database"
-FILES_NAMES: dict[str, Path] = {
-    GENOME_SUMMARY_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/genome_summary_form.tsv",
-    MODULE_STEPS_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/module_step_form.tsv",
-    FUNCTION_HEATMAP_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/function_heatmap_form.tsv",
-    ETC_MODULE_DF_TAG: Path(__file__).parent.parent.resolve() / "data/etc_module_database.tsv",
-}
-ID_FUNCTION_DICT = {
-    'kegg_genes_id': lambda x: [x],
-    'ko_id': lambda x: [j for j in x.split(',')],
-    'kegg_id': lambda x: [j for j in x.split(',')],
-    'kegg_hit': lambda x: [i[1:-1] for i in
-                           re.findall(r'\[EC:\d*.\d*.\d*.\d*\]', x)],
-    'peptidase_family': lambda x: [j for j in x.split(';')],
-    'cazy_best_hit': lambda x: [x.split('_')[0]],
-    'pfam_hits': lambda x: [j[1:-1].split('.')[0]
-                            for j in re.findall(r'\[PF\d\d\d\d\d.\d*\]', x)],
-    'camper_id': lambda x: [x],
-    'fegenie_id': lambda x: [x],
-    'sulfur_id': lambda x: [x],
-    'methyl_id': lambda x: [i.split(' ')[0].strip() for i in x.split(',')]
-}
-KO_REGEX = r"^K\d\d\d\d\d$"
-ETC_COVERAGE_COLUMNS = [
-    "module_id",
-    "module_name",
-    "complex",
-    "genome",
-    "path_length",
-    "path_length_coverage",
-    "percent_coverage",
-    "genes",
-    "missing_genes",
-    "complex_module_name",
-]
-TAXONOMY_LEVELS = ["d", "p", "c", "o", "f", "g", "s"]
-LOCATION_TAG = "location"
 
 
 def get_distillate_sheet(form_tag: str, dram_config: dict):

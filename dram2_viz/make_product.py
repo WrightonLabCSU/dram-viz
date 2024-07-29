@@ -16,12 +16,12 @@ from bokeh.resources import INLINE
 import pandas as pd
 import panel as pn
 
-from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES
-from dram2_viz.processing.process_annotations import (DBSETS_COL, MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG,
-    ETC_MODULE_DF_TAG, FILES_NAMES, build_module_net, fill_product_dfs, make_product_df,
-    get_phylum_and_most_specific,
-    make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
-from dram2_viz.apps.heatmap import make_product_heatmap, Dashboard
+from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES, DBSETS_COL, \
+    MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG, ETC_MODULE_DF_TAG, FILES_NAMES
+from dram2_viz.processing.process_annotations import (build_module_net, fill_product_dfs, make_product_df,
+                                                      get_phylum_and_most_specific,
+                                                      make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
+from dram2_viz.apps.heatmap import Dashboard
 
 
 
