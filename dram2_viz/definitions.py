@@ -35,15 +35,11 @@ TAXONOMY_RANKS_REGEX = {
 }
 
 NO_TAXONOMY_RANKS = len(TAXONOMY_RANKS_REGEX)
-DRAM_DATAFOLDER_TAG = "dram_data_folder"
 DBSETS_COL = "db_id_sets"
-DRAM_SHEET_TAG = "dram_sheets"
-GENOME_SUMMARY_FORM_TAG = "genome_summary_form"
 MODULE_STEPS_FORM_TAG = "module_step_form"
 FUNCTION_HEATMAP_FORM_TAG = "function_heatmap_form"
 ETC_MODULE_DF_TAG = "etc_module_database"
 FILES_NAMES: dict[str, Path] = {
-    GENOME_SUMMARY_FORM_TAG: Path(__file__).parent.resolve() / "data/genome_summary_form.tsv",
     MODULE_STEPS_FORM_TAG: Path(__file__).parent.resolve() / "data/module_step_form.tsv",
     FUNCTION_HEATMAP_FORM_TAG: Path(__file__).parent.resolve() / "data/function_heatmap_form.tsv",
     ETC_MODULE_DF_TAG: Path(__file__).parent.resolve() / "data/etc_module_database.tsv",
@@ -77,4 +73,3 @@ ETC_COVERAGE_COLUMNS = [
     "complex_module_name",
 ]
 TAXONOMY_LEVELS = ["d", "p", "c", "o", "f", "g", "s"]
-LOCATION_TAG = "location"

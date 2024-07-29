@@ -11,64 +11,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, DRAM_DATAFOLDER_TAG, DBSETS_COL, DRAM_SHEET_TAG, FILES_NAMES, \
-    ID_FUNCTION_DICT, KO_REGEX, ETC_COVERAGE_COLUMNS, TAXONOMY_LEVELS, LOCATION_TAG
+from dram2_viz.definitions import (DEFAULT_GROUPBY_COLUMN, DBSETS_COL,
+    ID_FUNCTION_DICT, KO_REGEX, ETC_COVERAGE_COLUMNS, TAXONOMY_LEVELS)
 
 logger = logging.getLogger("dram2_log.viz")
-
-
-def get_distillate_sheet(form_tag: str, dram_config: dict):
-    """
-    Paths in the config can be complicated. Here is a function that will get
-    you the absolute path, the relative path, or whatever. Specifically for
-    distillate sheets This should be more
-    formalized and the config
-
-    should actually be managed in its own structure. With a data file class
-    that can use this function.
-    """
-    if (
-            (dram_sheets := dram_config.get(DRAM_SHEET_TAG)) is None
-            or dram_sheets.get(form_tag) is None
-            or (sheet_path_str := dram_sheets[form_tag].get(LOCATION_TAG)) is None
-    ):
-        sheet_path: Path = FILES_NAMES[form_tag]
-        logger.debug(
-            f"""
-            Using the default distillation sheet for {form_tag} with its location at
-            {sheet_path}. This information is only important if you intended to use a
-            custom distillation sheet.
-            """
-        )
-    else:
-        sheet_path = Path(sheet_path_str)
-        if not sheet_path.is_absolute():
-            dram_data_folder: Optional[str] = dram_config.get(DRAM_DATAFOLDER_TAG)
-            if dram_data_folder is None:
-                raise DramUsageError(
-                    f"""
-                    In the DRAM2 config File, the path {form_tag} is a relative path
-                    and the {DRAM_DATAFOLDER_TAG} is not set!
-                    """
-                )
-            sheet_path = Path(dram_data_folder) / sheet_path
-        if not sheet_path.exists():
-            raise DramUsageError(
-                f"""
-                The file {form_tag} is not at the path {sheet_path}. Most likely you
-                moved the DRAM data but forgot to update the config file to point to
-                it. The easy fix is to set the {DRAM_DATAFOLDER_TAG} variable in the
-                config like:\n
-                {DRAM_DATAFOLDER_TAG}: the/path/to/my/file Iyou are using full paths
-                and not the {DRAM_DATAFOLDER_TAG} you may want to revue the Configure
-                Dram section othe documentation to make sure your config will work with
-                dram. rememberer that the config must be a valid yaml file to work.
-                Also you can always use db_builder to remake your databases and the
-                config file iyou don't feel up to editing it yourself.
-                """
-            )
-
-    return pd.read_csv(sheet_path, sep="\t")
 
 
 def build_module_net(module_df):
