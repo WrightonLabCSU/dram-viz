@@ -1,6 +1,7 @@
 # Visualization Output Files
 product.html
 product.tsv
+output/
 
 # docs build
 docs/_build

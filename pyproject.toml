@@ -41,6 +41,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     'pytest',
+    'pytest-cov',
     'black',
     'isort',
     'flake8',
@@ -102,8 +103,47 @@ pyflakes = ["+*"]
 # And ignore module level imports not at top of file because of jupyter notebook examples
 pycodestyle = ["+*", "-W503", "-E402"]
 
+# pytest settings
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 norecursedirs = "_build"
 filterwarnings = ["ignore::DeprecationWarning:invoke"]
+
+# coverage settings
+[tool.coverage.run]
+branch = true
+# patterns of files to exclude from coverage
+omit = [
+    "_version.py",
+    "__init__.py",
+    "__main__.py",
+    "definitions.py"
+    ]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+
+    # Ignore imports
+    "from",
+    "import",
+
+    # ignore getting logger
+    "logger = logging",
+
+    ]

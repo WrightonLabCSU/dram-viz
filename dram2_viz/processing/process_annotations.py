@@ -11,107 +11,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN
+from dram2_viz.definitions import (DEFAULT_GROUPBY_COLUMN, DBSETS_COL,
+    ID_FUNCTION_DICT, KO_REGEX, ETC_COVERAGE_COLUMNS, TAXONOMY_LEVELS)
 
 logger = logging.getLogger("dram2_log.viz")
-
-DRAM_DATAFOLDER_TAG = "dram_data_folder"
-DBSETS_COL = "db_id_sets"
-DRAM_SHEET_TAG = "dram_sheets"
-GENOME_SUMMARY_FORM_TAG = "genome_summary_form"
-MODULE_STEPS_FORM_TAG = "module_step_form"
-FUNCTION_HEATMAP_FORM_TAG = "function_heatmap_form"
-ETC_MODULE_DF_TAG = "etc_module_database"
-FILES_NAMES: dict[str, Path] = {
-    GENOME_SUMMARY_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/genome_summary_form.tsv",
-    MODULE_STEPS_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/module_step_form.tsv",
-    FUNCTION_HEATMAP_FORM_TAG: Path(__file__).parent.parent.resolve() / "data/function_heatmap_form.tsv",
-    ETC_MODULE_DF_TAG: Path(__file__).parent.parent.resolve() / "data/etc_module_database.tsv",
-}
-ID_FUNCTION_DICT = {
-    'kegg_genes_id': lambda x: [x],
-    'ko_id': lambda x: [j for j in x.split(',')],
-    'kegg_id': lambda x: [j for j in x.split(',')],
-    'kegg_hit': lambda x: [i[1:-1] for i in
-                           re.findall(r'\[EC:\d*.\d*.\d*.\d*\]', x)],
-    'peptidase_family': lambda x: [j for j in x.split(';')],
-    'cazy_best_hit': lambda x: [x.split('_')[0]],
-    'pfam_hits': lambda x: [j[1:-1].split('.')[0]
-                            for j in re.findall(r'\[PF\d\d\d\d\d.\d*\]', x)],
-    'camper_id': lambda x: [x],
-    'fegenie_id': lambda x: [x],
-    'sulfur_id': lambda x: [x],
-    'methyl_id': lambda x: [i.split(' ')[0].strip() for i in x.split(',')]
-}
-KO_REGEX = r"^K\d\d\d\d\d$"
-ETC_COVERAGE_COLUMNS = [
-    "module_id",
-    "module_name",
-    "complex",
-    "genome",
-    "path_length",
-    "path_length_coverage",
-    "percent_coverage",
-    "genes",
-    "missing_genes",
-    "complex_module_name",
-]
-TAXONOMY_LEVELS = ["d", "p", "c", "o", "f", "g", "s"]
-LOCATION_TAG = "location"
-
-
-def get_distillate_sheet(form_tag: str, dram_config: dict):
-    """
-    Paths in the config can be complicated. Here is a function that will get
-    you the absolute path, the relative path, or whatever. Specifically for
-    distillate sheets This should be more
-    formalized and the config
-
-    should actually be managed in its own structure. With a data file class
-    that can use this function.
-    """
-    if (
-            (dram_sheets := dram_config.get(DRAM_SHEET_TAG)) is None
-            or dram_sheets.get(form_tag) is None
-            or (sheet_path_str := dram_sheets[form_tag].get(LOCATION_TAG)) is None
-    ):
-        sheet_path: Path = FILES_NAMES[form_tag]
-        logger.debug(
-            f"""
-            Using the default distillation sheet for {form_tag} with its location at
-            {sheet_path}. This information is only important if you intended to use a
-            custom distillation sheet.
-            """
-        )
-    else:
-        sheet_path = Path(sheet_path_str)
-        if not sheet_path.is_absolute():
-            dram_data_folder: Optional[str] = dram_config.get(DRAM_DATAFOLDER_TAG)
-            if dram_data_folder is None:
-                raise DramUsageError(
-                    f"""
-                    In the DRAM2 config File, the path {form_tag} is a relative path
-                    and the {DRAM_DATAFOLDER_TAG} is not set!
-                    """
-                )
-            sheet_path = Path(dram_data_folder) / sheet_path
-        if not sheet_path.exists():
-            raise DramUsageError(
-                f"""
-                The file {form_tag} is not at the path {sheet_path}. Most likely you
-                moved the DRAM data but forgot to update the config file to point to
-                it. The easy fix is to set the {DRAM_DATAFOLDER_TAG} variable in the
-                config like:\n
-                {DRAM_DATAFOLDER_TAG}: the/path/to/my/file Iyou are using full paths
-                and not the {DRAM_DATAFOLDER_TAG} you may want to revue the Configure
-                Dram section othe documentation to make sure your config will work with
-                dram. rememberer that the config must be a valid yaml file to work.
-                Also you can always use db_builder to remake your databases and the
-                config file iyou don't feel up to editing it yourself.
-                """
-            )
-
-    return pd.read_csv(sheet_path, sep="\t")
 
 
 def build_module_net(module_df):
@@ -302,11 +205,11 @@ def get_module_coverage(module_net: nx.DiGraph, genes_present: set):
 
 
 def make_module_coverage_frame(
-        annotations, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN
+        annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN
 ):
     # go through each scaffold to check for modules
     module_coverage_dict = dict()
-    for group, frame in annotations.groupby(groupby_column, sort=False):
+    for group, frame in annotations_df.groupby(groupby_column, sort=False):
         module_coverage_dict[group] = make_module_coverage_df(frame, module_nets)
     module_coverage = pd.concat(module_coverage_dict)
     module_coverage.index = module_coverage.index.set_names(["genome", "module"])
@@ -414,7 +317,7 @@ def make_functional_df(
 
 # TODO: refactor this to handle splitting large numbers of genomes into multiple heatmaps here
 def fill_product_dfs(
-        annotations,
+        annotations_df,
         module_nets,
         etc_module_df,
         function_heatmap_form,
@@ -422,7 +325,7 @@ def fill_product_dfs(
         groupby_column=DEFAULT_GROUPBY_COLUMN,
 ):
     module_coverage_frame = make_module_coverage_frame(
-        annotations, module_nets, groupby_column
+        annotations_df, module_nets, groupby_column
     )
 
     # make ETC frame
@@ -530,3 +433,77 @@ def get_ordered_uniques(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x) or pd.isna(x))]
+
+
+def build_taxonomy_df(annotations_df: pd.DataFrame, groupby_column=DEFAULT_GROUPBY_COLUMN):
+    cols = [groupby_column, "taxonomy"]
+    if "Completeness" in annotations_df.columns:
+        cols.append("Completeness")
+    if "Contamination" in annotations_df.columns:
+        cols.append("Contamination")
+    tax_df = annotations_df[cols].drop_duplicates()
+    tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
+    return tax_df
+
+
+def build_tax_edge_df(tax_df,):
+    # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])  # regex that might be useful later
+    # tree = tax_df["taxonomy"].str.extractall(regex)
+    tree = pd.DataFrame(tax_df["taxonomy"].str.split(";").to_list(),
+                        columns=["domain", "phylum", "class", "order", "family", "genus", "species"],
+                        index=tax_df.index)
+    tax_df = tax_df.merge(tree, left_index=True, right_index=True, validate="1:1")
+    tax_df["taxonomy"] = tax_df["domain"] + "; " + tax_df["phylum"] + "; " + tax_df["class"] + "; " + tax_df[
+        "order"] + "; " + tax_df["family"] + "; " + tax_df["genus"] + "; " + tax_df["species"]
+
+    tax_edge_df = pd.concat(
+        [tree[["domain", "phylum"]].rename(columns={"domain": "source", "phylum": "target"}),
+         tree[["phylum", "class"]].rename(columns={"phylum": "source", "class": "target"}),
+         tree[["class", "order"]].rename(columns={"class": "source", "order": "target"}),
+         tree[["order", "family"]].rename(columns={"order": "source", "family": "target"}),
+         tree[["family", "genus"]].rename(columns={"family": "source", "genus": "target"}),
+         tree[["genus", "species"]].rename(columns={"genus": "source", "species": "target"})]
+    ).drop_duplicates().reset_index(drop=True)
+
+    return tax_edge_df
+
+
+def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
+    """
+    Builds a tree structure from an edge DataFrame.
+
+    Parameters:
+    - edge_df (DataFrame): The edge DataFrame containing the source and target nodes.
+    - source_col (str): The name of the column in edge_df that represents the source nodes. Default is "source".
+    - target_col (str): The name of the column in edge_df that represents the target nodes. Default is "target".
+    - state (dict): A dictionary representing the state of the tree nodes. Default is None.
+    - id_cb (callable): A callback function that generates unique IDs for the tree nodes. Default is None.
+
+    Returns:
+    - tree_data (list): A list of dictionaries representing the tree structure.
+
+    """
+    def recurse_tree(source, id_cb, parent_id=None):
+        """
+        Recursively builds the tree structure.
+
+        Parameters:
+        - source: The current source node.
+        - id_cb (callable): A callback function that generates unique IDs for the tree nodes.
+        - parent_id: The ID of the parent node. Default is None.
+
+        Returns:
+        - js_ls (list): A list of dictionaries representing the tree structure.
+
+        """
+        target_nodes = edge_df.loc[edge_df[source_col] == source, target_col]
+        js_ls = []
+        for target in target_nodes:
+            id_ = id_cb(source, target, parent_id)
+            js_ls.append({"text": target, "children": recurse_tree(target, parent_id=id_, id_cb=id_cb), "state": state, "id": id_})
+        return js_ls
+
+    state = state or {}
+    roots = edge_df.loc[~edge_df[source_col].isin(edge_df[target_col]), source_col].unique()
+    tree_data = [{"id": root, "text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": state} for root in roots]
+    return tree_data

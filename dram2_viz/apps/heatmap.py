@@ -13,15 +13,8 @@ from bokeh.transform import linear_cmap, factor_cmap
 import param
 from panel_jstree import Tree
 
+from dram2_viz.definitions import TAXONOMY_RANKS_REGEX, NO_TAXONOMY_RANKS
 
-try:
-    from ..definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES, TAXONOMY_RANKS_REGEX, NO_TAXONOMY_RANKS
-except ImportError:
-    import os
-    import sys
-
-    sys.path.insert(0, os.path.abspath(".."))
-    from viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN, HEATMAP_MODULES, TAXONOMY_RANKS_REGEX, NO_TAXONOMY_RANKS
 
 pn.extension('tabulator', 'katex', template='bootstrap')
 
@@ -84,29 +77,29 @@ def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right",
         p.add_layout(legend, side)
     return p_orig
 
-
-def format_chart_group(chart_group: list, title: str = ""):
-    """
-    Make a formatted chart group
-
-    Parameters
-    ----------
-    chart_group : list
-        A list of charts
-    title : str
-        The title of the chart group
-
-    Returns
-    -------
-    pn.Column
-        A panel column of charts
-    """
-    if not isinstance(chart_group, list) or isinstance(chart_group, tuple):
-        chart_group = [chart_group]
-    return pn.Column(
-        pn.pane.Markdown(f"## {title}", align="center"),
-        pn.Row(*chart_group)
-    )
+#
+# def format_chart_group(chart_group: list, title: str = ""):
+#     """
+#     Make a formatted chart group
+#
+#     Parameters
+#     ----------
+#     chart_group : list
+#         A list of charts
+#     title : str
+#         The title of the chart group
+#
+#     Returns
+#     -------
+#     pn.Column
+#         A panel column of charts
+#     """
+#     if not isinstance(chart_group, list) or isinstance(chart_group, tuple):
+#         chart_group = [chart_group]
+#     return pn.Column(
+#         pn.pane.Markdown(f"## {title}", align="center"),
+#         pn.Row(*chart_group)
+#     )
 
 
 def add_colorbar(p_orig: Plot | list[Plot], index: Optional[int] = None):
@@ -274,17 +267,13 @@ def make_product_heatmap(
 
     Returns
     -------
-    pn.Row
-        A panel row of heatmaps
+    list
+        A list of heatmaps
     """
 
     extra_tooltip_cols = []
     if "taxonomy" in module_df.columns:
         extra_tooltip_cols.append("taxonomy")
-    if "Completeness" in module_df.columns:
-        extra_tooltip_cols.append("Completeness")
-    if "Contamination" in module_df.columns:
-        extra_tooltip_cols.append("Contamination")
 
     fig1_kw = {}
     if taxonomy_label is not None:
@@ -292,14 +281,20 @@ def make_product_heatmap(
         # fig1_kw["extra_y_col"] = taxonomy_label
     else:
         module_df["label"] = module_df[y_col]
-    completeness_charts = [*make_heatmap_groups(module_df, x_cols=["Contamination"], y_col="label",
+
+    completeness_charts = []
+    if "Completeness" in module_df.columns:
+        completeness_charts.extend(make_heatmap_groups(module_df, x_cols=["Contamination"], y_col="label",
                                         tooltip_cols=[y_col],
                                                 **fig1_kw
-                                                ),
-                           *make_heatmap_groups(module_df, x_cols=["Completeness"], y_col=y_col,
-                                               tooltip_cols=[y_col],
-                                               y_axis_location=None)
-                           ]
+                                                ))
+        extra_tooltip_cols.append("Completeness")
+    if "Contamination" in module_df.columns:
+        completeness_charts.extend(make_heatmap_groups(module_df, x_cols=["Completeness"], y_col=y_col,
+                            tooltip_cols=[y_col],
+                            y_axis_location=None))
+        extra_tooltip_cols.append("Contamination")
+
     if taxonomy_label is not None:
         fig1_kw["extra_y_col"] = taxonomy_label
     module_charts = make_heatmap_groups(module_df, x_col="module_name", y_col=y_col, c_col="step_coverage",
@@ -329,13 +324,13 @@ def make_product_heatmap(
                                 "present", side="right", index=-1)
     return [*completeness_charts, *module_charts, *etc_charts, *function_charts]
 
-    charts = [
-        format_chart_group([p for p in completeness_charts]),
-        format_chart_group([p for p in module_charts]),
-        format_chart_group([p for p in etc_charts], title="ETC Complexes"),
-        format_chart_group([p for p in function_charts]),
-    ]
-    return charts
+    # charts = [
+    #     format_chart_group([p for p in completeness_charts]),
+    #     format_chart_group([p for p in module_charts]),
+    #     format_chart_group([p for p in etc_charts], title="ETC Complexes"),
+    #     format_chart_group([p for p in function_charts]),
+    # ]
+    # return charts
 
     # plot = pn.Row(*charts)
     # return plot

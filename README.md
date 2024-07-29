@@ -32,7 +32,7 @@ pip install git+https://github.com/WrightonLabCSU/dram2_viz.git
 This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository. To install the DRAM2 Visualization Library as a development package, clone the repository, cd into the repository, create your environment, and run:
 
 ```bash
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository, as well as the development dependencies.
