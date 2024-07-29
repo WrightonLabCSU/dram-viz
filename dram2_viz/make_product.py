@@ -84,7 +84,7 @@ def main(annotations,
 
     Parameters
     ----------
-    annotations_tsv_path : str
+    annotations : str
         The path to the annotations tsv file
     groupby_column : str
         The column to group by

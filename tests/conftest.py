@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
 import networkx as nx
+from pathlib import Path
 
 from dram2_viz.definitions import DBSETS_COL
 
@@ -105,3 +106,8 @@ def functional_df():
                           'scaffold_1', True, 'Category1: B function']],
                         columns=['category', 'subcategory', 'function_name', 'function_ids', 'long_function_name',
                                  'gene_symbol', 'genome', 'present', 'category_function_name'])
+
+
+@pytest.fixture()
+def test_annotation_path():
+    return str(Path(__file__).parent.resolve() / "data/test_annotations.tsv")
