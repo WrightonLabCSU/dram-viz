@@ -146,6 +146,4 @@ exclude_also = [
     # ignore getting logger
     "logger = logging",
 
-    # click CLI entry point
-    "click",
     ]
