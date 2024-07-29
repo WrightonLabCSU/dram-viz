@@ -48,9 +48,12 @@ def get_module_step_coverage(kos, module_net):
     # prune network based on what kos were observed
     pruned_module_net = module_net.copy()
     module_kos_present = set()
-    for node, data in module_net.nodes.items():
-        if "kos" in data:
-            ko_overlap = data["kos"] & kos
+    for node, data in module_net.nodes.items(
+
+      ):
+        if        "kos" in data:
+            ko_overlap  = data[
+                    "kos"] & kos 
             if len(ko_overlap) == 0:
                 pruned_module_net.remove_node(node)
             else:
