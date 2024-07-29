@@ -433,3 +433,44 @@ def get_ordered_uniques(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x) or pd.isna(x))]
+
+
+def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
+    """
+    Builds a tree structure from an edge DataFrame.
+
+    Parameters:
+    - edge_df (DataFrame): The edge DataFrame containing the source and target nodes.
+    - source_col (str): The name of the column in edge_df that represents the source nodes. Default is "source".
+    - target_col (str): The name of the column in edge_df that represents the target nodes. Default is "target".
+    - state (dict): A dictionary representing the state of the tree nodes. Default is None.
+    - id_cb (callable): A callback function that generates unique IDs for the tree nodes. Default is None.
+
+    Returns:
+    - tree_data (list): A list of dictionaries representing the tree structure.
+
+    """
+    def recurse_tree(source, id_cb, parent_id=None):
+        """
+        Recursively builds the tree structure.
+
+        Parameters:
+        - source: The current source node.
+        - id_cb (callable): A callback function that generates unique IDs for the tree nodes.
+        - parent_id: The ID of the parent node. Default is None.
+
+        Returns:
+        - js_ls (list): A list of dictionaries representing the tree structure.
+
+        """
+        target_nodes = edge_df.loc[edge_df[source_col] == source, target_col]
+        js_ls = []
+        for target in target_nodes:
+            id_ = id_cb(source, target, parent_id)
+            js_ls.append({"text": target, "children": recurse_tree(target, parent_id=id_, id_cb=id_cb), "state": state, "id": id_})
+        return js_ls
+
+    state = state or {}
+    roots = edge_df.loc[~edge_df[source_col].isin(edge_df[target_col]), source_col].unique()
+    tree_data = [{"id": root, "text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": state} for root in roots]
+    return tree_data

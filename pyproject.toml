@@ -141,5 +141,8 @@ exclude_also = [
 
     # Ignore imports
     "from",
-    "import"
+    "import",
+
+    # ignore getting logger
+    "logger = logging",
     ]

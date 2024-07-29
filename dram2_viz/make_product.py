@@ -6,7 +6,6 @@ DRAM Visualizations
 Script that generates a product visualization from the DRAM output.
 """
 from __future__ import annotations
-import argparse
 import logging
 from pathlib import Path
 from typing import Optional
@@ -20,52 +19,12 @@ from dram2_viz.definitions import DEFAULT_GROUPBY_COLUMN, BACKUP_GROUPBY_COLUMN,
     MODULE_STEPS_FORM_TAG, FUNCTION_HEATMAP_FORM_TAG, ETC_MODULE_DF_TAG, FILES_NAMES
 from dram2_viz.processing.process_annotations import (build_module_net, fill_product_dfs, make_product_df,
                                                       get_phylum_and_most_specific,
-                                                      make_strings_no_repeats, get_annotation_ids_by_row, rename_genomes_to_taxa)
+                                                      make_strings_no_repeats, get_annotation_ids_by_row,
+                                                      rename_genomes_to_taxa, build_tree)
 from dram2_viz.apps.heatmap import Dashboard
 
 
 logger = logging.getLogger("dram2_log.viz")
-
-
-def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
-    """
-    Builds a tree structure from an edge DataFrame.
-
-    Parameters:
-    - edge_df (DataFrame): The edge DataFrame containing the source and target nodes.
-    - source_col (str): The name of the column in edge_df that represents the source nodes. Default is "source".
-    - target_col (str): The name of the column in edge_df that represents the target nodes. Default is "target".
-    - state (dict): A dictionary representing the state of the tree nodes. Default is None.
-    - id_cb (callable): A callback function that generates unique IDs for the tree nodes. Default is None.
-
-    Returns:
-    - tree_data (list): A list of dictionaries representing the tree structure.
-
-    """
-    def recurse_tree(source, id_cb, parent_id=None):
-        """
-        Recursively builds the tree structure.
-
-        Parameters:
-        - source: The current source node.
-        - id_cb (callable): A callback function that generates unique IDs for the tree nodes.
-        - parent_id: The ID of the parent node. Default is None.
-
-        Returns:
-        - js_ls (list): A list of dictionaries representing the tree structure.
-
-        """
-        target_nodes = edge_df.loc[edge_df[source_col] == source, target_col]
-        js_ls = []
-        for target in target_nodes:
-            id_ = id_cb(source, target, parent_id)
-            js_ls.append({"text": target, "children": recurse_tree(target, parent_id=id_, id_cb=id_cb), "state": state, "id": id_})
-        return js_ls
-
-    state = state or {}
-    roots = edge_df.loc[~edge_df[source_col].isin(edge_df[target_col]), source_col].unique()
-    tree_data = [{"id": root, "text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": state} for root in roots]
-    return tree_data
 
 
 @click.command()
@@ -257,20 +216,4 @@ def main(annotations,
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(description="Generate a product visualization from the DRAM output.")
-    # parser.add_argument("--annotations", help="Path to the annotations tsv file")
-    # parser.add_argument("--groupby_column", help="Column to group by", default=DEFAULT_GROUPBY_COLUMN)
-    # parser.add_argument("--output_dir", help="Output directory", default=Path.cwd().resolve())
-    # parser.add_argument("--module_steps_form", help="Module Step Database TSV",
-    #                     default=FILES_NAMES[MODULE_STEPS_FORM_TAG])
-    # parser.add_argument("--etc_steps_form", help="ETC Step Database TSV", default=FILES_NAMES[ETC_MODULE_DF_TAG])
-    # parser.add_argument("--function_steps_form", help="Function Step Database TSV",
-    #                     default=FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG])
-    # parser.add_argument("--dashboard", help="Launch as dashboard", action='store_true')
-    # args = parser.parse_args()
-
-    # main(annotations_tsv_path=args.annotations, groupby_column=args.groupby_column, output_dir=args.output_dir,
-    #      module_steps_form=args.module_steps_form, etc_steps_form=args.etc_steps_form,
-    #      function_steps_form=args.function_steps_form, dashboard=args.dashboard)
-
     main()
