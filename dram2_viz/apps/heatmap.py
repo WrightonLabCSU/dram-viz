@@ -77,29 +77,29 @@ def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right",
         p.add_layout(legend, side)
     return p_orig
 
-
-def format_chart_group(chart_group: list, title: str = ""):
-    """
-    Make a formatted chart group
-
-    Parameters
-    ----------
-    chart_group : list
-        A list of charts
-    title : str
-        The title of the chart group
-
-    Returns
-    -------
-    pn.Column
-        A panel column of charts
-    """
-    if not isinstance(chart_group, list) or isinstance(chart_group, tuple):
-        chart_group = [chart_group]
-    return pn.Column(
-        pn.pane.Markdown(f"## {title}", align="center"),
-        pn.Row(*chart_group)
-    )
+#
+# def format_chart_group(chart_group: list, title: str = ""):
+#     """
+#     Make a formatted chart group
+#
+#     Parameters
+#     ----------
+#     chart_group : list
+#         A list of charts
+#     title : str
+#         The title of the chart group
+#
+#     Returns
+#     -------
+#     pn.Column
+#         A panel column of charts
+#     """
+#     if not isinstance(chart_group, list) or isinstance(chart_group, tuple):
+#         chart_group = [chart_group]
+#     return pn.Column(
+#         pn.pane.Markdown(f"## {title}", align="center"),
+#         pn.Row(*chart_group)
+#     )
 
 
 def add_colorbar(p_orig: Plot | list[Plot], index: Optional[int] = None):
@@ -324,13 +324,13 @@ def make_product_heatmap(
                                 "present", side="right", index=-1)
     return [*completeness_charts, *module_charts, *etc_charts, *function_charts]
 
-    charts = [
-        format_chart_group([p for p in completeness_charts]),
-        format_chart_group([p for p in module_charts]),
-        format_chart_group([p for p in etc_charts], title="ETC Complexes"),
-        format_chart_group([p for p in function_charts]),
-    ]
-    return charts
+    # charts = [
+    #     format_chart_group([p for p in completeness_charts]),
+    #     format_chart_group([p for p in module_charts]),
+    #     format_chart_group([p for p in etc_charts], title="ETC Complexes"),
+    #     format_chart_group([p for p in function_charts]),
+    # ]
+    # return charts
 
     # plot = pn.Row(*charts)
     # return plot
