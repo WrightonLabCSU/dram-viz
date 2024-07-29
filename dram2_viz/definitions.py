@@ -31,7 +31,7 @@ TAXONOMY_RANKS_REGEX = {
     "order": r"(?:;?o__)(?P<order>.*?)",
     "family": r"(?:;?f__)(?P<family>.*?)",
     "genus": r"(?:;?g__)(?P<genus>.*?)",
-    "species": r"(?:;?s__)(?P<species>.*)"
+    "species": r"(?:;?s__)(?P<species>.*)",
 }
 
 NO_TAXONOMY_RANKS = len(TAXONOMY_RANKS_REGEX)
@@ -45,19 +45,17 @@ FILES_NAMES: dict[str, Path] = {
     ETC_MODULE_DF_TAG: Path(__file__).parent.resolve() / "data/etc_module_database.tsv",
 }
 ID_FUNCTION_DICT = {
-    'kegg_genes_id': lambda x: [x],
-    'ko_id': lambda x: [j for j in x.split(',')],
-    'kegg_id': lambda x: [j for j in x.split(',')],
-    'kegg_hit': lambda x: [i[1:-1] for i in
-                           re.findall(r'\[EC:\d*.\d*.\d*.\d*\]', x)],
-    'peptidase_family': lambda x: [j for j in x.split(';')],
-    'cazy_best_hit': lambda x: [x.split('_')[0]],
-    'pfam_hits': lambda x: [j[1:-1].split('.')[0]
-                            for j in re.findall(r'\[PF\d\d\d\d\d.\d*\]', x)],
-    'camper_id': lambda x: [x],
-    'fegenie_id': lambda x: [x],
-    'sulfur_id': lambda x: [x],
-    'methyl_id': lambda x: [i.split(' ')[0].strip() for i in x.split(',')]
+    "kegg_genes_id": lambda x: [x],
+    "ko_id": lambda x: [j for j in x.split(",")],
+    "kegg_id": lambda x: [j for j in x.split(",")],
+    "kegg_hit": lambda x: [i[1:-1] for i in re.findall(r"\[EC:\d*.\d*.\d*.\d*\]", x)],
+    "peptidase_family": lambda x: [j for j in x.split(";")],
+    "cazy_best_hit": lambda x: [x.split("_")[0]],
+    "pfam_hits": lambda x: [j[1:-1].split(".")[0] for j in re.findall(r"\[PF\d\d\d\d\d.\d*\]", x)],
+    "camper_id": lambda x: [x],
+    "fegenie_id": lambda x: [x],
+    "sulfur_id": lambda x: [x],
+    "methyl_id": lambda x: [i.split(" ")[0].strip() for i in x.split(",")],
 }
 KO_REGEX = r"^K\d\d\d\d\d$"
 ETC_COVERAGE_COLUMNS = [

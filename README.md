@@ -1,6 +1,6 @@
 # DRAM2 Visualization Library
 
-This directory contains the visualization code for DRAM2. The visualization code is written in Python and uses the [Bokeh](https://bokeh.org) and [Panel](https://panel.holoviz.org) libraries. The visualization code is used to generate the figures 
+This directory contains the visualization code for DRAM2. The visualization code is written in Python and uses the [Bokeh](https://bokeh.org) and [Panel](https://panel.holoviz.org) libraries. The visualization code is used to generate the figures
 and dashboards for the [DRAM2 gene annotation tool](https://github.com/WrightonLabCSU/DRAM2).
 
 ## Nextflow Integration
@@ -29,13 +29,29 @@ The DRAM2 Visualization Library can also be used as a standalone Python package 
 pip install git+https://github.com/WrightonLabCSU/dram2_viz.git
 ```
 
-This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository. To install the DRAM2 Visualization Library as a development package, clone the repository, cd into the repository, create your environment, and run:
+This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository.
+
+#### Development Installation
+
+To install the DRAM2 Visualization Library as a development package, clone the repository, cd into the repository, create your environment, and run:
 
 ```bash
 pip install -e '.[dev]'
 ```
 
 This will install the DRAM2 Visualization Library and all of its dependencies from the main branch of the GitHub repository, as well as the development dependencies.
+
+We use [pre-commit](https://pre-commit.com) to manage our pre-commit hooks (e.g., linting, formatting that run commit to keep code formatting in check). To install the pre-commit hooks, run:
+
+```bash
+pre-commit install
+```
+
+now pre-commit will run automatically on git commit, but you can run it manually by running:
+
+```bash
+pre-commit run --all-files
+```
 
 ### Usage
 
@@ -55,7 +71,7 @@ This should open your default web browser and display the dashboard. If the dash
 ### SSH Tunneling
 
 If you are using the DRAM2 Visualization Library as a standalone Python package, you can run the dashboard on a remote server and use SSH tunneling to view the dashboard on your local machine. This will allow you to avoid downloading large data files to your local machine. To do this, first launch the dashboard on the remote server by ssh'ing into the server, navigating to the DRAM2 visualization directory, and running the above dashboard command. Then, on your local machine, run the following command:
-    
+
 ```bash
 ssh -NfL localhost:5006:localhost:5006 <username>@<remote-server>
 ```

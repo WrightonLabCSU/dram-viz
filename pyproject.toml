@@ -42,10 +42,8 @@ dependencies = [
 dev = [
     'pytest',
     'pytest-cov',
-    'black',
-    'isort',
-    'flake8',
-    'flakeheaven >=3.0.0'
+    'pre-commit',
+    'ruff',
 ]
 
 [tool.setuptools.packages.find]
@@ -54,54 +52,51 @@ include = ["dram2_viz*"]
 [tool.setuptools_scm]
 write_to = "dram2_viz/_version.py"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-py_version = 311
-skip_glob = ["*env*/*"]
-
-[tool.black]
+[tool.ruff]
 line-length = 120
+indent-width = 4
+
 # These are regular expressions (hence the \. is escaping the ., and not a literal \.)
-exclude = '''
-(
-    /(\.git
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | .*env.*
-    | _build
-    | buck-out
-    | build
-    | dist
-    | _version.py
-    )
-)
-'''
-
-[tool.flakeheaven]
-# 80 chars aren't enough in 21 century
-max_line_length = 120
-# show line of source code in output
-show_source = true
-
 exclude = [
-    "scratch",
+    "_version.py",
+    ".bzr",
+    ".direnv",
+    ".eggs",
     ".git",
-    "__pycache__",
-    "docs",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
     "build",
     "dist",
-    "tests",
-    "venv"
+    "node_modules",
+    "site-packages",
+    "venv",
 ]
 
-# list of plugins and rules for them
-[tool.flakeheaven.plugins]
-pyflakes = ["+*"]
-# all pycodestyle except line break before binary operator because we use binary break after line break as recommended
-# And ignore module level imports not at top of file because of jupyter notebook examples
-pycodestyle = ["+*", "-W503", "-E402"]
+# Assume Python 3.12
+target-version = "py312"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+docstring-code-format = true
 
 # pytest settings
 [tool.pytest.ini_options]
