@@ -147,6 +147,6 @@ exclude_also = [
     "logger = logging",
 
     # click CLI entry point
-    "@click.command",
-    "@click.option",
+    "click.command",
+    "click.option",
     ]

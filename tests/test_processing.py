@@ -115,12 +115,12 @@ def test_fill_product_dfs(test_annotations_df, test_module_net, etc_module_df, f
 
 
 def test_make_product_df(module_coverage_frame, etc_coverage_df, functional_df):
-    liquor_df = pd.DataFrame([[1/3, 1/3, False, True]],
+    product_df = pd.DataFrame([[1/3, 1/3, False, True]],
                              index=pd.Index(['scaffold_1'], name='genome'),
                              columns=['a module name', 'Complex I: oxidoreductase', 'Category1: A function',
                                       'Category1: B function'])
-    test_liquor_df = make_product_df(module_coverage_frame, etc_coverage_df, functional_df)
-    pd.testing.assert_frame_equal(test_liquor_df, liquor_df)
+    test_product_df = make_product_df(module_coverage_frame, etc_coverage_df, functional_df)
+    pd.testing.assert_frame_equal(test_product_df, product_df)
 
 
 def test_get_phylum_and_most_specific():
