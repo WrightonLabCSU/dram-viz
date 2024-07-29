@@ -24,11 +24,6 @@ from dram2_viz.processing.process_annotations import (build_module_net, fill_pro
 from dram2_viz.apps.heatmap import Dashboard
 
 
-
-
-__authors__ = ["Madeline Scyphers", "Rory Flynn"]
-__copyright__ = "Copyright 2024, Wrighton Lab"
-
 logger = logging.getLogger("dram2_log.viz")
 
 
