@@ -415,7 +415,7 @@ class Dashboard(pn.viewable.Viewer):
 
         self.redraw_button.on_click(self.make_plot)
 
-        self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy", value=False)
+        self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy on Y Axis", value=False)
         self.tax_axis_rank = pn.widgets.Select(
             name="Taxonomy Label", options=list(TAXONOMY_RANKS_REGEX), visible=False, value="genus"
         )
