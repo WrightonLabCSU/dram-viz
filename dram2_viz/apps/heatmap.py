@@ -284,7 +284,7 @@ def make_product_heatmap(
     if "taxonomy" in module_df.columns:
         extra_tooltip_cols.append("taxonomy")
 
-    fig1_kw = {}
+    first_charts_kw = {}
     if taxonomy_label is not None:
         module_df["label"] = module_df[taxonomy_label] + " | " + module_df[y_col]
         # fig1_kw["extra_y_col"] = taxonomy_label
@@ -294,27 +294,30 @@ def make_product_heatmap(
     completeness_charts = []
     if "Completeness" in module_df.columns:
         completeness_charts.extend(
-            make_heatmap_groups(module_df, x_cols=["Contamination"], y_col="label", tooltip_cols=[y_col], **fig1_kw)
+            make_heatmap_groups(module_df, x_cols=["Contamination"], y_col="label", tooltip_cols=[y_col])
         )
         extra_tooltip_cols.append("Completeness")
+        # The first chart we see (completeness, contamination, module) will have the y-axis on the left
+        first_charts_kw["y_axis_location"] = None
     if "Contamination" in module_df.columns:
         completeness_charts.extend(
             make_heatmap_groups(
-                module_df, x_cols=["Completeness"], y_col=y_col, tooltip_cols=[y_col], y_axis_location=None
+                module_df, x_cols=["Completeness"], y_col=y_col, tooltip_cols=[y_col], **first_charts_kw
             )
         )
         extra_tooltip_cols.append("Contamination")
+        # The first chart we see (completeness, contamination, module) will have the y-axis on the left
+        first_charts_kw["y_axis_location"] = None
 
     if taxonomy_label is not None:
-        fig1_kw["extra_y_col"] = taxonomy_label
+        first_charts_kw["extra_y_col"] = taxonomy_label
     module_charts = make_heatmap_groups(
         module_df,
         x_col="module_name",
         y_col=y_col,
         c_col="step_coverage",
         tooltip_cols=["genome", "module_name", "steps", "steps_present", *extra_tooltip_cols],
-        y_axis_location=None,
-        **fig1_kw,
+        **first_charts_kw,
         title="Module",
     )
     # etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
@@ -473,6 +476,7 @@ class Dashboard(pn.viewable.Viewer):
         self.plot_view[:] = charts
 
         if "taxonomy" in self.module_df.columns:
+            additional_sidebar.append(self.show_tax_box)
             additional_sidebar.append("## Taxonomy Filter")
             additional_sidebar.append(self.taxonomy_filter)
 
@@ -489,7 +493,6 @@ class Dashboard(pn.viewable.Viewer):
             ],
             sidebar=[
                 pn.Row(self.redraw_button, self.reset_button),
-                self.show_tax_box,
                 self.sort_by,
                 self.param.min_coverage,
                 *additional_sidebar,
@@ -526,7 +529,8 @@ class Dashboard(pn.viewable.Viewer):
         if self.taxonomy_filter is None:
             return module_df, etc_df, function_df
         selected = self.taxonomy_filter.value
-        leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        # leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        leaves = [node.replace(" ", "") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
         module_df = module_df.loc[module_df["taxonomy"].isin(leaves)]
         etc_df = etc_df.loc[etc_df["taxonomy"].isin(leaves)]
         function_df = function_df.loc[function_df["taxonomy"].isin(leaves)]

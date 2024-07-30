@@ -158,12 +158,12 @@ def main(
     if "taxonomy" in annotations:
         tax_df = build_taxonomy_df(annotations, groupby_column)
 
-        tax_edge_df = build_tax_edge_df(tax_df)
+        tax_edge_df, tax_df = build_tax_edge_df(tax_df)
 
         tax_tree_data = build_tree(
             tax_edge_df,
             state={"opened": False, "selected": True},
-            id_cb=lambda source, child, parent_id: f"{parent_id}; {child}",
+            id_cb=lambda source, child, parent_id: f"{parent_id};{child}",
         )
 
         module_coverage_df = tax_df.merge(module_coverage_df, on="genome", how="left")
