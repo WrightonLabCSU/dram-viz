@@ -191,7 +191,7 @@ def test_build_taxonomy_df(test_annotations_df):
 
 def test_build_tax_edge_df(test_annotations_df):
     test_tax_df = build_taxonomy_df(test_annotations_df, "scaffold")
-    test_edge_df = build_tax_edge_df(test_tax_df)
+    test_edge_df, test_tax_df = build_tax_edge_df(test_tax_df)
     edge_df = pd.DataFrame(
         [
             ["d__Something", "p__Another"],
@@ -216,10 +216,13 @@ def test_build_tax_edge_df(test_annotations_df):
 
     pd.testing.assert_frame_equal(test_edge_df, edge_df, check_like=True)
 
+    for column in ["domain", "phylum", "class", "order", "family", "genus", "species", "taxonomy"]:
+        assert column in test_tax_df.columns
+
 
 def test_build_tree(test_annotations_df):
     test_tax_df = build_taxonomy_df(test_annotations_df, "scaffold")
-    edge_df = build_tax_edge_df(test_tax_df)
+    edge_df, test_tax_df = build_tax_edge_df(test_tax_df)
     tax_tree_data = build_tree(
         edge_df,
         state={"opened": False, "selected": True},
