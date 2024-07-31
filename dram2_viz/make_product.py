@@ -68,7 +68,7 @@ logger = logging.getLogger("dram2_log.viz")
     "-d",
     is_flag=True,
     show_default=True,
-    default=True,
+    default=False,
 )
 @click.option(
     "--save-dataframes",
@@ -88,26 +88,7 @@ def main(
     save_dataframes=False,
 ):
     """
-    Make a product visualization
-
-    Parameters
-    ----------
-    annotations : str
-        The path to the annotations TSV file
-    groupby_column : str
-        The column to group by
-    output_dir : str
-        The output directory
-    module_steps_form : str
-        The module step database tsv
-    etc_steps_form : str
-        The etc step database tsv
-    function_steps_form : str
-        The function step database tsv
-    dashboard : bool
-        Launch as dashboard
-    save_dataframes : bool
-        Save the dataframes created from the annotations TSV file used to create the product visualization
+    Make a product heatmap visualization from the DRAM2 output.
     """
 
     output_dir = output_dir or Path.cwd().resolve()
