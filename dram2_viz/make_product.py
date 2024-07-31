@@ -15,7 +15,6 @@ from typing import Optional
 import click
 import pandas as pd
 import panel as pn
-from bokeh.resources import INLINE
 
 from dram2_viz.apps.heatmap import Dashboard
 from dram2_viz.definitions import (
@@ -31,6 +30,7 @@ from dram2_viz.definitions import (
 from dram2_viz.processing.process_annotations import (
     build_module_net,
     build_tax_edge_df,
+    build_tax_tree_selected_recurse,
     build_taxonomy_df,
     build_tree,
     fill_product_dfs,
@@ -42,6 +42,9 @@ from dram2_viz.processing.process_annotations import (
 )
 
 logger = logging.getLogger("dram2_log.viz")
+
+pn.config.reuse_sessions = True
+pn.config.global_loading_spinner = True
 
 
 @click.command()
@@ -148,6 +151,7 @@ def main(
     )
 
     tax_tree_data = None
+    selected_tax_tree = None
     if "taxonomy" in annotations:
         tax_df = build_taxonomy_df(annotations, groupby_column)
 
@@ -158,6 +162,7 @@ def main(
             state={"opened": False, "selected": True},
             id_cb=lambda source, child, parent_id: f"{parent_id};{child}",
         )
+        selected_tax_tree = build_tax_tree_selected_recurse(tax_tree_data)
 
         module_coverage_df = tax_df.merge(module_coverage_df, on="genome", how="left")
         etc_coverage_df = tax_df.merge(etc_coverage_df, on="genome", how="left")
@@ -180,13 +185,28 @@ def main(
         with open(output_dir / "taxonomy_tree.json", "w") as f:
             json.dump(tax_tree_data, f, ensure_ascii=False, indent=4)
 
-    app = Dashboard(module_coverage_df, etc_coverage_df, function_df, tax_tree_data=tax_tree_data)
-
-    app.plot_view.save(output_dir / "product.html", resources=INLINE)
     product_df.to_csv(output_dir / "product.tsv", sep="\t", index=False)
     if dashboard:
-        pn.serve(app.view, port=5006)
-        # plot.show(port=5007)
+        pn.serve(
+            lambda: Dashboard(
+                module_df=module_coverage_df,
+                etc_df=etc_coverage_df,
+                function_df=function_df,
+                tax_tree_data=tax_tree_data,
+                selected_tax_tree=selected_tax_tree,
+                output_dir=output_dir,
+            ),
+            port=5006,
+        )
+    else:
+        Dashboard(
+            module_df=module_coverage_df,
+            etc_df=etc_coverage_df,
+            function_df=function_df,
+            tax_tree_data=tax_tree_data,
+            selected_tax_tree=selected_tax_tree,
+            output_dir=output_dir,
+        )
     logger.info("Completed visualization")
 
 

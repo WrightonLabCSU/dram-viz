@@ -509,3 +509,13 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
         for root in roots
     ]
     return tree_data
+
+
+def build_tax_tree_selected_recurse(tax_tree, flat_tree=None):
+    if flat_tree is None:
+        flat_tree = []
+    for node in tax_tree:
+        flat_tree.append(node["id"])
+        if "children" in node:
+            build_tax_tree_selected_recurse(node["children"], flat_tree)
+    return flat_tree
