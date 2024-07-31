@@ -2,16 +2,7 @@ import panel as pn
 from bokeh.models import Plot
 
 from dram2_viz.apps.heatmap import Dashboard, make_product_heatmap
-
-
-def build_tax_tree_selected_recurse(tax_tree, flat_tree=None):
-    if flat_tree is None:
-        flat_tree = []
-    for node in tax_tree:
-        flat_tree.append(node["id"])
-        if "children" in node:
-            build_tax_tree_selected_recurse(node["children"], flat_tree)
-    return flat_tree
+from dram2_viz.processing.process_annotations import build_tax_tree_selected_recurse
 
 
 def test_make_product_heatmap(module_coverage_frame, etc_coverage_df, functional_df):

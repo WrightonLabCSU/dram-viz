@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import pi
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -10,6 +11,7 @@ from bokeh.core.property.vectorization import Field
 from bokeh.models import ColorBar, Legend, LegendItem, LinearColorMapper, Plot
 from bokeh.palettes import BuGn, Cividis256
 from bokeh.plotting import figure
+from bokeh.resources import INLINE
 from bokeh.transform import factor_cmap, linear_cmap
 from panel_jstree import Tree
 
@@ -79,31 +81,6 @@ def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right",
         )
         p.add_layout(legend, side)
     return p_orig
-
-
-#
-# def format_chart_group(chart_group: list, title: str = ""):
-#     """
-#     Make a formatted chart group
-#
-#     Parameters
-#     ----------
-#     chart_group : list
-#         A list of charts
-#     title : str
-#         The title of the chart group
-#
-#     Returns
-#     -------
-#     pn.Column
-#         A panel column of charts
-#     """
-#     if not isinstance(chart_group, list) or isinstance(chart_group, tuple):
-#         chart_group = [chart_group]
-#     return pn.Column(
-#         pn.pane.Markdown(f"## {title}", align="center"),
-#         pn.Row(*chart_group)
-#     )
 
 
 def add_colorbar(p_orig: Plot | list[Plot], index: Optional[int] = None):
@@ -188,13 +165,6 @@ def heatmap(
         else:
             tooltips.append((col.replace("_", " ").title(), f"@{col}"))
 
-    # half_ttl_ln = len(title) / 2
-    # if half_ttl_ln > len(
-    #         df[x_col].unique()) and "min_border_left" not in fig_kwargs and "min_border_right" not in fig_kwargs:
-    #     left_over = (half_ttl_ln - len(df[x_col].unique()))
-    # fig_kwargs["min_border_left"] = int(left_over / 1.2) * HEATMAP_CELL_WIDTH
-    # fig_kwargs["min_border_right"] = int(left_over / 1.2) * HEATMAP_CELL_WIDTH
-
     p = figure(
         frame_width=HEATMAP_CELL_WIDTH * len(df[x_col].unique()),
         frame_height=HEATMAP_CELL_WIDTH * len(df[y_col].unique()),
@@ -208,14 +178,6 @@ def heatmap(
         # title_location="right",
         **fig_kwargs,
     )
-    #
-    # if extra_y_col:
-    #     # p.extra_y_ranges[extra_y_col] = FactorRange(factors=list(df[extra_y_col].unique()))
-    #     p.extra_y_ranges[extra_y_col] = Range1d(-0.1, len(df[extra_y_col].unique()))
-    #
-    #     ax2 = LinearAxis(y_range_name=extra_y_col, axis_label=extra_y_col)
-    #     # ax2.axis_label_text_color = "navy"
-    #     p.add_layout(ax2, 'left')
 
     # if x_col:
     if df[c_col].dtype == float:
@@ -380,16 +342,27 @@ class Dashboard(pn.viewable.Viewer):
     view = param.ClassSelector(class_=pn.template.FastListTemplate)
     plot_view = param.ClassSelector(class_=pn.Row)
 
-    def __init__(self, module_df: pd.DataFrame, etc_df: pd.DataFrame, function_df: pd.DataFrame, tax_tree_data=None):
+    def __init__(
+        self,
+        module_df: pd.DataFrame,
+        etc_df: pd.DataFrame,
+        function_df: pd.DataFrame,
+        tax_tree_data=None,
+        selected_tax_tree=None,
+        output_dir=None,
+    ):
         super().__init__()
         self.module_df = module_df
         self.etc_df = etc_df
         self.function_df = function_df
         self.tax_tree_data = tax_tree_data
+        self._output_dir = output_dir or Path.cwd()
         self.plot_view = pn.Row()
+        self.download_button = pn.widgets.Button(name="Download Heatmap", button_type="primary")
+        self.download_button.on_click(self.download_heatmap)
 
         self.redraw_button = pn.widgets.Button(name="Redraw", button_type="primary")
-        self.reset_button = pn.widgets.Button(name="Reset Filters", button_type="primary")
+        self.reset_button = pn.widgets.Button(name="Reset Filters", button_type="warning")
         self.reset_button.on_click(self.reset_filters)
 
         self.redraw_button.on_click(self.make_plot)
@@ -403,11 +376,15 @@ class Dashboard(pn.viewable.Viewer):
 
         if "taxonomy" in self.module_df.columns:
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
+
+            # hack to make sure the taxonomy filter tree.value is set since it isn't set on the first load
+            # TODO: remove maybe when this is put into panel
+            self.taxonomy_filter.value = selected_tax_tree or []
+
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
         else:
             self.taxonomy_filter = None
             sort_options = ["genome"]
-        self._taxonomy_filter_initiated = False
         if "Completeness" in self.module_df.columns:
             sort_options.append("Completeness")
         if "Contamination" in self.module_df.columns:
@@ -415,35 +392,17 @@ class Dashboard(pn.viewable.Viewer):
 
         self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
 
-        self.make_plot()
+        self._init_view()
+        self.download_heatmap()
 
-    def make_plot(self, event=None):
-        """
-        Make the product plot
-        """
+    def __panel__(self, *args, **kwargs):
+        return self.view
+
+    def _init_view(self):
         additional_sidebar = []
         module_df = self.module_df.copy()
         etc_df = self.etc_df.copy()
         function_df = self.function_df.copy()
-
-        if event:  # don't filter on initial load (These are filters after browser load)
-            # This is a hack to make sure the taxonomy filter tree.value is set.
-            # It is not set on the first load, even though we pass in the data as selected,
-            # Those aren't currently back propagated to the python side
-            if not self._taxonomy_filter_initiated and "taxonomy" in self.module_df.columns:
-                self.reset_tax_tree()
-                self._taxonomy_filter_initiated = True
-
-            if self.min_coverage > 0:
-                print(self.min_coverage)
-                # module_df = self.module_df[self.module_df["step_coverage"] >= self.min_coverage]
-                module_df.loc[self.module_df["step_coverage"] < self.min_coverage, "step_coverage"] = 0
-                # etc_df = self.etc_df[self.etc_df["percent_coverage"] >= self.min_coverage]
-                etc_df.loc[self.etc_df["percent_coverage"] < self.min_coverage, "percent_coverage"] = 0
-            print("making plot")
-
-            module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
-            module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
 
         charts = make_product_heatmap(
             module_df,
@@ -472,11 +431,40 @@ class Dashboard(pn.viewable.Viewer):
             ],
             sidebar=[
                 pn.Row(self.redraw_button, self.reset_button),
+                self.download_button,
                 self.sort_by,
                 self.param.min_coverage,
                 *additional_sidebar,
             ],
         )
+
+    def make_plot(self, event=None):
+        """
+        Make the product plot
+        """
+        additional_sidebar = []
+        module_df = self.module_df.copy()
+        etc_df = self.etc_df.copy()
+        function_df = self.function_df.copy()
+
+        if self.min_coverage > 0:
+            print(self.min_coverage)
+            # module_df = self.module_df[self.module_df["step_coverage"] >= self.min_coverage]
+            module_df.loc[self.module_df["step_coverage"] < self.min_coverage, "step_coverage"] = 0
+            # etc_df = self.etc_df[self.etc_df["percent_coverage"] >= self.min_coverage]
+            etc_df.loc[self.etc_df["percent_coverage"] < self.min_coverage, "percent_coverage"] = 0
+
+        module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
+        module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
+
+        charts = make_product_heatmap(
+            module_df,
+            etc_df,
+            function_df,
+            taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value,
+        )
+
+        self.plot_view[:] = charts
 
     def reset_filters(self, event=None):
         """
@@ -489,21 +477,12 @@ class Dashboard(pn.viewable.Viewer):
         self.min_coverage = self.param.min_coverage.default
 
         if self.taxonomy_filter is not None:
-            self.reset_tax_tree()
+            self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
             self.tax_axis_filter.value = False
             self.tax_axis_rank.visible = False
             self.tax_axis_rank.value = "genus"
 
         self.sort_by.value = []
-
-    def reset_tax_tree(self):
-        """
-        Resets the taxonomy filter to its initial state.
-
-        This method sets the value of the `taxonomy_filter` attribute to the list of IDs of all nodes in the flat tree.
-        """
-        self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
-        # self.reveal_tax_axis_rank_selector(tax_axis_filter_value=False)
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
         """
@@ -537,3 +516,10 @@ class Dashboard(pn.viewable.Viewer):
         Sort the dataframes by taxonomy
         """
         return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
+
+    def download_heatmap(self, event=None, output_dir=None):
+        """
+        Save the heatmap to a file
+        """
+        output_dir = output_dir or self._output_dir
+        self.plot_view.save(output_dir / "product.html", resources=INLINE)
