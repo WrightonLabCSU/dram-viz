@@ -42,7 +42,9 @@ def make_heatmap_groups(df: pd.DataFrame, groupby: Optional[str] = None, title: 
     if not groupby:
         return [heatmap(df, **kwargs)]
     # if not title, use groups as titles
-    return [heatmap(frame, **{"title": maybe_title, **kwargs}) for maybe_title, frame in df.groupby(groupby)]
+    return [
+        heatmap(frame, **{"title": maybe_title, **kwargs}) for maybe_title, frame in df.groupby(groupby, sort=False)
+    ]
 
 
 def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right", index: Optional[int] = None):
@@ -226,25 +228,13 @@ def heatmap(
         palette = PALETTE_CATEGORICAL[max(len(factors), 3)] if len(factors) <= max_factors else PALETTE_CONTINUOUS
         fill_color = factor_cmap(c_col, palette=tuple(reversed(palette)), factors=factors)
     p.rect(x=x_col, y=y_col, width=0.9, height=0.9, source=df, fill_alpha=0.9, color=fill_color, **rect_kw)
-    # else:
-    #     for x_col in x_cols:
-    #         palette = tuple(reversed(PALETTE_CONTINUOUS))
-    #         fill_color = linear_cmap(x_col, palette=palette, low=c_min, high=c_max)
-    #
-    #         p.rect(x=x_col, y=y_col,
-    #                width=0.9, height=0.9,
-    #                source=df,
-    #                fill_alpha=0.9,
-    #                color=fill_color,
-    #                **rect_kw
-    #                )
 
-    p.title.align = "left"
+    p.title.text_font_size = "8pt"
 
     p.grid.grid_line_color = None
     p.axis.axis_line_color = None
     p.axis.major_tick_line_color = None
-    p.axis.major_label_text_font_size = "14px"
+    p.axis.major_label_text_font_size = "12px"
     p.xaxis.major_label_orientation = pi / 2
 
     return p
@@ -368,17 +358,6 @@ def make_product_heatmap(
         index=-1,
     )
     return [*completeness_charts, *module_charts, *etc_charts, *function_charts]
-
-    # charts = [
-    #     format_chart_group([p for p in completeness_charts]),
-    #     format_chart_group([p for p in module_charts]),
-    #     format_chart_group([p for p in etc_charts], title="ETC Complexes"),
-    #     format_chart_group([p for p in function_charts]),
-    # ]
-    # return charts
-
-    # plot = pn.Row(*charts)
-    # return plot
 
 
 class Dashboard(pn.viewable.Viewer):
