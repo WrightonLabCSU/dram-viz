@@ -486,8 +486,8 @@ class Dashboard(pn.viewable.Viewer):
             main=[
                 pn.Tabs(
                     ("Heatmap", self.plot_view),
-                    ("Module Coverage DF", pn.widgets.Tabulator(module_df, page_size=50)),
-                    ("ETC Coverage DF", pn.widgets.Tabulator(etc_df, page_size=50)),
+                    ("Module Coverage DF", pn.widgets.Tabulator(self.module_df, page_size=50)),
+                    ("ETC Coverage DF", pn.widgets.Tabulator(self.etc_df, page_size=50)),
                     ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50)),
                 )
             ],

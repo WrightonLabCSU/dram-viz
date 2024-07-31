@@ -67,6 +67,15 @@ logger = logging.getLogger("dram2_log.viz")
     "--dashboard",
     "-d",
     is_flag=True,
+    show_default=True,
+    default=True,
+)
+@click.option(
+    "--save-dataframes",
+    "-sd",
+    is_flag=True,
+    show_default=True,
+    default=False,
 )
 def main(
     annotations,
@@ -76,6 +85,7 @@ def main(
     etc_steps_form: Optional[Path] = None,
     function_steps_form: Optional[Path] = None,
     dashboard=False,
+    save_dataframes=False,
 ):
     """
     Make a product visualization
@@ -83,7 +93,7 @@ def main(
     Parameters
     ----------
     annotations : str
-        The path to the annotations tsv file
+        The path to the annotations TSV file
     groupby_column : str
         The column to group by
     output_dir : str
@@ -94,8 +104,10 @@ def main(
         The etc step database tsv
     function_steps_form : str
         The function step database tsv
-    show : bool
+    dashboard : bool
         Launch as dashboard
+    save_dataframes : bool
+        Save the dataframes created from the annotations TSV file used to create the product visualization
     """
 
     output_dir = output_dir or Path.cwd().resolve()
@@ -175,10 +187,20 @@ def main(
     if labels is not None:
         function_df = rename_genomes_to_taxa(function_df, labels)
 
-    app = Dashboard(module_coverage_df, etc_coverage_df, function_df, tax_tree_data=tax_tree_data)
-
     if not output_dir.exists():
         output_dir.mkdir(parents=True, exist_ok=True)
+
+    if save_dataframes:
+        module_coverage_df.to_csv(output_dir / "module_coverage_df.tsv", sep="\t", index=False)
+        etc_coverage_df.to_csv(output_dir / "etc_coverage_df.tsv", sep="\t", index=False)
+        function_df.to_csv(output_dir / "function_df.tsv", sep="\t", index=False)
+        import json
+
+        with open(output_dir / "taxonomy_tree.json", "w") as f:
+            json.dump(tax_tree_data, f, ensure_ascii=False, indent=4)
+
+    app = Dashboard(module_coverage_df, etc_coverage_df, function_df, tax_tree_data=tax_tree_data)
+
     app.plot_view.save(output_dir / "product.html", resources=INLINE)
     product_df.to_csv(output_dir / "product.tsv", sep="\t", index=False)
     if dashboard:
