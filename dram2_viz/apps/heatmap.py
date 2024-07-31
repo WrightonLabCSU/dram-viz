@@ -420,7 +420,7 @@ class Dashboard(pn.viewable.Viewer):
             name="Taxonomy Label", options=list(TAXONOMY_RANKS_REGEX), visible=False, value="genus"
         )
         self.show_tax_box = pn.Column(self.tax_axis_filter, self.tax_axis_rank)
-        pn.bind(self.set_taxonomy_axis_filter, self.tax_axis_filter, watch=True)
+        pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
 
         if "taxonomy" in self.module_df.columns:
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
@@ -452,7 +452,7 @@ class Dashboard(pn.viewable.Viewer):
             # It is not set on the first load, even though we pass in the data as selected,
             # Those aren't currently back propagated to the python side
             if not self._taxonomy_filter_initiated and "taxonomy" in self.module_df.columns:
-                self.reset_taxonomy()
+                self.reset_tax_tree()
                 self._taxonomy_filter_initiated = True
 
             if self.min_coverage > 0:
@@ -486,8 +486,8 @@ class Dashboard(pn.viewable.Viewer):
             main=[
                 pn.Tabs(
                     ("Heatmap", self.plot_view),
-                    ("Module Coverage DF", pn.widgets.Tabulator(module_df, page_size=50)),
-                    ("ETC Coverage DF", pn.widgets.Tabulator(etc_df, page_size=50)),
+                    ("Module Coverage DF", pn.widgets.Tabulator(self.module_df, page_size=50)),
+                    ("ETC Coverage DF", pn.widgets.Tabulator(self.etc_df, page_size=50)),
                     ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50)),
                 )
             ],
@@ -510,17 +510,21 @@ class Dashboard(pn.viewable.Viewer):
         self.min_coverage = self.param.min_coverage.default
 
         if self.taxonomy_filter is not None:
-            self.reset_taxonomy()
+            self.reset_tax_tree()
+            self.tax_axis_filter.value = False
+            self.tax_axis_rank.visible = False
+            self.tax_axis_rank.value = "genus"
 
         self.sort_by.value = []
 
-    def reset_taxonomy(self):
+    def reset_tax_tree(self):
         """
         Resets the taxonomy filter to its initial state.
 
         This method sets the value of the `taxonomy_filter` attribute to the list of IDs of all nodes in the flat tree.
         """
         self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
+        # self.reveal_tax_axis_rank_selector(tax_axis_filter_value=False)
 
     def filter_by_taxonomy(self, module_df, etc_df, function_df):
         """
@@ -530,17 +534,20 @@ class Dashboard(pn.viewable.Viewer):
             return module_df, etc_df, function_df
         selected = self.taxonomy_filter.value
         # leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
-        leaves = [node.replace(" ", "") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        # maybe we don't need this replace, but leaving in for now to be sure we match the data
+        leaves = [node.replace("; ", ";") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
         module_df = module_df.loc[module_df["taxonomy"].isin(leaves)]
         etc_df = etc_df.loc[etc_df["taxonomy"].isin(leaves)]
         function_df = function_df.loc[function_df["taxonomy"].isin(leaves)]
 
         return module_df, etc_df, function_df
 
-    def set_taxonomy_axis_filter(self, event=None):
+    def reveal_tax_axis_rank_selector(self, event=None, tax_axis_filter_value: bool = None):
         """
         Set the taxonomy filter
         """
+        if isinstance(tax_axis_filter_value, bool) and tax_axis_filter_value:
+            self.tax_axis_filter.value = tax_axis_filter_value
         if self.tax_axis_filter.value:
             self.tax_axis_rank.visible = True
             return

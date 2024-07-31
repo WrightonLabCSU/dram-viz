@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import networkx as nx
@@ -209,3 +210,25 @@ def functional_df():
 @pytest.fixture()
 def test_annotation_path():
     return str(Path(__file__).parent.resolve() / "data/test_annotations.tsv")
+
+
+@pytest.fixture()
+def module_coverage_df_from_file():
+    return pd.read_csv(Path(__file__).parent.resolve() / "data/module_coverage_df.tsv", sep="\t")
+
+
+@pytest.fixture()
+def etc_coverage_df_from_file():
+    return pd.read_csv(Path(__file__).parent.resolve() / "data/etc_coverage_df.tsv", sep="\t")
+
+
+@pytest.fixture()
+def function_df_from_file():
+    return pd.read_csv(Path(__file__).parent.resolve() / "data/function_df.tsv", sep="\t")
+
+
+@pytest.fixture()
+def taxonomy_tree():
+    with open(Path(__file__).parent.resolve() / "data/taxonomy_tree.json") as f:
+        d = json.load(f)
+    return d
