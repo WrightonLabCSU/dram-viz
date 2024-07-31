@@ -534,7 +534,8 @@ class Dashboard(pn.viewable.Viewer):
             return module_df, etc_df, function_df
         selected = self.taxonomy_filter.value
         # leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
-        leaves = [node.replace(" ", "") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        # maybe we don't need this replace, but leaving in for now to be sure we match the data
+        leaves = [node.replace("; ", ";") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
         module_df = module_df.loc[module_df["taxonomy"].isin(leaves)]
         etc_df = etc_df.loc[etc_df["taxonomy"].isin(leaves)]
         function_df = function_df.loc[function_df["taxonomy"].isin(leaves)]
