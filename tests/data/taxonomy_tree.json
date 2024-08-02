@@ -1,0 +1,2267 @@
+[
+    {
+        "id": "d__Archaea",
+        "text": "d__Archaea",
+        "children": [
+            {
+                "text": "p__Halobacteriota",
+                "children": [
+                    {
+                        "text": "c__Bog-38",
+                        "children": [
+                            {
+                                "text": "o__Bog-38",
+                                "children": [
+                                    {
+                                        "text": "f__Bog-38",
+                                        "children": [
+                                            {
+                                                "text": "g__Bog-38",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Bog-38 sp003162175",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Bog-38;o__Bog-38;f__Bog-38;g__Bog-38;s__Bog-38 sp003162175"
+                                                    },
+                                                    {
+                                                        "text": "s__Bog-38 sp003139855",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Bog-38;o__Bog-38;f__Bog-38;g__Bog-38;s__Bog-38 sp003139855"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Halobacteriota;c__Bog-38;o__Bog-38;f__Bog-38;g__Bog-38"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Halobacteriota;c__Bog-38;o__Bog-38;f__Bog-38"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Halobacteriota;c__Bog-38;o__Bog-38"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Archaea;p__Halobacteriota;c__Bog-38"
+                    },
+                    {
+                        "text": "c__Methanomicrobia",
+                        "children": [
+                            {
+                                "text": "o__Methanomicrobiales",
+                                "children": [
+                                    {
+                                        "text": "f__Methanoregulaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Methanoregula",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Methanoregula sp003141335",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Methanomicrobia;o__Methanomicrobiales;f__Methanoregulaceae;g__Methanoregula;s__Methanoregula sp003141335"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Halobacteriota;c__Methanomicrobia;o__Methanomicrobiales;f__Methanoregulaceae;g__Methanoregula"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Halobacteriota;c__Methanomicrobia;o__Methanomicrobiales;f__Methanoregulaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Halobacteriota;c__Methanomicrobia;o__Methanomicrobiales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Archaea;p__Halobacteriota;c__Methanomicrobia"
+                    },
+                    {
+                        "text": "c__Methanosarcinia",
+                        "children": [
+                            {
+                                "text": "o__Methanotrichales",
+                                "children": [
+                                    {
+                                        "text": "f__Methanotrichaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Methanothrix",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales;f__Methanotrichaceae;g__Methanothrix;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales;f__Methanotrichaceae;g__Methanothrix"
+                                            },
+                                            {
+                                                "text": "g__Fen-7",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Fen-7 sp003162615",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales;f__Methanotrichaceae;g__Fen-7;s__Fen-7 sp003162615"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales;f__Methanotrichaceae;g__Fen-7"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales;f__Methanotrichaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanotrichales"
+                            },
+                            {
+                                "text": "o__Methanosarcinales",
+                                "children": [
+                                    {
+                                        "text": "f__Methanosarcinaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Methanosarcina",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Methanosarcina sp003164755",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanosarcinales;f__Methanosarcinaceae;g__Methanosarcina;s__Methanosarcina sp003164755"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanosarcinales;f__Methanosarcinaceae;g__Methanosarcina"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanosarcinales;f__Methanosarcinaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia;o__Methanosarcinales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Archaea;p__Halobacteriota;c__Methanosarcinia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Archaea;p__Halobacteriota"
+            },
+            {
+                "text": "p__Thermoplasmatota",
+                "children": [
+                    {
+                        "text": "c__Thermoplasmata",
+                        "children": [
+                            {
+                                "text": "o__Methanomassiliicoccales",
+                                "children": [
+                                    {
+                                        "text": "f__UBA472",
+                                        "children": [
+                                            {
+                                                "text": "g__FEN-33",
+                                                "children": [
+                                                    {
+                                                        "text": "s__FEN-33 sp003135935",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Thermoplasmatota;c__Thermoplasmata;o__Methanomassiliicoccales;f__UBA472;g__FEN-33;s__FEN-33 sp003135935"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Thermoplasmatota;c__Thermoplasmata;o__Methanomassiliicoccales;f__UBA472;g__FEN-33"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Thermoplasmatota;c__Thermoplasmata;o__Methanomassiliicoccales;f__UBA472"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Thermoplasmatota;c__Thermoplasmata;o__Methanomassiliicoccales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Archaea;p__Thermoplasmatota;c__Thermoplasmata"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Archaea;p__Thermoplasmatota"
+            },
+            {
+                "text": "p__Methanobacteriota",
+                "children": [
+                    {
+                        "text": "c__Methanobacteria",
+                        "children": [
+                            {
+                                "text": "o__Methanobacteriales",
+                                "children": [
+                                    {
+                                        "text": "f__Methanobacteriaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Methanobacterium_A",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Methanobacterium_A sp003166335",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobacterium_A;s__Methanobacterium_A sp003166335"
+                                                    },
+                                                    {
+                                                        "text": "s__Methanobacterium_A sp003161815",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobacterium_A;s__Methanobacterium_A sp003161815"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobacterium_A"
+                                            },
+                                            {
+                                                "text": "g__Methanobacterium_B",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Methanobacterium_B sp003162655",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobacterium_B;s__Methanobacterium_B sp003162655"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae;g__Methanobacterium_B"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales;f__Methanobacteriaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria;o__Methanobacteriales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Archaea;p__Methanobacteriota;c__Methanobacteria"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Archaea;p__Methanobacteriota"
+            }
+        ],
+        "state": {
+            "opened": false,
+            "selected": true
+        }
+    },
+    {
+        "id": "d__Bacteria",
+        "text": "d__Bacteria",
+        "children": [
+            {
+                "text": "p__Actinomycetota",
+                "children": [
+                    {
+                        "text": "c__Actinomycetia",
+                        "children": [
+                            {
+                                "text": "o__Actinomycetales",
+                                "children": [
+                                    {
+                                        "text": "f__Cellulomonadaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Pengzhenrongella",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Cellulomonadaceae;g__Pengzhenrongella;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Cellulomonadaceae;g__Pengzhenrongella"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Cellulomonadaceae"
+                                    },
+                                    {
+                                        "text": "f__Kineosporiaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Kineosporiaceae;g__;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Kineosporiaceae;g__"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales;f__Kineosporiaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Actinomycetales"
+                            },
+                            {
+                                "text": "o__Propionibacteriales",
+                                "children": [
+                                    {
+                                        "text": "f__Propionibacteriaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-668",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales;f__Propionibacteriaceae;g__Fen-668;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales;f__Propionibacteriaceae;g__Fen-668"
+                                            },
+                                            {
+                                                "text": "g__Propionicimonas",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales;f__Propionibacteriaceae;g__Propionicimonas;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales;f__Propionibacteriaceae;g__Propionicimonas"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales;f__Propionibacteriaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia;o__Propionibacteriales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Actinomycetota;c__Actinomycetia"
+                    },
+                    {
+                        "text": "c__Thermoleophilia",
+                        "children": [
+                            {
+                                "text": "o__RBG-16-64-13",
+                                "children": [
+                                    {
+                                        "text": "f__RBG-16-64-13",
+                                        "children": [
+                                            {
+                                                "text": "g__Chersky-299",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__RBG-16-64-13;f__RBG-16-64-13;g__Chersky-299;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__RBG-16-64-13;f__RBG-16-64-13;g__Chersky-299"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__RBG-16-64-13;f__RBG-16-64-13"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__RBG-16-64-13"
+                            },
+                            {
+                                "text": "o__Gaiellales",
+                                "children": [
+                                    {
+                                        "text": "f__Gaiellaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-549",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Fen-549 sp003162055",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Gaiellales;f__Gaiellaceae;g__Fen-549;s__Fen-549 sp003162055"
+                                                    },
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Gaiellales;f__Gaiellaceae;g__Fen-549;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Gaiellales;f__Gaiellaceae;g__Fen-549"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Gaiellales;f__Gaiellaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Gaiellales"
+                            },
+                            {
+                                "text": "o__Solirubrobacterales",
+                                "children": [
+                                    {
+                                        "text": "f__Solirubrobacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Palsa-513",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Solirubrobacterales;f__Solirubrobacteraceae;g__Palsa-513;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Solirubrobacterales;f__Solirubrobacteraceae;g__Palsa-513"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Solirubrobacterales;f__Solirubrobacteraceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia;o__Solirubrobacterales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Actinomycetota;c__Thermoleophilia"
+                    },
+                    {
+                        "text": "c__Acidimicrobiia",
+                        "children": [
+                            {
+                                "text": "o__Acidimicrobiales",
+                                "children": [
+                                    {
+                                        "text": "f__RAAP-2",
+                                        "children": [
+                                            {
+                                                "text": "g__RAAP-2",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Actinomycetota;c__Acidimicrobiia;o__Acidimicrobiales;f__RAAP-2;g__RAAP-2;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Actinomycetota;c__Acidimicrobiia;o__Acidimicrobiales;f__RAAP-2;g__RAAP-2"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Actinomycetota;c__Acidimicrobiia;o__Acidimicrobiales;f__RAAP-2"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Actinomycetota;c__Acidimicrobiia;o__Acidimicrobiales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Actinomycetota;c__Acidimicrobiia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Actinomycetota"
+            },
+            {
+                "text": "p__Chloroflexota",
+                "children": [
+                    {
+                        "text": "c__Limnocylindria",
+                        "children": [
+                            {
+                                "text": "o__Limnocylindrales",
+                                "children": [
+                                    {
+                                        "text": "f__CSP1-4",
+                                        "children": [
+                                            {
+                                                "text": "g__CTSoil-043",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales;f__CSP1-4;g__CTSoil-043;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales;f__CSP1-4;g__CTSoil-043"
+                                            },
+                                            {
+                                                "text": "g__Fen-1039",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales;f__CSP1-4;g__Fen-1039;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales;f__CSP1-4;g__Fen-1039"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales;f__CSP1-4"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria;o__Limnocylindrales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Chloroflexota;c__Limnocylindria"
+                    },
+                    {
+                        "text": "c__Anaerolineae",
+                        "children": [
+                            {
+                                "text": "o__Anaerolineales",
+                                "children": [
+                                    {
+                                        "text": "f__Anaerolineaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA6107",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Chloroflexota;c__Anaerolineae;o__Anaerolineales;f__Anaerolineaceae;g__UBA6107;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Chloroflexota;c__Anaerolineae;o__Anaerolineales;f__Anaerolineaceae;g__UBA6107"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Chloroflexota;c__Anaerolineae;o__Anaerolineales;f__Anaerolineaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Chloroflexota;c__Anaerolineae;o__Anaerolineales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Chloroflexota;c__Anaerolineae"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Chloroflexota"
+            },
+            {
+                "text": "p__Bacteroidota",
+                "children": [
+                    {
+                        "text": "c__UBA10030",
+                        "children": [
+                            {
+                                "text": "o__UBA10030",
+                                "children": [
+                                    {
+                                        "text": "f__UBA6906",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-1260",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Fen-1260 sp003162635",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacteroidota;c__UBA10030;o__UBA10030;f__UBA6906;g__Fen-1260;s__Fen-1260 sp003162635"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacteroidota;c__UBA10030;o__UBA10030;f__UBA6906;g__Fen-1260"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacteroidota;c__UBA10030;o__UBA10030;f__UBA6906"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacteroidota;c__UBA10030;o__UBA10030"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Bacteroidota;c__UBA10030"
+                    },
+                    {
+                        "text": "c__Bacteroidia",
+                        "children": [
+                            {
+                                "text": "o__Bacteroidales",
+                                "children": [
+                                    {
+                                        "text": "f__Paludibacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Paludibacter",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Paludibacteraceae;g__Paludibacter;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Paludibacteraceae;g__Paludibacter"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Paludibacteraceae"
+                                    },
+                                    {
+                                        "text": "f__Bacteroidaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA1794",
+                                                "children": [
+                                                    {
+                                                        "text": "s__UBA1794 sp002315435",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__UBA1794;s__UBA1794 sp002315435"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__UBA1794"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae"
+                                    },
+                                    {
+                                        "text": "f__UBA1402",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA8389",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA1402;g__UBA8389;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA1402;g__UBA8389"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales;f__UBA1402"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia;o__Bacteroidales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Bacteroidota;c__Bacteroidia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Bacteroidota"
+            },
+            {
+                "text": "p__Acidobacteriota",
+                "children": [
+                    {
+                        "text": "c__Thermoanaerobaculia",
+                        "children": [
+                            {
+                                "text": "o__UBA5066",
+                                "children": [
+                                    {
+                                        "text": "f__UBA5066",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-183",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Thermoanaerobaculia;o__UBA5066;f__UBA5066;g__Fen-183;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Thermoanaerobaculia;o__UBA5066;f__UBA5066;g__Fen-183"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Acidobacteriota;c__Thermoanaerobaculia;o__UBA5066;f__UBA5066"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Acidobacteriota;c__Thermoanaerobaculia;o__UBA5066"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Acidobacteriota;c__Thermoanaerobaculia"
+                    },
+                    {
+                        "text": "c__Terriglobia",
+                        "children": [
+                            {
+                                "text": "o__Terriglobales",
+                                "children": [
+                                    {
+                                        "text": "f__Koribacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__TOLSYN",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Koribacteraceae;g__TOLSYN;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Koribacteraceae;g__TOLSYN"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Koribacteraceae"
+                                    },
+                                    {
+                                        "text": "f__Acidobacteriaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Terracidiphilus",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Acidobacteriaceae;g__Terracidiphilus;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Acidobacteriaceae;g__Terracidiphilus"
+                                            },
+                                            {
+                                                "text": "g__Palsa-288",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Acidobacteriaceae;g__Palsa-288;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Acidobacteriaceae;g__Palsa-288"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales;f__Acidobacteriaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Terriglobales"
+                            },
+                            {
+                                "text": "o__Bryobacterales",
+                                "children": [
+                                    {
+                                        "text": "f__Bryobacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__CAIVVT01",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Bryobacterales;f__Bryobacteraceae;g__CAIVVT01;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Bryobacterales;f__Bryobacteraceae;g__CAIVVT01"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Bryobacterales;f__Bryobacteraceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia;o__Bryobacterales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Acidobacteriota;c__Terriglobia"
+                    },
+                    {
+                        "text": "c__Holophagae",
+                        "children": [
+                            {
+                                "text": "o__Holophagales",
+                                "children": [
+                                    {
+                                        "text": "f__Holophagaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Holophaga",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Acidobacteriota;c__Holophagae;o__Holophagales;f__Holophagaceae;g__Holophaga;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Acidobacteriota;c__Holophagae;o__Holophagales;f__Holophagaceae;g__Holophaga"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Acidobacteriota;c__Holophagae;o__Holophagales;f__Holophagaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Acidobacteriota;c__Holophagae;o__Holophagales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Acidobacteriota;c__Holophagae"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Acidobacteriota"
+            },
+            {
+                "text": "p__Verrucomicrobiota",
+                "children": [
+                    {
+                        "text": "c__Verrucomicrobiae",
+                        "children": [
+                            {
+                                "text": "o__Pedosphaerales",
+                                "children": [
+                                    {
+                                        "text": "f__UBA11358",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA11358",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__UBA11358;g__UBA11358;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__UBA11358;g__UBA11358"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__UBA11358"
+                                    },
+                                    {
+                                        "text": "f__Palsa-1400",
+                                        "children": [
+                                            {
+                                                "text": "g__CAIUEN01",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__Palsa-1400;g__CAIUEN01;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__Palsa-1400;g__CAIUEN01"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales;f__Palsa-1400"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Pedosphaerales"
+                            },
+                            {
+                                "text": "o__Opitutales",
+                                "children": [
+                                    {
+                                        "text": "f__Opitutaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-1467",
+                                                "children": [
+                                                    {
+                                                        "text": "s__Fen-1467 sp003142955",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales;f__Opitutaceae;g__Fen-1467;s__Fen-1467 sp003142955"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales;f__Opitutaceae;g__Fen-1467"
+                                            },
+                                            {
+                                                "text": "g__Palsa-1447",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales;f__Opitutaceae;g__Palsa-1447;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales;f__Opitutaceae;g__Palsa-1447"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales;f__Opitutaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae;o__Opitutales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Verrucomicrobiota;c__Verrucomicrobiae"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Verrucomicrobiota"
+            },
+            {
+                "text": "p__Patescibacteria",
+                "children": [
+                    {
+                        "text": "c__Saccharimonadia",
+                        "children": [
+                            {
+                                "text": "o__Saccharimonadales",
+                                "children": [
+                                    {
+                                        "text": "f__UBA1547",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA1547",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Patescibacteria;c__Saccharimonadia;o__Saccharimonadales;f__UBA1547;g__UBA1547;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Patescibacteria;c__Saccharimonadia;o__Saccharimonadales;f__UBA1547;g__UBA1547"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Patescibacteria;c__Saccharimonadia;o__Saccharimonadales;f__UBA1547"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Patescibacteria;c__Saccharimonadia;o__Saccharimonadales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Patescibacteria;c__Saccharimonadia"
+                    },
+                    {
+                        "text": "c__Paceibacteria",
+                        "children": [
+                            {
+                                "text": "o__UBA9983_A",
+                                "children": [
+                                    {
+                                        "text": "f__UBA9973",
+                                        "children": [
+                                            {
+                                                "text": "g__UBA8515",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Patescibacteria;c__Paceibacteria;o__UBA9983_A;f__UBA9973;g__UBA8515;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Patescibacteria;c__Paceibacteria;o__UBA9983_A;f__UBA9973;g__UBA8515"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Patescibacteria;c__Paceibacteria;o__UBA9983_A;f__UBA9973"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Patescibacteria;c__Paceibacteria;o__UBA9983_A"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Patescibacteria;c__Paceibacteria"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Patescibacteria"
+            },
+            {
+                "text": "p__Caldisericota",
+                "children": [
+                    {
+                        "text": "c__Caldisericia",
+                        "children": [
+                            {
+                                "text": "o__Cryosericales",
+                                "children": [
+                                    {
+                                        "text": "f__Cryosericaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Cryosericum",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Caldisericota;c__Caldisericia;o__Cryosericales;f__Cryosericaceae;g__Cryosericum;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Caldisericota;c__Caldisericia;o__Cryosericales;f__Cryosericaceae;g__Cryosericum"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Caldisericota;c__Caldisericia;o__Cryosericales;f__Cryosericaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Caldisericota;c__Caldisericia;o__Cryosericales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Caldisericota;c__Caldisericia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Caldisericota"
+            },
+            {
+                "text": "p__Myxococcota",
+                "children": [
+                    {
+                        "text": "c__Polyangia",
+                        "children": [
+                            {
+                                "text": "o__Fen-1088",
+                                "children": [
+                                    {
+                                        "text": "f__Fen-1088",
+                                        "children": [
+                                            {
+                                                "text": "g__Fen-1137",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088;f__Fen-1088;g__Fen-1137;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088;f__Fen-1088;g__Fen-1137"
+                                            },
+                                            {
+                                                "text": "g__",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088;f__Fen-1088;g__;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088;f__Fen-1088;g__"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088;f__Fen-1088"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Myxococcota;c__Polyangia;o__Fen-1088"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Myxococcota;c__Polyangia"
+                    },
+                    {
+                        "text": "c__Myxococcia",
+                        "children": [
+                            {
+                                "text": "o__Myxococcales",
+                                "children": [
+                                    {
+                                        "text": "f__Anaeromyxobacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Anaeromyxobacter",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Myxococcota;c__Myxococcia;o__Myxococcales;f__Anaeromyxobacteraceae;g__Anaeromyxobacter;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Myxococcota;c__Myxococcia;o__Myxococcales;f__Anaeromyxobacteraceae;g__Anaeromyxobacter"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Myxococcota;c__Myxococcia;o__Myxococcales;f__Anaeromyxobacteraceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Myxococcota;c__Myxococcia;o__Myxococcales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Myxococcota;c__Myxococcia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Myxococcota"
+            },
+            {
+                "text": "p__Pseudomonadota",
+                "children": [
+                    {
+                        "text": "c__Alphaproteobacteria",
+                        "children": [
+                            {
+                                "text": "o__Micropepsales",
+                                "children": [
+                                    {
+                                        "text": "f__Micropepsaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Rhizomicrobium",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Micropepsales;f__Micropepsaceae;g__Rhizomicrobium;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Micropepsales;f__Micropepsaceae;g__Rhizomicrobium"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Micropepsales;f__Micropepsaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Micropepsales"
+                            },
+                            {
+                                "text": "o__Rhizobiales",
+                                "children": [
+                                    {
+                                        "text": "f__Xanthobacteraceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Bradyrhizobium",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Rhizobiales;f__Xanthobacteraceae;g__Bradyrhizobium;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Rhizobiales;f__Xanthobacteraceae;g__Bradyrhizobium"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Rhizobiales;f__Xanthobacteraceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__Rhizobiales"
+                            },
+                            {
+                                "text": "o__UBA9219",
+                                "children": [
+                                    {
+                                        "text": "f__UBA9219",
+                                        "children": [
+                                            {
+                                                "text": "g__CAIXLI01",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__UBA9219;f__UBA9219;g__CAIXLI01;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__UBA9219;f__UBA9219;g__CAIXLI01"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__UBA9219;f__UBA9219"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria;o__UBA9219"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Pseudomonadota;c__Alphaproteobacteria"
+                    },
+                    {
+                        "text": "c__Gammaproteobacteria",
+                        "children": [
+                            {
+                                "text": "o__Burkholderiales",
+                                "children": [
+                                    {
+                                        "text": "f__Burkholderiaceae_A",
+                                        "children": [
+                                            {
+                                                "text": "g__GJ-E10",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Burkholderiales;f__Burkholderiaceae_A;g__GJ-E10;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Burkholderiales;f__Burkholderiaceae_A;g__GJ-E10"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Burkholderiales;f__Burkholderiaceae_A"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Burkholderiales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Pseudomonadota"
+            },
+            {
+                "text": "p__Bacillota_C",
+                "children": [
+                    {
+                        "text": "c__Negativicutes",
+                        "children": [
+                            {
+                                "text": "o__Selenomonadales",
+                                "children": [
+                                    {
+                                        "text": "f__Selenomonadaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Propionispira",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae;g__Propionispira;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae;g__Propionispira"
+                                            },
+                                            {
+                                                "text": "g__UBA1792",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae;g__UBA1792;s__"
+                                                    },
+                                                    {
+                                                        "text": "s__UBA1792 sp002315155",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae;g__UBA1792;s__UBA1792 sp002315155"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae;g__UBA1792"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales;f__Selenomonadaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Selenomonadales"
+                            },
+                            {
+                                "text": "o__UMGS1260",
+                                "children": [
+                                    {
+                                        "text": "f__UMGS1260",
+                                        "children": [
+                                            {
+                                                "text": "g__Pelorhabdus",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__UMGS1260;f__UMGS1260;g__Pelorhabdus;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__UMGS1260;f__UMGS1260;g__Pelorhabdus"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__UMGS1260;f__UMGS1260"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__UMGS1260"
+                            },
+                            {
+                                "text": "o__Propionisporales",
+                                "children": [
+                                    {
+                                        "text": "f__DSM-13327",
+                                        "children": [
+                                            {
+                                                "text": "g__CTSoil-075",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Propionisporales;f__DSM-13327;g__CTSoil-075;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Propionisporales;f__DSM-13327;g__CTSoil-075"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Propionisporales;f__DSM-13327"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes;o__Propionisporales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Bacillota_C;c__Negativicutes"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Bacillota_C"
+            },
+            {
+                "text": "p__Methylomirabilota",
+                "children": [
+                    {
+                        "text": "c__Methylomirabilia",
+                        "children": [
+                            {
+                                "text": "o__Methylomirabilales",
+                                "children": [
+                                    {
+                                        "text": "f__2-02-FULL-66-22",
+                                        "children": [
+                                            {
+                                                "text": "g__2-02-FULL-66-22",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Methylomirabilota;c__Methylomirabilia;o__Methylomirabilales;f__2-02-FULL-66-22;g__2-02-FULL-66-22;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Methylomirabilota;c__Methylomirabilia;o__Methylomirabilales;f__2-02-FULL-66-22;g__2-02-FULL-66-22"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Methylomirabilota;c__Methylomirabilia;o__Methylomirabilales;f__2-02-FULL-66-22"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Methylomirabilota;c__Methylomirabilia;o__Methylomirabilales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Methylomirabilota;c__Methylomirabilia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Methylomirabilota"
+            },
+            {
+                "text": "p__Bacillota_A",
+                "children": [
+                    {
+                        "text": "c__Clostridia",
+                        "children": [
+                            {
+                                "text": "o__Clostridiales",
+                                "children": [
+                                    {
+                                        "text": "f__Clostridiaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Clostridium_I",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Clostridiales;f__Clostridiaceae;g__Clostridium_I;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Clostridiales;f__Clostridiaceae;g__Clostridium_I"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Clostridiales;f__Clostridiaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Clostridiales"
+                            },
+                            {
+                                "text": "o__Oscillospirales",
+                                "children": [
+                                    {
+                                        "text": "f__Ethanoligenenaceae",
+                                        "children": [
+                                            {
+                                                "text": "g__Ruminiclostridium_D",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Oscillospirales;f__Ethanoligenenaceae;g__Ruminiclostridium_D;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Oscillospirales;f__Ethanoligenenaceae;g__Ruminiclostridium_D"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Oscillospirales;f__Ethanoligenenaceae"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__Bacillota_A;c__Clostridia;o__Oscillospirales"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__Bacillota_A;c__Clostridia"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__Bacillota_A"
+            },
+            {
+                "text": "p__FCPU426",
+                "children": [
+                    {
+                        "text": "c__Palsa-1180",
+                        "children": [
+                            {
+                                "text": "o__Palsa-1180",
+                                "children": [
+                                    {
+                                        "text": "f__Palsa-1180",
+                                        "children": [
+                                            {
+                                                "text": "g__",
+                                                "children": [
+                                                    {
+                                                        "text": "s__",
+                                                        "children": [],
+                                                        "state": {
+                                                            "opened": false,
+                                                            "selected": true
+                                                        },
+                                                        "id": "d__Bacteria;p__FCPU426;c__Palsa-1180;o__Palsa-1180;f__Palsa-1180;g__;s__"
+                                                    }
+                                                ],
+                                                "state": {
+                                                    "opened": false,
+                                                    "selected": true
+                                                },
+                                                "id": "d__Bacteria;p__FCPU426;c__Palsa-1180;o__Palsa-1180;f__Palsa-1180;g__"
+                                            }
+                                        ],
+                                        "state": {
+                                            "opened": false,
+                                            "selected": true
+                                        },
+                                        "id": "d__Bacteria;p__FCPU426;c__Palsa-1180;o__Palsa-1180;f__Palsa-1180"
+                                    }
+                                ],
+                                "state": {
+                                    "opened": false,
+                                    "selected": true
+                                },
+                                "id": "d__Bacteria;p__FCPU426;c__Palsa-1180;o__Palsa-1180"
+                            }
+                        ],
+                        "state": {
+                            "opened": false,
+                            "selected": true
+                        },
+                        "id": "d__Bacteria;p__FCPU426;c__Palsa-1180"
+                    }
+                ],
+                "state": {
+                    "opened": false,
+                    "selected": true
+                },
+                "id": "d__Bacteria;p__FCPU426"
+            }
+        ],
+        "state": {
+            "opened": false,
+            "selected": true
+        }
+    }
+]

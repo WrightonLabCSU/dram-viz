@@ -15,7 +15,6 @@ from typing import Optional
 import click
 import pandas as pd
 import panel as pn
-from bokeh.resources import INLINE
 
 from dram2_viz.apps.heatmap import Dashboard
 from dram2_viz.definitions import (
@@ -31,6 +30,7 @@ from dram2_viz.definitions import (
 from dram2_viz.processing.process_annotations import (
     build_module_net,
     build_tax_edge_df,
+    build_tax_tree_selected_recurse,
     build_taxonomy_df,
     build_tree,
     fill_product_dfs,
@@ -42,6 +42,9 @@ from dram2_viz.processing.process_annotations import (
 )
 
 logger = logging.getLogger("dram2_log.viz")
+
+pn.config.reuse_sessions = True
+pn.config.global_loading_spinner = True
 
 
 @click.command()
@@ -67,6 +70,15 @@ logger = logging.getLogger("dram2_log.viz")
     "--dashboard",
     "-d",
     is_flag=True,
+    show_default=True,
+    default=False,
+)
+@click.option(
+    "--save-dataframes",
+    "-sd",
+    is_flag=True,
+    show_default=True,
+    default=False,
 )
 def main(
     annotations,
@@ -76,26 +88,10 @@ def main(
     etc_steps_form: Optional[Path] = None,
     function_steps_form: Optional[Path] = None,
     dashboard=False,
+    save_dataframes=False,
 ):
     """
-    Make a product visualization
-
-    Parameters
-    ----------
-    annotations : str
-        The path to the annotations tsv file
-    groupby_column : str
-        The column to group by
-    output_dir : str
-        The output directory
-    module_steps_form : str
-        The module step database tsv
-    etc_steps_form : str
-        The etc step database tsv
-    function_steps_form : str
-        The function step database tsv
-    show : bool
-        Launch as dashboard
+    Make a product heatmap visualization from the DRAM2 output.
     """
 
     output_dir = output_dir or Path.cwd().resolve()
@@ -155,16 +151,18 @@ def main(
     )
 
     tax_tree_data = None
+    selected_tax_tree = None
     if "taxonomy" in annotations:
         tax_df = build_taxonomy_df(annotations, groupby_column)
 
-        tax_edge_df = build_tax_edge_df(tax_df)
+        tax_edge_df, tax_df = build_tax_edge_df(tax_df)
 
         tax_tree_data = build_tree(
             tax_edge_df,
             state={"opened": False, "selected": True},
-            id_cb=lambda source, child, parent_id: f"{parent_id}; {child}",
+            id_cb=lambda source, child, parent_id: f"{parent_id};{child}",
         )
+        selected_tax_tree = build_tax_tree_selected_recurse(tax_tree_data)
 
         module_coverage_df = tax_df.merge(module_coverage_df, on="genome", how="left")
         etc_coverage_df = tax_df.merge(etc_coverage_df, on="genome", how="left")
@@ -175,15 +173,40 @@ def main(
     if labels is not None:
         function_df = rename_genomes_to_taxa(function_df, labels)
 
-    app = Dashboard(module_coverage_df, etc_coverage_df, function_df, tax_tree_data=tax_tree_data)
-
     if not output_dir.exists():
         output_dir.mkdir(parents=True, exist_ok=True)
-    app.plot_view.save(output_dir / "product.html", resources=INLINE)
+
+    if save_dataframes:
+        module_coverage_df.to_csv(output_dir / "module_coverage_df.tsv", sep="\t", index=False)
+        etc_coverage_df.to_csv(output_dir / "etc_coverage_df.tsv", sep="\t", index=False)
+        function_df.to_csv(output_dir / "function_df.tsv", sep="\t", index=False)
+        import json
+
+        with open(output_dir / "taxonomy_tree.json", "w") as f:
+            json.dump(tax_tree_data, f, ensure_ascii=False, indent=4)
+
     product_df.to_csv(output_dir / "product.tsv", sep="\t", index=False)
     if dashboard:
-        pn.serve(app.view, port=5006)
-        # plot.show(port=5007)
+        pn.serve(
+            lambda: Dashboard(
+                module_df=module_coverage_df,
+                etc_df=etc_coverage_df,
+                function_df=function_df,
+                tax_tree_data=tax_tree_data,
+                selected_tax_tree=selected_tax_tree,
+                output_dir=output_dir,
+            ),
+            port=5006,
+        )
+    else:
+        Dashboard(
+            module_df=module_coverage_df,
+            etc_df=etc_coverage_df,
+            function_df=function_df,
+            tax_tree_data=tax_tree_data,
+            selected_tax_tree=selected_tax_tree,
+            output_dir=output_dir,
+        )
     logger.info("Completed visualization")
 
 

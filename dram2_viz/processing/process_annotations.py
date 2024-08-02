@@ -440,21 +440,6 @@ def build_tax_edge_df(
         index=tax_df.index,
     )
     tax_df = tax_df.merge(tree, left_index=True, right_index=True, validate="1:1")
-    tax_df["taxonomy"] = (
-        tax_df["domain"]
-        + "; "
-        + tax_df["phylum"]
-        + "; "
-        + tax_df["class"]
-        + "; "
-        + tax_df["order"]
-        + "; "
-        + tax_df["family"]
-        + "; "
-        + tax_df["genus"]
-        + "; "
-        + tax_df["species"]
-    )
 
     tax_edge_df = (
         pd.concat(
@@ -471,7 +456,7 @@ def build_tax_edge_df(
         .reset_index(drop=True)
     )
 
-    return tax_edge_df
+    return tax_edge_df, tax_df
 
 
 def build_tree(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
@@ -524,3 +509,13 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
         for root in roots
     ]
     return tree_data
+
+
+def build_tax_tree_selected_recurse(tax_tree, flat_tree=None):
+    if flat_tree is None:
+        flat_tree = []
+    for node in tax_tree:
+        flat_tree.append(node["id"])
+        if "children" in node:
+            build_tax_tree_selected_recurse(node["children"], flat_tree)
+    return flat_tree
