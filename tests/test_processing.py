@@ -1,7 +1,7 @@
 import networkx as nx
 import pandas as pd
 
-from dram2_viz.processing.process_annotations import (
+from dram_viz.processing.process_annotations import (
     build_tax_edge_df,
     build_taxonomy_df,
     build_tree,

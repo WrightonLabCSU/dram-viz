@@ -3,8 +3,8 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dram2_viz"
-description = "A library for visualizing the output of DRAM2"
+name = "dram_viz"
+description = "A library for visualizing the output of DRAM"
 readme = "README.md"
 authors = [
     {name = "Madeline Scyphers", email = "mescyphers@gmail.com"},
@@ -34,8 +34,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Source Code" = "https://github.com/WrightonLabCSU/dram2_viz"
-"Bug Tracker" = "https://github.com/WrightonLabCSU/dram2_viz/issues"
+"Source Code" = "https://github.com/WrightonLabCSU/dram-viz"
+"Bug Tracker" = "https://github.com/WrightonLabCSU/dram-viz/issues"
 
 
 [project.optional-dependencies]
@@ -47,10 +47,14 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["dram2_viz*"]
+include = ["dram_viz*"]
+
+[project.scripts]
+"dram_viz" = "dram_viz.__main__:main"
+"dram.viz" = "dram_viz.__main__:main"
 
 [tool.setuptools_scm]
-write_to = "dram2_viz/_version.py"
+write_to = "dram_viz/_version.py"
 
 [tool.ruff]
 line-length = 120

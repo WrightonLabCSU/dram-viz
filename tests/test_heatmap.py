@@ -1,8 +1,8 @@
 import panel as pn
 from bokeh.models import Plot
 
-from dram2_viz.apps.heatmap import Dashboard, make_product_heatmap
-from dram2_viz.processing.process_annotations import build_tax_tree_selected_recurse
+from dram_viz.apps.heatmap import Dashboard, make_product_heatmap
+from dram_viz.processing.process_annotations import build_tax_tree_selected_recurse
 
 
 def test_make_product_heatmap(module_coverage_frame, etc_coverage_df, functional_df):
