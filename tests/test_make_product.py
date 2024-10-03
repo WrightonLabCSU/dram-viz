@@ -1,6 +1,6 @@
 import shlex
 
-from dram2_viz.make_product import main
+from dram_viz.make_product import main
 
 
 def test_main(test_annotation_path, tmp_path):

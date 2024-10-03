@@ -16,8 +16,8 @@ import click
 import pandas as pd
 import panel as pn
 
-from dram2_viz.apps.heatmap import Dashboard
-from dram2_viz.definitions import (
+from dram_viz.apps.heatmap import Dashboard
+from dram_viz.definitions import (
     BACKUP_GROUPBY_COLUMN,
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
@@ -27,7 +27,7 @@ from dram2_viz.definitions import (
     HEATMAP_MODULES,
     MODULE_STEPS_FORM_TAG,
 )
-from dram2_viz.processing.process_annotations import (
+from dram_viz.processing.process_annotations import (
     build_module_net,
     build_tax_edge_df,
     build_tax_tree_selected_recurse,
@@ -41,7 +41,7 @@ from dram2_viz.processing.process_annotations import (
     rename_genomes_to_taxa,
 )
 
-logger = logging.getLogger("dram2_log.viz")
+logger = logging.getLogger("dram.viz")
 
 pn.config.reuse_sessions = True
 pn.config.global_loading_spinner = True
@@ -91,7 +91,7 @@ def main(
     save_dataframes=False,
 ):
     """
-    Make a product heatmap visualization from the DRAM2 output.
+    Make a product heatmap visualization from the DRAM output.
     """
 
     output_dir = output_dir or Path.cwd().resolve()

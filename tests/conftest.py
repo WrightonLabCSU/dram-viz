@@ -5,8 +5,8 @@ import networkx as nx
 import pandas as pd
 import pytest
 
-from dram2_viz.definitions import DBSETS_COL
-from dram2_viz.processing.process_annotations import (
+from dram_viz.definitions import DBSETS_COL
+from dram_viz.processing.process_annotations import (
     build_module_net,
     get_annotation_ids_by_row,
 )

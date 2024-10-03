@@ -10,7 +10,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from dram2_viz.definitions import (
+from dram_viz.definitions import (
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
     ETC_COVERAGE_COLUMNS,
@@ -19,7 +19,7 @@ from dram2_viz.definitions import (
     TAXONOMY_LEVELS,
 )
 
-logger = logging.getLogger("dram2_log.viz")
+logger = logging.getLogger("dram.viz")
 
 
 def build_module_net(module_df):

@@ -15,7 +15,7 @@ from bokeh.resources import INLINE
 from bokeh.transform import factor_cmap, linear_cmap
 from panel_jstree import Tree
 
-from dram2_viz.definitions import NO_TAXONOMY_RANKS, TAXONOMY_RANKS_REGEX
+from dram_viz.definitions import NO_TAXONOMY_RANKS, TAXONOMY_RANKS_REGEX
 
 pn.extension("tabulator", "katex", template="bootstrap")
 
@@ -419,7 +419,7 @@ class Dashboard(pn.viewable.Viewer):
             additional_sidebar.append(self.taxonomy_filter)
 
         self.view = pn.template.FastListTemplate(
-            title="DRAM2 Product Visualization",
+            title="DRAM Product Visualization",
             # main=[self.plot_view],
             main=[
                 pn.Tabs(
