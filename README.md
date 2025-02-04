@@ -6,16 +6,17 @@ and dashboards for the [DRAM2 gene annotation tool](https://github.com/WrightonL
 ## Nextflow Integration
 
 The DRAM Visualization Library can be integrated into the DRAM Nextflow pipeline to generate figures in the form of html files. The html files can be viewed in a web browser and can be used to explore the results of the DRAM gene annotation software. This can be incorporated into a larger DRAM Nextflow pipeline or run as a standalone DRAM Nextflow
-pipeline by by running the `nextflow run` command:
+pipeline by by running the `nextflow run` (To install DRAM with nextflow see: https://github.com/WrightonLabCSU/DRAM/tree/dev) command:
+
 
 ```bash
-nextflow run DRAM2.nf --product --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/>
+nextflow run DRAM --product --annotations <path/to/annotations.tsv> --outdir <path/to/output/directory/>
 ```
 
 more options can be found by running:
 
 ```bash
-nextflow run DRAM2.nf --product --help
+nextflow run DRAM --product --help
 ```
 ## Standalone Usage
 
