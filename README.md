@@ -1,7 +1,7 @@
 # DRAM Visualization Library
 
 This directory contains the visualization code for DRAM. The visualization code is written in Python and uses the [Bokeh](https://bokeh.org) and [Panel](https://panel.holoviz.org) libraries. The visualization code is used to generate the figures
-and dashboards for the [DRAM2 gene annotation tool](https://github.com/WrightonLabCSU/DRAM2).
+and dashboards for the [DRAM v2 gene annotation tool](https://github.com/WrightonLabCSU/DRAM).
 
 ## Nextflow Integration
 
