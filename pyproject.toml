@@ -47,7 +47,10 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["dram_viz*"]
+include = ["dram_viz"]
+
+[tool.setuptools.package-data]
+dram_viz = ["dram_viz/data/*"]
 
 [project.scripts]
 "dram_viz" = "dram_viz.__main__:main"
