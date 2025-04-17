@@ -27,6 +27,7 @@ from dram_viz.definitions import (
     HEATMAP_MODULES,
     MODULE_STEPS_FORM_TAG,
 )
+from dram_viz.processing.join_annotations import join_dataframes
 from dram_viz.processing.process_annotations import (
     build_module_net,
     build_tax_edge_df,
@@ -51,6 +52,7 @@ pn.config.global_loading_spinner = True
 @click.option("--annotations", "-a", type=Path, help="Path to the annotations tsv file")
 @click.option("--groupby-column", "-g", type=str, default=DEFAULT_GROUPBY_COLUMN, help="Column to group by")
 @click.option("--output-dir", "-o", type=Path, help="Path to the output directory", default=Path.cwd().resolve())
+@click.option("--mapping", "-m", type=Path, help="Path to mapping file")
 @click.option(
     "--module-steps-form",
     type=Path,
@@ -84,6 +86,7 @@ def main(
     annotations,
     groupby_column=DEFAULT_GROUPBY_COLUMN,
     output_dir=None,
+    mapping=None,
     module_steps_form: Optional[Path] = None,
     etc_steps_form: Optional[Path] = None,
     function_steps_form: Optional[Path] = None,
@@ -93,21 +96,29 @@ def main(
     """
     Make a product heatmap visualization from the DRAM output.
     """
+    import time
+
+    s = time.time()
 
     output_dir = output_dir or Path.cwd().resolve()
     annotations = pd.read_csv(annotations, sep="\t", index_col=0)
 
+    if mapping:
+        mapping = pd.read_csv(mapping, sep="\t", index_col=0)
+        annotations = pd.merge(annotations, mapping, left_index=True, right_index=True, how="left")
+        del mapping
+
     db_id_sets: pd.Series = get_annotation_ids_by_row(annotations)
-    annotation_ids_by_row = annotations.copy()
-    annotation_ids_by_row[DBSETS_COL] = db_id_sets
+    # annotation_ids_by_row = annotations.copy()
+    annotations[DBSETS_COL] = db_id_sets
 
     module_steps_form = pd.read_csv(module_steps_form or FILES_NAMES[MODULE_STEPS_FORM_TAG], sep="\t")
     etc_module_df = pd.read_csv(etc_steps_form or FILES_NAMES[ETC_MODULE_DF_TAG], sep="\t")
     function_heatmap_form = pd.read_csv(function_steps_form or FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG], sep="\t")
 
     if groupby_column not in annotations.columns:
-        if BACKUP_GROUPBY_COLUMN in annotations.columns:
-            groupby_column = BACKUP_GROUPBY_COLUMN
+        if DEFAULT_GROUPBY_COLUMN in annotations.columns:
+            groupby_column = DEFAULT_GROUPBY_COLUMN
         elif BACKUP_GROUPBY_COLUMN in annotations.columns:
             groupby_column = BACKUP_GROUPBY_COLUMN
         else:
@@ -146,7 +157,7 @@ def main(
         module_nets=module_nets,
         etc_module_df=etc_module_df,
         function_heatmap_form=function_heatmap_form,
-        annotation_ids_by_row=annotation_ids_by_row,
+        # annotation_ids_by_row=annotation_ids_by_row,
         groupby_column=groupby_column,
     )
 
@@ -208,6 +219,7 @@ def main(
             output_dir=output_dir,
         )
     logger.info("Completed visualization")
+    print(f"Total run time: {time.time() - s}")
 
 
 if __name__ == "__main__":
