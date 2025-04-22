@@ -208,6 +208,7 @@ def make_product_heatmap(
     function_df: pd.DataFrame,
     y_col: str = "genome",
     taxonomy_label: pd.Series | None = None,
+    mapping: bool = False,
 ):
     """
     Make a product heatmap group from the module_coverage_df, etc_coverage_df, and functional_df
@@ -263,11 +264,13 @@ def make_product_heatmap(
 
     if taxonomy_label is not None:
         first_charts_kw["extra_y_col"] = taxonomy_label
+    c_col = "step_coverage" if not mapping else "summed_sample_abundances"
+    # c_col = "step_coverage" if not mapping else "normalized_sample_abundances"
     module_charts = make_heatmap_groups(
         module_df,
         x_col="module_name",
         y_col=y_col,
-        c_col="step_coverage",
+        c_col=c_col,
         tooltip_cols=["genome", "module_name", "steps", "steps_present", *extra_tooltip_cols],
         **first_charts_kw,
         title="Module",
@@ -278,11 +281,13 @@ def make_product_heatmap(
     #                                                "genes", "missing_genes", *extra_tooltip_cols],
     #                                               y_axis_location=None,),
     #                           index=-1)
+    c_col = "percent_coverage" if not mapping else "summed_sample_abundances"
+    # c_col = "percent_coverage" if not mapping else "normalized_sample_abundances"
     etc_charts = make_heatmap_groups(
         etc_df,
         x_col="module_name",
         y_col=y_col,
-        c_col="percent_coverage",
+        c_col=c_col,
         groupby="complex",
         tooltip_cols=[
             "genome",
@@ -296,12 +301,14 @@ def make_product_heatmap(
         y_axis_location=None,
     )
     #
+    c_col = "present" if not mapping else "summed_sample_abundances"
+    # c_col = "present" if not mapping else "normalized_sample_abundances"
     function_charts = add_legend(
         make_heatmap_groups(
             function_df,
             x_col="function_name",
             y_col=y_col,
-            c_col="present",
+            c_col=c_col,
             groupby="category",
             tooltip_cols=[
                 "genome",
@@ -350,6 +357,7 @@ class Dashboard(pn.viewable.Viewer):
         tax_tree_data=None,
         selected_tax_tree=None,
         output_dir=None,
+        mapping=None
     ):
         super().__init__()
         self.module_df = module_df
@@ -357,6 +365,7 @@ class Dashboard(pn.viewable.Viewer):
         self.function_df = function_df
         self.tax_tree_data = tax_tree_data
         self._output_dir = output_dir or Path.cwd()
+        self._mapping = mapping
         self.plot_view = pn.Row()
         self.download_button = pn.widgets.Button(name="Download Heatmap", button_type="primary")
         self.download_button.on_click(self.download_heatmap)
@@ -373,6 +382,9 @@ class Dashboard(pn.viewable.Viewer):
         )
         self.show_tax_box = pn.Column(self.tax_axis_filter, self.tax_axis_rank)
         pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
+
+        self.mapping_filter = pn.widgets.Checkbox(name="Switch to Mapping View", value=False)
+        self.show_mapping_box = pn.Column(self.mapping_filter)
 
         if "taxonomy" in self.module_df.columns:
             self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
@@ -412,6 +424,9 @@ class Dashboard(pn.viewable.Viewer):
         )
 
         self.plot_view[:] = charts
+
+        if self._mapping:
+            additional_sidebar.append(self.show_mapping_box)
 
         if "taxonomy" in self.module_df.columns:
             additional_sidebar.append(self.show_tax_box)
@@ -462,6 +477,7 @@ class Dashboard(pn.viewable.Viewer):
             etc_df,
             function_df,
             taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value,
+            mapping=self.mapping_filter.value,
         )
 
         self.plot_view[:] = charts

@@ -103,10 +103,12 @@ def main(
     output_dir = output_dir or Path.cwd().resolve()
     annotations = pd.read_csv(annotations, sep="\t", index_col=0)
 
+    sample_names = None
     if mapping:
-        mapping = pd.read_csv(mapping, sep="\t", index_col=0)
-        annotations = pd.merge(annotations, mapping, left_index=True, right_index=True, how="left")
-        del mapping
+        mapping_df = pd.read_csv(mapping, sep="\t", index_col=0)
+        annotations = pd.merge(annotations, mapping_df, left_index=True, right_index=True, how="left")
+        sample_names = mapping_df.columns.tolist()
+        del mapping_df
 
     db_id_sets: pd.Series = get_annotation_ids_by_row(annotations)
     # annotation_ids_by_row = annotations.copy()
@@ -152,13 +154,32 @@ def main(
     # etc_coverage_df = pd.read_csv(output_dir / "etc_coverage.tsv", sep="\t")
     # function_df = pd.read_csv(output_dir / "function_coverage.tsv", sep="\t")
 
+
+    # ko_id: Optional[str] = None
+    # ko_id_names: list[str] = ["kegg_id", "kofam_id", "ko_id"]
+    # for id in ko_id_names:
+    #     if id in annotations.columns:
+    #         ko_id = id
+    #         break
+    # if ko_id is None:
+    #     raise ValueError(
+    #         f"""
+    #         No KEGG or KOfam id column could be found.
+    #         These names were tried: {', '.join(ko_id_names)}.
+    #         """
+    #     )
+    # df1 = pd.merge(annotations, module_steps_form.loc[module_steps_form["module"].isin(HEATMAP_MODULES)],
+    #                left_on="kegg_id", right_on="ko").groupby([groupby_column, "module"])[sample_names].sum()
+
     module_coverage_df, etc_coverage_df, function_df = fill_product_dfs(
         annotations_df=annotations,
         module_nets=module_nets,
+        module_steps_form=module_steps_form,
         etc_module_df=etc_module_df,
         function_heatmap_form=function_heatmap_form,
         # annotation_ids_by_row=annotation_ids_by_row,
         groupby_column=groupby_column,
+        sample_names=sample_names,
     )
 
     tax_tree_data = None
@@ -206,6 +227,7 @@ def main(
                 tax_tree_data=tax_tree_data,
                 selected_tax_tree=selected_tax_tree,
                 output_dir=output_dir,
+                mapping=mapping
             ),
             port=5006,
         )
@@ -217,6 +239,7 @@ def main(
             tax_tree_data=tax_tree_data,
             selected_tax_tree=selected_tax_tree,
             output_dir=output_dir,
+            mapping=mapping
         )
     logger.info("Completed visualization")
     print(f"Total run time: {time.time() - s}")
