@@ -154,7 +154,6 @@ def main(
     # etc_coverage_df = pd.read_csv(output_dir / "etc_coverage.tsv", sep="\t")
     # function_df = pd.read_csv(output_dir / "function_coverage.tsv", sep="\t")
 
-
     # ko_id: Optional[str] = None
     # ko_id_names: list[str] = ["kegg_id", "kofam_id", "ko_id"]
     # for id in ko_id_names:
@@ -227,7 +226,7 @@ def main(
                 tax_tree_data=tax_tree_data,
                 selected_tax_tree=selected_tax_tree,
                 output_dir=output_dir,
-                mapping=mapping
+                mapping=mapping,
             ),
             port=5006,
         )
@@ -239,7 +238,7 @@ def main(
             tax_tree_data=tax_tree_data,
             selected_tax_tree=selected_tax_tree,
             output_dir=output_dir,
-            mapping=mapping
+            mapping=mapping,
         )
     logger.info("Completed visualization")
     print(f"Total run time: {time.time() - s}")

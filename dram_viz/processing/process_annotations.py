@@ -14,10 +14,10 @@ from dram_viz.definitions import (
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
     ETC_COVERAGE_COLUMNS,
+    HEATMAP_MODULES,
     ID_FUNCTION_DICT,
     KO_REGEX,
     TAXONOMY_LEVELS,
-    HEATMAP_MODULES
 )
 
 logger = logging.getLogger("dram.viz")
@@ -45,7 +45,7 @@ def build_module_net(module_df):
     return module_net
 
 
-def  get_module_step_coverage(kos, module_net):
+def get_module_step_coverage(kos, module_net):
     # prune network based on what kos were observed
     pruned_module_net = module_net.copy()
     module_kos_present = set()
@@ -209,7 +209,9 @@ def get_module_coverage(module_net: nx.DiGraph, genes_present: set):
     )
 
 
-def make_module_coverage_frame(annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN, sample_names=None, module_steps_form=None):
+def make_module_coverage_frame(
+    annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN, sample_names=None, module_steps_form=None
+):
     # go through each scaffold to check for modules
     module_coverage_dict = dict()
     for group, frame in annotations_df.groupby(groupby_column, sort=False):
@@ -218,20 +220,28 @@ def make_module_coverage_frame(annotations_df, module_nets, groupby_column=DEFAU
     module_coverage.index = module_coverage.index.set_names(["genome", "module"])
 
     if sample_names:
-
-        df1 = pd.merge(annotations_df, module_steps_form.loc[module_steps_form["module"].isin(HEATMAP_MODULES)],
-                       left_on="kegg_id", right_on="ko").groupby([groupby_column, "module"])[sample_names].sum()
-        df1.index = df1.index.set_names(['genome', 'module'])
+        df1 = (
+            pd.merge(
+                annotations_df,
+                module_steps_form.loc[module_steps_form["module"].isin(HEATMAP_MODULES)],
+                left_on="kegg_id",
+                right_on="ko",
+            )
+            .groupby([groupby_column, "module"])[sample_names]
+            .sum()
+        )
+        df1.index = df1.index.set_names(["genome", "module"])
         df1 = pd.merge(module_coverage, df1, left_index=True, right_index=True, how="left")
         module_coverage["summed_sample_abundances"] = df1[sample_names].sum(axis=1)
         module_coverage["present_samples"] = (df1[sample_names].replace(np.nan, 0) != 0).sum(axis=1)
-        module_coverage["avg_sample_abundances"] = module_coverage["summed_sample_abundances"] / module_coverage[
-            "present_samples"]
-        module_coverage["normalized_sample_abundances"] = module_coverage["summed_sample_abundances"] / module_coverage.groupby(['module'])[
-            "summed_sample_abundances"].transform("max")
+        module_coverage["avg_sample_abundances"] = (
+            module_coverage["summed_sample_abundances"] / module_coverage["present_samples"]
+        )
+        module_coverage["normalized_sample_abundances"] = module_coverage[
+            "summed_sample_abundances"
+        ] / module_coverage.groupby(["module"])["summed_sample_abundances"].transform("max")
 
     module_coverage = module_coverage.reset_index()
-
 
     return module_coverage
 
@@ -291,15 +301,24 @@ def make_etc_coverage_df(
     etc_coverage_df = pd.DataFrame(etc_coverage_df_rows, columns=ETC_COVERAGE_COLUMNS)
     if sample_names:
         df = etc_coverage_df.copy()
-        df["genes"] = df["genes"].str.split(',')
-        df = df.explode("genes").rename(columns={'genes': 'kegg_id'})
+        df["genes"] = df["genes"].str.split(",")
+        df = df.explode("genes").rename(columns={"genes": "kegg_id"})
 
-        df = pd.merge(df, annotation_ids_by_row, left_on=['genome', 'kegg_id'], right_on=['fasta', 'kegg_id'], how="left").groupby(['genome', 'module_id'])[sample_names].sum()
+        df = (
+            pd.merge(
+                df, annotation_ids_by_row, left_on=["genome", "kegg_id"], right_on=["fasta", "kegg_id"], how="left"
+            )
+            .groupby(["genome", "module_id"])[sample_names]
+            .sum()
+        )
         df["summed_sample_abundances"] = df[sample_names].sum(axis=1)
-        etc_coverage_df = pd.merge(etc_coverage_df, df[["summed_sample_abundances"]], on=['genome', 'module_id'], how='left')
+        etc_coverage_df = pd.merge(
+            etc_coverage_df, df[["summed_sample_abundances"]], on=["genome", "module_id"], how="left"
+        )
 
-        etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df["summed_sample_abundances"] / etc_coverage_df.groupby(['module_id'])[
-            "summed_sample_abundances"].transform("max")
+        etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df[
+            "summed_sample_abundances"
+        ] / etc_coverage_df.groupby(["module_id"])["summed_sample_abundances"].transform("max")
 
     return etc_coverage_df
 
@@ -349,17 +368,25 @@ def make_functional_df(
         columns=list(function_heatmap_form.columns) + ["genome", "present", "category_function_name"],
     )
     if sample_names:
-
         df = function_df.copy()
-        df["function_ids"] = df["function_ids"].str.replace(" ", "").str.split(',')
-        df = df.explode("function_ids").rename(columns={'function_ids': 'kegg_id'})
+        df["function_ids"] = df["function_ids"].str.replace(" ", "").str.split(",")
+        df = df.explode("function_ids").rename(columns={"function_ids": "kegg_id"})
 
-        df = pd.merge(df, annotation_ids_by_row, left_on=['genome', 'kegg_id'], right_on=['fasta', 'kegg_id'], how="left").groupby(['genome', 'function_name'])[sample_names].sum()
+        df = (
+            pd.merge(
+                df, annotation_ids_by_row, left_on=["genome", "kegg_id"], right_on=["fasta", "kegg_id"], how="left"
+            )
+            .groupby(["genome", "function_name"])[sample_names]
+            .sum()
+        )
         df["summed_sample_abundances"] = df[sample_names].sum(axis=1)
-        function_df = pd.merge(function_df, df[["summed_sample_abundances"]], on=['genome', 'function_name'], how='left')
+        function_df = pd.merge(
+            function_df, df[["summed_sample_abundances"]], on=["genome", "function_name"], how="left"
+        )
 
-        function_df["normalized_sample_abundances"] = function_df["summed_sample_abundances"] / function_df.groupby(['function_name'])[
-            "summed_sample_abundances"].transform("max")
+        function_df["normalized_sample_abundances"] = function_df["summed_sample_abundances"] / function_df.groupby(
+            ["function_name"]
+        )["summed_sample_abundances"].transform("max")
 
     return function_df
 
@@ -375,18 +402,15 @@ def fill_product_dfs(
     groupby_column=DEFAULT_GROUPBY_COLUMN,
     sample_names=None,
 ):
-    module_coverage_frame = make_module_coverage_frame(annotations_df, module_nets, groupby_column, sample_names, module_steps_form)
+    module_coverage_frame = make_module_coverage_frame(
+        annotations_df, module_nets, groupby_column, sample_names, module_steps_form
+    )
 
     # make ETC frame
     etc_coverage_df = make_etc_coverage_df(etc_module_df, annotations_df, groupby_column, sample_names)
 
     # make functional frame
-    function_df = make_functional_df(
-        annotations_df,
-        function_heatmap_form,
-        groupby_column,
-        sample_names
-    )
+    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
 
     return module_coverage_frame, etc_coverage_df, function_df
 

@@ -357,7 +357,7 @@ class Dashboard(pn.viewable.Viewer):
         tax_tree_data=None,
         selected_tax_tree=None,
         output_dir=None,
-        mapping=None
+        mapping=None,
     ):
         super().__init__()
         self.module_df = module_df
