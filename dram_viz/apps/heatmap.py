@@ -209,6 +209,7 @@ def make_product_heatmap(
     y_col: str = "genome",
     taxonomy_label: pd.Series | None = None,
     mapping: bool = False,
+    normalize: bool = False,
 ):
     """
     Make a product heatmap group from the module_coverage_df, etc_coverage_df, and functional_df
@@ -264,8 +265,10 @@ def make_product_heatmap(
 
     if taxonomy_label is not None:
         first_charts_kw["extra_y_col"] = taxonomy_label
-    c_col = "step_coverage" if not mapping else "summed_sample_abundances"
-    # c_col = "step_coverage" if not mapping else "normalized_sample_abundances"
+    # c_col = "step_coverage" if not mapping else "summed_sample_abundances"
+    c_col = (
+        "step_coverage" if not mapping else "normalized_sample_abundances" if normalize else "summed_sample_abundances"
+    )
     module_charts = make_heatmap_groups(
         module_df,
         x_col="module_name",
@@ -281,8 +284,14 @@ def make_product_heatmap(
     #                                                "genes", "missing_genes", *extra_tooltip_cols],
     #                                               y_axis_location=None,),
     #                           index=-1)
-    c_col = "percent_coverage" if not mapping else "summed_sample_abundances"
-    # c_col = "percent_coverage" if not mapping else "normalized_sample_abundances"
+    # c_col = "percent_coverage" if not mapping else "summed_sample_abundances"
+    c_col = (
+        "percent_coverage"
+        if not mapping
+        else "normalized_sample_abundances"
+        if normalize
+        else "summed_sample_abundances"
+    )
     etc_charts = make_heatmap_groups(
         etc_df,
         x_col="module_name",
@@ -301,8 +310,8 @@ def make_product_heatmap(
         y_axis_location=None,
     )
     #
-    c_col = "present" if not mapping else "summed_sample_abundances"
-    # c_col = "present" if not mapping else "normalized_sample_abundances"
+    # c_col = "present" if not mapping else "summed_sample_abundances"
+    c_col = "present" if not mapping else "normalized_sample_abundances" if normalize else "summed_sample_abundances"
     function_charts = add_legend(
         make_heatmap_groups(
             function_df,
@@ -384,6 +393,7 @@ class Dashboard(pn.viewable.Viewer):
         pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
 
         self.mapping_filter = pn.widgets.Checkbox(name="Switch to Mapping View", value=False)
+        self.normalize_mapping_filter = pn.widgets.Checkbox(name="Normalize Mapping", value=False)
         self.show_mapping_box = pn.Column(self.mapping_filter)
 
         if "taxonomy" in self.module_df.columns:
@@ -427,6 +437,7 @@ class Dashboard(pn.viewable.Viewer):
 
         if self._mapping:
             additional_sidebar.append(self.show_mapping_box)
+            additional_sidebar.append(self.normalize_mapping_filter)
 
         if "taxonomy" in self.module_df.columns:
             additional_sidebar.append(self.show_tax_box)
@@ -478,6 +489,7 @@ class Dashboard(pn.viewable.Viewer):
             function_df,
             taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value,
             mapping=self.mapping_filter.value,
+            normalize=self.normalize_mapping_filter.value,
         )
 
         self.plot_view[:] = charts

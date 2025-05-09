@@ -233,6 +233,7 @@ def make_module_coverage_frame(
         df1.index = df1.index.set_names(["genome", "module"])
         df1 = pd.merge(module_coverage, df1, left_index=True, right_index=True, how="left")
         module_coverage["summed_sample_abundances"] = df1[sample_names].sum(axis=1)
+        module_coverage["summed_sample_abundances"] = module_coverage["summed_sample_abundances"].fillna(0)
         module_coverage["present_samples"] = (df1[sample_names].replace(np.nan, 0) != 0).sum(axis=1)
         module_coverage["avg_sample_abundances"] = (
             module_coverage["summed_sample_abundances"] / module_coverage["present_samples"]
@@ -240,6 +241,8 @@ def make_module_coverage_frame(
         module_coverage["normalized_sample_abundances"] = module_coverage[
             "summed_sample_abundances"
         ] / module_coverage.groupby(["module"])["summed_sample_abundances"].transform("max")
+
+        module_coverage["normalized_sample_abundances"] = module_coverage["normalized_sample_abundances"].fillna(0)
 
     module_coverage = module_coverage.reset_index()
 
@@ -315,11 +318,13 @@ def make_etc_coverage_df(
         etc_coverage_df = pd.merge(
             etc_coverage_df, df[["summed_sample_abundances"]], on=["genome", "module_id"], how="left"
         )
+        etc_coverage_df["summed_sample_abundances"] = etc_coverage_df["summed_sample_abundances"].fillna(0)
 
         etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df[
             "summed_sample_abundances"
         ] / etc_coverage_df.groupby(["module_id"])["summed_sample_abundances"].transform("max")
 
+        etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df["normalized_sample_abundances"].fillna(0)
     return etc_coverage_df
 
 
@@ -383,10 +388,13 @@ def make_functional_df(
         function_df = pd.merge(
             function_df, df[["summed_sample_abundances"]], on=["genome", "function_name"], how="left"
         )
+        function_df["summed_sample_abundances"] = function_df["summed_sample_abundances"].fillna(0)
 
         function_df["normalized_sample_abundances"] = function_df["summed_sample_abundances"] / function_df.groupby(
             ["function_name"]
         )["summed_sample_abundances"].transform("max")
+
+        function_df["normalized_sample_abundances"] = function_df["normalized_sample_abundances"].fillna(0)
 
     return function_df
 
@@ -402,15 +410,15 @@ def fill_product_dfs(
     groupby_column=DEFAULT_GROUPBY_COLUMN,
     sample_names=None,
 ):
+    # make functional frame
+    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
+
     module_coverage_frame = make_module_coverage_frame(
         annotations_df, module_nets, groupby_column, sample_names, module_steps_form
     )
 
     # make ETC frame
     etc_coverage_df = make_etc_coverage_df(etc_module_df, annotations_df, groupby_column, sample_names)
-
-    # make functional frame
-    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
 
     return module_coverage_frame, etc_coverage_df, function_df
 
