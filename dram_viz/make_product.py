@@ -18,7 +18,7 @@ import panel as pn
 
 from dram_viz.apps.heatmap import Dashboard
 from dram_viz.definitions import (
-    BACKUP_GROUPBY_COLUMN,
+    BACKUP_GROUPBY_COLUMNS,
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
     ETC_MODULE_DF_TAG,
@@ -121,8 +121,11 @@ def main(
     if groupby_column not in annotations.columns:
         if DEFAULT_GROUPBY_COLUMN in annotations.columns:
             groupby_column = DEFAULT_GROUPBY_COLUMN
-        elif BACKUP_GROUPBY_COLUMN in annotations.columns:
-            groupby_column = BACKUP_GROUPBY_COLUMN
+        elif any(column in BACKUP_GROUPBY_COLUMNS for column in BACKUP_GROUPBY_COLUMNS):
+            for column in BACKUP_GROUPBY_COLUMNS:
+                if column in annotations.columns:
+                    groupby_column = column
+                    break
         else:
             raise ValueError(f"Groupby column {groupby_column} not found in annotations")
 
