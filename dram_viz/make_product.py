@@ -18,7 +18,7 @@ import panel as pn
 
 from dram_viz.apps.heatmap import Dashboard
 from dram_viz.definitions import (
-    BACKUP_GROUPBY_COLUMN,
+    BACKUP_GROUPBY_COLUMNS,
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
     ETC_MODULE_DF_TAG,
@@ -27,6 +27,7 @@ from dram_viz.definitions import (
     HEATMAP_MODULES,
     MODULE_STEPS_FORM_TAG,
 )
+from dram_viz.processing.join_annotations import join_dataframes
 from dram_viz.processing.process_annotations import (
     build_module_net,
     build_tax_edge_df,
@@ -51,6 +52,7 @@ pn.config.global_loading_spinner = True
 @click.option("--annotations", "-a", type=Path, help="Path to the annotations tsv file")
 @click.option("--groupby-column", "-g", type=str, default=DEFAULT_GROUPBY_COLUMN, help="Column to group by")
 @click.option("--output-dir", "-o", type=Path, help="Path to the output directory", default=Path.cwd().resolve())
+@click.option("--mapping", "-m", type=Path, help="Path to mapping file")
 @click.option(
     "--module-steps-form",
     type=Path,
@@ -84,6 +86,7 @@ def main(
     annotations,
     groupby_column=DEFAULT_GROUPBY_COLUMN,
     output_dir=None,
+    mapping=None,
     module_steps_form: Optional[Path] = None,
     etc_steps_form: Optional[Path] = None,
     function_steps_form: Optional[Path] = None,
@@ -93,23 +96,36 @@ def main(
     """
     Make a product heatmap visualization from the DRAM output.
     """
+    import time
+
+    s = time.time()
 
     output_dir = output_dir or Path.cwd().resolve()
     annotations = pd.read_csv(annotations, sep="\t", index_col=0)
 
+    sample_names = None
+    if mapping:
+        mapping_df = pd.read_csv(mapping, sep="\t", index_col=0)
+        annotations = pd.merge(annotations, mapping_df, left_index=True, right_index=True, how="left")
+        sample_names = mapping_df.columns.tolist()
+        del mapping_df
+
     db_id_sets: pd.Series = get_annotation_ids_by_row(annotations)
-    annotation_ids_by_row = annotations.copy()
-    annotation_ids_by_row[DBSETS_COL] = db_id_sets
+    # annotation_ids_by_row = annotations.copy()
+    annotations[DBSETS_COL] = db_id_sets
 
     module_steps_form = pd.read_csv(module_steps_form or FILES_NAMES[MODULE_STEPS_FORM_TAG], sep="\t")
     etc_module_df = pd.read_csv(etc_steps_form or FILES_NAMES[ETC_MODULE_DF_TAG], sep="\t")
     function_heatmap_form = pd.read_csv(function_steps_form or FILES_NAMES[FUNCTION_HEATMAP_FORM_TAG], sep="\t")
 
     if groupby_column not in annotations.columns:
-        if BACKUP_GROUPBY_COLUMN in annotations.columns:
-            groupby_column = BACKUP_GROUPBY_COLUMN
-        elif BACKUP_GROUPBY_COLUMN in annotations.columns:
-            groupby_column = BACKUP_GROUPBY_COLUMN
+        if DEFAULT_GROUPBY_COLUMN in annotations.columns:
+            groupby_column = DEFAULT_GROUPBY_COLUMN
+        elif any(column in BACKUP_GROUPBY_COLUMNS for column in BACKUP_GROUPBY_COLUMNS):
+            for column in BACKUP_GROUPBY_COLUMNS:
+                if column in annotations.columns:
+                    groupby_column = column
+                    break
         else:
             raise ValueError(f"Groupby column {groupby_column} not found in annotations")
 
@@ -141,13 +157,31 @@ def main(
     # etc_coverage_df = pd.read_csv(output_dir / "etc_coverage.tsv", sep="\t")
     # function_df = pd.read_csv(output_dir / "function_coverage.tsv", sep="\t")
 
+    # ko_id: Optional[str] = None
+    # ko_id_names: list[str] = ["kegg_id", "kofam_id", "ko_id"]
+    # for id in ko_id_names:
+    #     if id in annotations.columns:
+    #         ko_id = id
+    #         break
+    # if ko_id is None:
+    #     raise ValueError(
+    #         f"""
+    #         No KEGG or KOfam id column could be found.
+    #         These names were tried: {', '.join(ko_id_names)}.
+    #         """
+    #     )
+    # df1 = pd.merge(annotations, module_steps_form.loc[module_steps_form["module"].isin(HEATMAP_MODULES)],
+    #                left_on="kegg_id", right_on="ko").groupby([groupby_column, "module"])[sample_names].sum()
+
     module_coverage_df, etc_coverage_df, function_df = fill_product_dfs(
         annotations_df=annotations,
         module_nets=module_nets,
+        module_steps_form=module_steps_form,
         etc_module_df=etc_module_df,
         function_heatmap_form=function_heatmap_form,
-        annotation_ids_by_row=annotation_ids_by_row,
+        # annotation_ids_by_row=annotation_ids_by_row,
         groupby_column=groupby_column,
+        sample_names=sample_names,
     )
 
     tax_tree_data = None
@@ -195,6 +229,7 @@ def main(
                 tax_tree_data=tax_tree_data,
                 selected_tax_tree=selected_tax_tree,
                 output_dir=output_dir,
+                mapping=mapping,
             ),
             port=5006,
         )
@@ -206,8 +241,10 @@ def main(
             tax_tree_data=tax_tree_data,
             selected_tax_tree=selected_tax_tree,
             output_dir=output_dir,
+            mapping=mapping,
         )
     logger.info("Completed visualization")
+    print(f"Total run time: {time.time() - s}")
 
 
 if __name__ == "__main__":

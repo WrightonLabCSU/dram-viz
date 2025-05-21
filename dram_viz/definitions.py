@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-DEFAULT_GROUPBY_COLUMN = "sample"
-BACKUP_GROUPBY_COLUMN = "fasta"
+DEFAULT_GROUPBY_COLUMN = "input_fasta"
+BACKUP_GROUPBY_COLUMNS = ["fasta", "sample"]
 
 HEATMAP_MODULES = [
     "M00001",
@@ -49,9 +49,12 @@ ID_FUNCTION_DICT = {
     "ko_id": lambda x: [j for j in x.split(",")],
     "kegg_id": lambda x: [j for j in x.split(",")],
     "kegg_hit": lambda x: [i[1:-1] for i in re.findall(r"\[EC:\d*.\d*.\d*.\d*\]", x)],
-    "peptidase_family": lambda x: [j for j in x.split(";")],
-    "cazy_best_hit": lambda x: [x.split("_")[0]],
-    "pfam_hits": lambda x: [j[1:-1].split(".")[0] for j in re.findall(r"\[PF\d\d\d\d\d.\d*\]", x)],
+    "peptidase_family": lambda x: [j for j in x.split(";")],  # old merops format
+    "merops_id": lambda x: [j for j in x.split(";")],  # new merops format
+    "cazy_best_hit": lambda x: [x.split("_")[0]],  # old cazy format
+    "dbcan_id": lambda x: [x.split("_")[0]],  # new cazy format
+    "pfam_hits": lambda x: [j[1:-1].split(".")[0] for j in re.findall(r"\[PF\d\d\d\d\d.\d*\]", x)],  # old pfam format
+    "pfam_id": lambda x: [j[1:-1].split(".")[0] for j in re.findall(r"\[PF\d\d\d\d\d.\d*\]", x)],  # new pfam format
     "camper_id": lambda x: [x],
     "fegenie_id": lambda x: [x],
     "sulfur_id": lambda x: [x],

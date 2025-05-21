@@ -14,6 +14,7 @@ from dram_viz.definitions import (
     DBSETS_COL,
     DEFAULT_GROUPBY_COLUMN,
     ETC_COVERAGE_COLUMNS,
+    HEATMAP_MODULES,
     ID_FUNCTION_DICT,
     KO_REGEX,
     TAXONOMY_LEVELS,
@@ -67,7 +68,7 @@ def get_module_step_coverage(kos, module_net):
     return num_steps, num_steps_present, coverage, sorted(module_kos_present)
 
 
-def make_module_coverage_df(annotation_df, module_nets):
+def make_module_coverage_df(annotation_df, module_nets, sample_names=None):
     kos_to_genes = defaultdict(list)
     ko_id: Optional[str] = None
     ko_id_names: list[str] = ["kegg_id", "kofam_id", "ko_id"]
@@ -167,20 +168,21 @@ def is_ko(ko):
 
 
 def make_module_network(definition, network: nx.DiGraph = None, parent_nodes=("start",)):
-    # TODO: Figure out how to add 'end' step to last step at end
+    """Efficiently construct the module network"""
     if network is None:
         network = nx.DiGraph()
+
     last_steps = []
     for step in split_into_steps(definition, ","):
         prev_steps = parent_nodes
         for substep in split_into_steps(step, "+"):
             if is_ko(substep):
-                for prev_step in prev_steps:
-                    network.add_edge(prev_step, substep)
+                network.add_edges_from((prev_step, substep) for prev_step in prev_steps)
                 prev_steps = [substep]
             else:
                 network, prev_steps = make_module_network(substep, network, prev_steps)
-        last_steps += prev_steps
+        last_steps.extend(prev_steps)
+
     return network, last_steps
 
 
@@ -207,35 +209,72 @@ def get_module_coverage(module_net: nx.DiGraph, genes_present: set):
     )
 
 
-def make_module_coverage_frame(annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN):
+def make_module_coverage_frame(
+    annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN, sample_names=None, module_steps_form=None
+):
     # go through each scaffold to check for modules
     module_coverage_dict = dict()
     for group, frame in annotations_df.groupby(groupby_column, sort=False):
-        module_coverage_dict[group] = make_module_coverage_df(frame, module_nets)
+        module_coverage_dict[group] = make_module_coverage_df(frame, module_nets, sample_names=sample_names)
     module_coverage = pd.concat(module_coverage_dict)
     module_coverage.index = module_coverage.index.set_names(["genome", "module"])
-    return module_coverage.reset_index()
+
+    if sample_names:
+        df1 = (
+            pd.merge(
+                annotations_df,
+                module_steps_form.loc[module_steps_form["module"].isin(HEATMAP_MODULES)],
+                left_on="kegg_id",
+                right_on="ko",
+            )
+            .groupby([groupby_column, "module"])[sample_names]
+            .sum()
+        )
+        df1.index = df1.index.set_names(["genome", "module"])
+        df1 = pd.merge(module_coverage, df1, left_index=True, right_index=True, how="left")
+        module_coverage["summed_sample_abundances"] = df1[sample_names].sum(axis=1)
+        module_coverage["summed_sample_abundances"] = module_coverage["summed_sample_abundances"].fillna(0)
+        module_coverage["present_samples"] = (df1[sample_names].replace(np.nan, 0) != 0).sum(axis=1)
+        module_coverage["avg_sample_abundances"] = (
+            module_coverage["summed_sample_abundances"] / module_coverage["present_samples"]
+        )
+        module_coverage["normalized_sample_abundances"] = module_coverage[
+            "summed_sample_abundances"
+        ] / module_coverage.groupby(["module"])["summed_sample_abundances"].transform("max")
+
+        module_coverage["normalized_sample_abundances"] = module_coverage["normalized_sample_abundances"].fillna(0)
+
+    module_coverage = module_coverage.reset_index()
+
+    return module_coverage
+
+
+def optimized_get_all_annotation_ids(data, groupby_column=DEFAULT_GROUPBY_COLUMN):
+    """Optimized version of get_all_annotation_ids using pandas explode"""
+    return data[DBSETS_COL].explode().astype(str).groupby(data[groupby_column]).apply(set)
 
 
 def make_etc_coverage_df(
-    etc_module_df,
+    etc_module_df: pd.DataFrame,
     annotation_ids_by_row: pd.DataFrame,
     groupby_column=DEFAULT_GROUPBY_COLUMN,
+    sample_names=None,
 ):
-    etc_coverage_df_rows = list()
+    etc_coverage_df_rows = []
+
+    # Precompute annotation IDs by group
+    annotation_ids_by_group = optimized_get_all_annotation_ids(annotation_ids_by_row, groupby_column=groupby_column)
+
     for _, module_row in etc_module_df.iterrows():
-        definition = module_row["definition"]
-        # remove optional subunits
-        definition = re.sub(r"-K\d\d\d\d\d", "", definition)
+        definition = re.sub(r"-K\d\d\d\d\d", "", module_row["definition"])
         module_net, _ = make_module_network(definition)
-        # add end node
-        no_out = [node for node in module_net.nodes() if module_net.out_degree(node) == 0]
-        for node in no_out:
-            module_net.add_edge(node, "end")
-        # go through each genome and check pathway coverage
-        for group, frame in annotation_ids_by_row.groupby(groupby_column):
-            # get annotation genes
-            grouped_ids = set(get_all_annotation_ids(frame).keys())
+
+        # Add end node for nodes with no outgoing edges
+        no_out_nodes = [node for node in module_net.nodes if module_net.out_degree(node) == 0]
+        module_net.add_edges_from((node, "end") for node in no_out_nodes)
+
+        # Process each group in precomputed annotation IDs
+        for group, grouped_ids in annotation_ids_by_group.items():
             (
                 path_len,
                 path_coverage_count,
@@ -243,9 +282,9 @@ def make_etc_coverage_df(
                 genes,
                 missing_genes,
             ) = get_module_coverage(module_net, grouped_ids)
-            complex_module_name = "Complex %s: %s" % (
-                module_row["complex"].replace("Complex ", ""),
-                module_row["module_name"],
+
+            complex_module_name = (
+                f"Complex {module_row['complex'].replace('Complex ', '')}: {module_row['module_name']}"
             )
             etc_coverage_df_rows.append(
                 [
@@ -261,13 +300,39 @@ def make_etc_coverage_df(
                     complex_module_name,
                 ]
             )
-    return pd.DataFrame(etc_coverage_df_rows, columns=ETC_COVERAGE_COLUMNS)
+
+    etc_coverage_df = pd.DataFrame(etc_coverage_df_rows, columns=ETC_COVERAGE_COLUMNS)
+    if sample_names:
+        df = etc_coverage_df.copy()
+        df["genes"] = df["genes"].str.split(",")
+        df = df.explode("genes").rename(columns={"genes": "kegg_id"})
+
+        df = (
+            pd.merge(
+                df, annotation_ids_by_row, left_on=["genome", "kegg_id"], right_on=["fasta", "kegg_id"], how="left"
+            )
+            .groupby(["genome", "module_id"])[sample_names]
+            .sum()
+        )
+        df["summed_sample_abundances"] = df[sample_names].sum(axis=1)
+        etc_coverage_df = pd.merge(
+            etc_coverage_df, df[["summed_sample_abundances"]], on=["genome", "module_id"], how="left"
+        )
+        etc_coverage_df["summed_sample_abundances"] = etc_coverage_df["summed_sample_abundances"].fillna(0)
+
+        etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df[
+            "summed_sample_abundances"
+        ] / etc_coverage_df.groupby(["module_id"])["summed_sample_abundances"].transform("max")
+
+        etc_coverage_df["normalized_sample_abundances"] = etc_coverage_df["normalized_sample_abundances"].fillna(0)
+    return etc_coverage_df
 
 
 def make_functional_df(
-    annotation_ids_by_row,
-    function_heatmap_form,
+    annotation_ids_by_row: pd.DataFrame,
+    function_heatmap_form: pd.DataFrame,
     groupby_column=DEFAULT_GROUPBY_COLUMN,
+    sample_names=None,
 ):
     # clean up function heatmap form
     function_heatmap_form = function_heatmap_form.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
@@ -303,32 +368,57 @@ def make_functional_df(
                     "%s: %s" % (row.category, row.function_name),
                 ]
             )
-    return pd.DataFrame(
+    function_df = pd.DataFrame(
         rows,
         columns=list(function_heatmap_form.columns) + ["genome", "present", "category_function_name"],
     )
+    if sample_names:
+        df = function_df.copy()
+        df["function_ids"] = df["function_ids"].str.replace(" ", "").str.split(",")
+        df = df.explode("function_ids").rename(columns={"function_ids": "kegg_id"})
+
+        df = (
+            pd.merge(
+                df, annotation_ids_by_row, left_on=["genome", "kegg_id"], right_on=["fasta", "kegg_id"], how="left"
+            )
+            .groupby(["genome", "function_name"])[sample_names]
+            .sum()
+        )
+        df["summed_sample_abundances"] = df[sample_names].sum(axis=1)
+        function_df = pd.merge(
+            function_df, df[["summed_sample_abundances"]], on=["genome", "function_name"], how="left"
+        )
+        function_df["summed_sample_abundances"] = function_df["summed_sample_abundances"].fillna(0)
+
+        function_df["normalized_sample_abundances"] = function_df["summed_sample_abundances"] / function_df.groupby(
+            ["function_name"]
+        )["summed_sample_abundances"].transform("max")
+
+        function_df["normalized_sample_abundances"] = function_df["normalized_sample_abundances"].fillna(0)
+
+    return function_df
 
 
 # TODO: refactor this to handle splitting large numbers of genomes into multiple heatmaps here
 def fill_product_dfs(
     annotations_df,
     module_nets,
+    module_steps_form,
     etc_module_df,
     function_heatmap_form,
-    annotation_ids_by_row: pd.DataFrame,
+    # annotation_ids_by_row: pd.DataFrame,
     groupby_column=DEFAULT_GROUPBY_COLUMN,
+    sample_names=None,
 ):
-    module_coverage_frame = make_module_coverage_frame(annotations_df, module_nets, groupby_column)
+    # make functional frame
+    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
+
+    module_coverage_frame = make_module_coverage_frame(
+        annotations_df, module_nets, groupby_column, sample_names, module_steps_form
+    )
 
     # make ETC frame
-    etc_coverage_df = make_etc_coverage_df(etc_module_df, annotation_ids_by_row, groupby_column)
-
-    # make functional frame
-    function_df = make_functional_df(
-        annotation_ids_by_row,
-        function_heatmap_form,
-        groupby_column,
-    )
+    etc_coverage_df = make_etc_coverage_df(etc_module_df, annotations_df, groupby_column, sample_names)
 
     return module_coverage_frame, etc_coverage_df, function_df
 
@@ -377,7 +467,9 @@ def make_strings_no_repeats(genome_taxa_dict: dict):
     return labels
 
 
-def get_annotation_ids_by_row(data):
+def get_annotation_ids_by_row(data: pd.DataFrame) -> pd.Series:
+    # Filter only columns present in the dataframe
+
     functions = {i: j for i, j in ID_FUNCTION_DICT.items() if i in data.columns}
     missing = [i for i in ID_FUNCTION_DICT if i not in data.columns]
     logger.info(
@@ -390,6 +482,33 @@ def get_annotation_ids_by_row(data):
         axis=1,
     )
     return out
+
+    ## Causes a bug somewhere on some small inputs where X is not a set, when it enumerated over functions and it is empty
+    ## functions = {col: ID_FUNCTION_DICT[col] for col in ID_FUNCTION_DICT if col in data.columns}
+
+    # # Log missing columns (optional, if logging is needed)
+    # missing = [col for col in ID_FUNCTION_DICT if col not in data.columns]
+    # logger.info(
+    #     "Note: the following id fields "
+    #     f"were not in the annotations file and are not being used: {missing}, "
+    #     f"but these are {list(functions.keys())}"
+    # )
+    #
+    # # Process each column using vectorized functions
+    # # processed_columns = {}
+    # df = pd.DataFrame(index=data.index)
+    # for i, (col, func) in enumerate(functions.items()):
+    #     # Convert column to string (handles NaN safely)
+    #     df[col] = data[col].astype(str).map(func)
+    #     if i == 0:
+    #         df["X"] = df[col].copy()
+    #     else:
+    #         df["X"] += df[col]  # Concatenate lists element-wise
+    #
+    # # Concatenate all the lists into a single series of sets
+    # df["X"] = df["X"].map(set)  # Convert lists to sets
+    #
+    # return df["X"]
 
 
 def get_all_annotation_ids(data):
