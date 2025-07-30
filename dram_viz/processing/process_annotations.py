@@ -80,7 +80,7 @@ def make_module_coverage_df(annotation_df, module_nets, sample_names=None):
         raise ValueError(
             f"""
             No KEGG or KOfam id column could be found.
-            These names were tried: {', '.join(ko_id_names)}.
+            These names were tried: {", ".join(ko_id_names)}.
             """
         )
     for gene_id, ko_list in annotation_df[ko_id].items():
