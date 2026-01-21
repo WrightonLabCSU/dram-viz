@@ -1,0 +1,25 @@
+query_id	input_fasta	kegg_id	kegg_description	sulfur_id	fegenie_id	kofam_id	merops_id	methyl_id	dbcan_id	camper_id	heme_regulatory_motif_count
+bin1_1	bin1	K00399	mez:Mtc_0908 (K00399) mcrA; methyl-coenzyme M reductase alpha subunit [EC:2.8.4.1]			K00399					0
+bin1_2	bin1	K14126	"mez:Mtc_2479 (K14126) mvhA, vhuA, vhcA; F420-non-reducing hydrogenase large subunit [EC:1.12.99.- 1.8.98.5]"			K14126					4
+bin1_3	bin1	K14128	"mez:Mtc_2478 (K14128) mvhG, vhuG, vhcG; F420-non-reducing hydrogenase small subunit [EC:1.12.99.- 1.8.98.5]"			K14128					2
+bin1_4	bin1	K00205	"rci:RCIX592 (K00205) fwdF, fmdF; 4Fe-4S ferredoxin"			K00205					0
+bin2_1	bin2	K03390	mla:Mlab_0239 (K03390) hdrC2; heterodisulfide reductase subunit C2 [EC:1.8.7.3 1.8.98.4 1.8.98.5 1.8.98.6]			K03390	MER0283993				0
+bin2_2	bin2	K03389	mez:Mtc_2474 (K03389) hdrB2; heterodisulfide reductase subunit B2 [EC:1.8.7.3 1.8.98.4 1.8.98.5 1.8.98.6]			K03389					0
+bin2_3	bin2	K03388	mpd:MCP_1576 (K03388) hdrA2; heterodisulfide reductase subunit A2 [EC:1.8.7.3 1.8.98.4 1.8.98.5 1.8.98.6]			K03388					0
+bin2_4	bin2	K14127	"mez:Mtc_2472 (K14127) mvhD, vhuD, vhcD; F420-non-reducing hydrogenase iron-sulfur subunit [EC:1.12.99.- 1.8.98.5 1.8.98.6]"			K14127					0
+bin3_1	bin3	K00200	"mez:Mtc_2469 (K00200) fwdA, fmdA; formylmethanofuran dehydrogenase subunit A [EC:1.2.7.12]"			K00200	MER0042762				0
+bin3_2	bin3			Rhodanese							0
+bin3_3	bin3				DFE_0463						4
+bin3_4	bin3						MER0283993				4
+bin4_1	bin4										4
+bin4_2	bin4							METHYL_0013			0
+bin4_3	bin4										0
+bin4_4	bin4										0
+bin5_1	bin5									D00016;CarC	4
+bin5_2	bin5										4
+bin5_3	bin5										4
+bin5_4	bin5										4
+bin6_1	bin6	K00399	mez:Mtc_0908 (K00399) mcrA; methyl-coenzyme M reductase alpha subunit [EC:2.8.4.1]			K00399					0
+bin6_2	bin6	K02591	dew:DGWBC_0606 (K02591) nifK; nitrogenase molybdenum-iron protein beta chain [EC:1.18.6.1]			K02591					0
+bin6_3	bin6										0
+bin6_4	bin6								GH23		0

@@ -1,0 +1,33 @@
+?start: step_expr
+      | expr
+
+step_expr: expr ("," expr)+               -> step_
+
+?expr: or_expr
+
+?or_expr: and_expr
+        | or_expr "|" and_expr            -> or_
+
+?and_expr: atom
+         | and_expr "&" atom              -> and_
+
+?atom: call
+     | literal
+     | "[" expr "]"                       -> group
+
+call: IDENT "(" [expr ("," expr)*] ")" -> call
+
+?literal: name_ref
+        | NUMBER                          -> number
+        | STRING                          -> string
+
+name_ref: IDENT ":" IDENT                 -> qualified_name
+        | IDENT                           -> simple_name
+
+IDENT: /[A-Za-z0-9_\-\.]+/
+NUMBER: /[0-9]+(\.[0-9]+)?/
+STRING: ESCAPED_STRING
+
+%import common.ESCAPED_STRING
+%import common.WS
+%ignore WS
