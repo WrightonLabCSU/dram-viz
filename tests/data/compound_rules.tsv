@@ -1,0 +1,14 @@
+name	parent	child
+A	a1	a2 & a3
+	a2	K00399 | K00400 | K00401 | K00402 | K03421 | K03422
+	a3	not(b4)
+B	b1	b2 | b4
+	b2	percent(50,b3)
+	b3	K00399,[K00401 & K00402 & [K00333 | K03421] & [K03422 | K13380]],K00400,K00401,K00402,K03421,K03422
+	b4	K02591 | K02586 | K02588
+C	c1	c1 & c2
+	c1	not(c3)
+	c2	column_count_values(heme_regulatory_motif_count,ge,4,ge,3)
+	c3	column_contains(kegg_description,NitrateReducer)
+D	d1	percent(50,d2)
+	d2	K00399,K14126,K02588

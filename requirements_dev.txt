@@ -1,0 +1,5 @@
+polars
+lark
+numpy
+pytest
+black
