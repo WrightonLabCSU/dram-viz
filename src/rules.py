@@ -5,10 +5,11 @@ from typing import Dict, Tuple, List, Optional, Set
 import operator
 import os
 from pathlib import Path
+import functools
 
 import numpy as np
 import polars as pl
-from lark import Lark, Transformer
+from lark import Lark, Transformer, LarkError
 
 OP_TO_EXPR = {
     "gt": operator.gt,
@@ -76,19 +77,28 @@ CALL_FUNCTIONS = {
     "at_least",
     "column_count_values",
     "column_sum_values",
-    "column_contains",
+    "filter_contains",
+    "filter_compare",
 }
 
 # AST node definitions and Grammar definition
 
 
 @dataclass(frozen=True)
-class Expr: ...
+class Expr:
+    def validate(self):
+        pass
+
+    def pprint(self):
+        """Pretty print the expression for debugging."""
+        from pprint import pprint
+
+        pprint(self)
 
 
 @dataclass(frozen=True)
 class Name(Expr):
-    name: str
+    value: str
     db: str | None = None
 
 
@@ -98,15 +108,18 @@ class Number(Expr):
 
 
 @dataclass(frozen=True)
+class String(Expr):
+    value: str
+
+
+@dataclass(frozen=True)
 class And(Expr):
-    a: Expr
-    b: Expr
+    parts: Tuple[Expr, ...]
 
 
 @dataclass(frozen=True)
 class Or(Expr):
-    a: Expr
-    b: Expr
+    parts: Tuple[Expr, ...]
 
 
 @dataclass(frozen=True)
@@ -116,20 +129,20 @@ class Steps(Expr):
 
 @dataclass(frozen=True)
 class Call(Expr):
-    name: str
+    value: str
     args: Tuple[Expr, ...]
 
-    def __post_init__(self):  # validation
-        if self.name not in CALL_FUNCTIONS:
-            raise RuleError(f"Unknown function: {self.name}")
+    def validate(self):
+        if self.value not in CALL_FUNCTIONS:
+            raise RuleError(f"Unknown function: {self.value}")
         n_args = len(self.args)
-        match self.name:
+        match self.value:
             case "not":
                 if n_args != 1:
                     raise RuleError("not(...) expects 1 arg")
             case "percent" | "at_least":
                 if n_args != 2:
-                    raise RuleError(f"{self.name}(n, Group) expects 2 args")
+                    raise RuleError(f"{self.value}(n, Group) expects 2 args")
             case "column_count_values":
                 if n_args != 5:
                     raise RuleError(
@@ -152,14 +165,41 @@ class Call(Expr):
                     raise RuleError(
                         f"column_sum_values op must be one of {sorted(ALLOWED_CMPOPS)}; got {op}"
                     )
-            case "column_contains":
-                if n_args != 2:
-                    raise RuleError("column_contains(column, value) expects 2 args")
+            case "filter_contains":
+                if n_args != 2 and n_args != 3:
+                    raise RuleError(
+                        "filter_contains(column, value, contains=True) expects 2 or 3 args"
+                    )
+            case "filter_compare":
+                if n_args != 3:
+                    raise RuleError(
+                        "filter_compare(column, op, threshold) expects 3 args"
+                    )
+            case _:
+                raise RuleError(
+                    f"Unable to parse function in rules. Function: {self.value}"
+                )
+
+
+@dataclass(frozen=True)
+class Pipe(Expr):
+    left: Expr
+    right: Expr
+
+
+@dataclass(frozen=True)
+class PipeChain(Expr):
+    calls: tuple[Call, ...]  # or Expr, depending on what you permit
+
+    def validate(self):
+        for call in self.calls:
+            if not isinstance(call, Call):
+                raise RuleError(f"Expected Call in PipeChain, got {call}")
 
 
 def _as_str(e: Expr) -> str:
     try:
-        return e.name
+        return e.value
     except AttributeError:
         raise RuleError(f"Could not convert node to string, got {e}")
 
@@ -167,16 +207,26 @@ def _as_str(e: Expr) -> str:
 def _as_int(e: Expr) -> int:
     if isinstance(e, Number) and float(e.value).is_integer():
         return int(e.value)
-    if isinstance(e, Name) and e.name.isdigit():
-        return int(e.name)
+    if isinstance(e, Name) and e.value.isdigit():
+        return int(e.value)
     raise RuleError(f"Expected integer literal, got {e}")
+
+
+def _as_bool(e: Expr) -> bool:
+    if isinstance(e, (Name, String)):
+        name = e.value.lower()
+        if name in {"true", "1", "yes", "t"}:
+            return True
+        if name in {"false", "0", "no", "f"}:
+            return False
+    raise RuleError(f"Expected boolean literal, got {e}")
 
 
 def _as_float(e: Expr) -> float:
     if isinstance(e, Number):
         return float(e.value)
     try:
-        return float(e.name)
+        return float(e.value)
     except (ValueError, AttributeError):
         raise RuleError(
             f"Could not convert node to gloat. Expected numeric literal, got {e}"
@@ -185,23 +235,30 @@ def _as_float(e: Expr) -> float:
 
 class ASTTransformer(Transformer):
     def simple_name(self, items):
-        return Name(name=str(items[0]), db=None)
+        return Name(value=str(items[0]), db=None)
 
     def qualified_name(self, items):
-        db, name = items
-        return Name(name=str(name), db=str(db))
+        db, value = items
+        return Name(value=str(value), db=str(db))
 
     def number(self, items):
         return Number(float(str(items[0])))
 
+    def string(self, items):
+        s = str(items[0])
+        if len(s) >= 2 and s[0] == s[-1] and s[0] in ("'", '"'):
+            s = s[1:-1]
+        return String(s)
+
     def and_(self, items):
-        return And(items[0], items[1])
+        return And(parts=tuple(items))
 
     def or_(self, items):
-        return Or(items[0], items[1])
+        return Or(parts=tuple(items))
 
     def group(self, items):
         # square brackets are just grouping, not a node
+        assert len(items) == 1, "Grouping isn't supposed to change number of items"
         return items[0]
 
     def step_(self, items):
@@ -211,6 +268,17 @@ class ASTTransformer(Transformer):
         name = str(items[0])
         args = tuple(items[1:])
         return Call(name, args)
+
+    def pipe_(self, items):
+        left, right = items
+
+        def to_list(x):
+            if isinstance(x, PipeChain):
+                return list(x.calls)
+            return [x]
+
+        calls = tuple(to_list(left) + to_list(right))
+        return PipeChain(calls)
 
 
 @dataclass(frozen=True)
@@ -222,7 +290,6 @@ class CompiledRules:
     def from_rules(cls, *args, **kwargs) -> CompiledRules:
         definitions, rules = load_rules(*args, **kwargs)
 
-        # Expand macros inside definitions too (so GroupName -> Steps(...) can nest)
         defs_expanded = {
             k: expand_macros(v, definitions) for k, v in definitions.items()
         }
@@ -235,7 +302,6 @@ class CompiledRules:
             k: expand_macros(v, defs_expanded, needed_features=needed_features)
             for k, v in rules.items()
         }
-
         return cls(rules=rules_expanded, needed_features=needed_features)
 
 
@@ -276,11 +342,32 @@ def load_rules(
     with open(Path(__file__).parent.absolute() / "rules.lark") as f:
         parser = Lark(f, parser="lalr", transformer=ASTTransformer())
 
+    def parse_rule_expr(expr_str: str) -> Expr:
+        """We use a closure to capture the parser instance since
+        polars map_elements doesn't let us pass extra args."""
+        try:
+            return parser.parse(expr_str)
+        except LarkError as e:
+            n_left_b = expr_str.count("[")
+            n_right_b = expr_str.count("]")
+            if n_left_b != n_right_b:
+                raise RuleError(
+                    f"Possible mismatched brackets in rule expression: {expr_str}"
+                ) from e
+            if expr_str.count("&") > 0 and expr_str.count("|") > 0:
+                # both used; likely missing brackets
+                raise RuleError(
+                    f"Possible ambiguous use of '&' or '|' without surrounding brackets `[ ]`. Check that you don't have a situation like `A | B & C` or `A & B | C`. These are generally not allowed because they can be ambiguous. These should be written as `[A | B] & C` or `[A & B] | C`: {expr_str}."
+                ) from e
+            raise RuleError(
+                f"Error parsing rule expression for unknown reason. Possible hints could be found in the above exceptions from the parsing library Lark: {expr_str}"
+            ) from e
+
     lf = lf.with_columns(
         [
             pl.col(rules_col)
             .str.strip_chars()
-            .map_elements(parser.parse, return_dtype=pl.Object)
+            .map_elements(parse_rule_expr, return_dtype=pl.Object)
         ]
     )
 
@@ -323,7 +410,7 @@ def expand_macros(
             return memo[e]
 
         if isinstance(e, Name):
-            name = e.name
+            name = e.value
             if name in definitions:
                 if name in stack:
                     raise RuleError(f"Cycle detected: {' -> '.join(stack + [name])}")
@@ -335,19 +422,20 @@ def expand_macros(
                 # This will slightly
                 if add_name_to_needed and not skip_needed:
                     needed_features.add(name)
-        elif isinstance(e, Number):
+        elif isinstance(e, (Number, String)):
             out = e
         elif isinstance(e, And):
-            out = And(recurse(e.a), recurse(e.b))
+            out = And(parts=tuple(recurse(part) for part in e.parts))
         elif isinstance(e, Or):
-            out = Or(recurse(e.a), recurse(e.b))
+            out = Or(parts=tuple(recurse(part) for part in e.parts))
         elif isinstance(e, Steps):
             out = Steps(tuple(recurse(p) for p in e.parts))
         elif isinstance(e, Call):
-            fn, args = e.name, e.args
+            fn, args = e.value, e.args
             call_rec = []
             # Determine which args should have their Names added to needed_features
-            # since some call args are just numbers or ops
+            # since some call args are just numbers, ops, and columns.
+            # needed_features are the genes we need to look for in the annotations.
             for i, arg in enumerate(args):
                 if fn in {"percent", "at_least"}:
                     add_name = 1 == i
@@ -356,7 +444,8 @@ def expand_macros(
                 elif fn in {
                     "column_count_values",
                     "column_sum_values",
-                    "column_contains",
+                    "filter_contains",
+                    "filter_compare",
                 }:
                     add_name = False
                 # unknown function; be conservative. Worse case is we count extra needed features
@@ -366,10 +455,16 @@ def expand_macros(
                     add_name = True
                 call_rec.append(recurse(arg, add_name_to_needed=add_name))
 
-            out = Call(e.name, tuple(call_rec))
+            out = Call(e.value, tuple(call_rec))
+        elif isinstance(e, PipeChain):
+            calls = list(e.calls)
+            for i, call in enumerate(e.calls):
+                calls[i] = recurse(call)
+            out = PipeChain(calls=tuple(calls))
         else:
             raise TypeError(e)
-
+        # Some nodes need validation and have to be done after children are expanded
+        out.validate()
         memo[e] = out
         return out
 
@@ -454,17 +549,38 @@ class Evaluator:
             return self._memo[expr]
 
         if isinstance(expr, Name):
-            out = self.present_map.get(expr.name, self._all_false)
+            out = self.present_map.get(expr.value, self._all_false)
             self._memo[expr] = out
             return out
 
         if isinstance(expr, And):
-            out = np.logical_and(self.eval_bool(expr.a), self.eval_bool(expr.b))
+            out = np.all(
+                np.stack([self.eval_bool(part) for part in expr.parts], axis=0), axis=0
+            )
             self._memo[expr] = out
             return out
 
         if isinstance(expr, Or):
-            out = np.logical_or(self.eval_bool(expr.a), self.eval_bool(expr.b))
+            try:
+                out = np.any(
+                    np.stack([self.eval_bool(part) for part in expr.parts], axis=0),
+                    axis=0,
+                )
+            except ValueError as e:
+                print(f"Error evaluating OR expression: {expr}")
+                raise
+            self._memo[expr] = out
+            return out
+
+        if isinstance(expr, PipeChain):
+            out_or_df = self.annotations
+            kwargs = {"df": self.annotations, "masks": []}
+            for call in expr.calls:
+                out = self.eval_call(call, **kwargs)
+                if isinstance(out, (pl.DataFrame, pl.LazyFrame)):
+                    kwargs["df"] = out
+                if isinstance(out, pl.Expr):
+                    kwargs["masks"].append(out)
             self._memo[expr] = out
             return out
 
@@ -479,10 +595,10 @@ class Evaluator:
 
         if isinstance(expr, Steps):
             raise RuleError(
-                f"Step expressions (expression seperated by commas)"
+                "Step expressions (expression seperated by commas)"
                 " logic cannot be evaluted on their own. They must be used"
                 " in a supporting function such as `percent`. Offending"
-                " rule: {expr}"
+                f" rule: {expr}"
             )
 
         raise RuleError(
@@ -503,12 +619,21 @@ class Evaluator:
         self._memo_list[expr] = mat
         return mat
 
-    def eval_call(self, call: Call) -> np.ndarray:
-        fn = call.name
+    def eval_call(
+        self, call: Call, df: pl.DataFrame = None, masks: list[pl.Expr] = None
+    ) -> np.ndarray:
+        fn = call.value
         args = call.args
+        kwargs = {}
+        if df is not None:
+            kwargs["df"] = df
+        if masks:
+            kwargs["masks"] = masks
 
         match fn:
             case "not":
+                if "masks" in kwargs and kwargs["masks"]:
+                    return self.not_(masks=kwargs["masks"])
                 return self.not_(self.eval_bool(args[0]))
             case "percent":
                 return self.percent(_as_int(args[0]), self.eval_cycle(args[1]))
@@ -521,13 +646,33 @@ class Evaluator:
                     val_thr=_as_float(args[2]),
                     count_op=_as_str(args[3]),
                     count_thr=_as_float(args[4]),
+                    **kwargs,
                 )
             case "column_sum_values":
                 return self.column_count_values(
-                    col=_as_str(args[0]), op=_as_str(args[1]), thr=_as_float(args[2])
+                    col=_as_str(args[0]),
+                    op=_as_str(args[1]),
+                    thr=_as_float(args[2]),
+                    **kwargs,
                 )
-            case "column_contains":
-                return self.column_contains(col=_as_str(args[0]), val=_as_str(args[1]))
+            case "filter_contains":
+                if len(args) == 2:
+                    return self.filter_contains(
+                        col=_as_str(args[0]), val=_as_str(args[1]), **kwargs
+                    )
+                return self.filter_contains(
+                    col=_as_str(args[0]),
+                    val=_as_str(args[1]),
+                    contains=_as_bool(args[2]),
+                    **kwargs,
+                )
+            case "filter_compare":
+                return self.filter_compare(
+                    col=_as_str(args[0]),
+                    op=_as_str(args[1]),
+                    thr=_as_float(args[2]),
+                    **kwargs,
+                )
             case _:
                 raise RuleError(f"Unable to parse function in rules. Function: {fn}")
 
@@ -538,9 +683,43 @@ class Evaluator:
             .drop("_order")
         )
 
+    def eval_filter_dec(func):
+        """Decorator to evaluate filter functions with optional df and masks
+        Applies masks to the specified column before calling the function."""
+
+        @functools.wraps(func)
+        def wrapper(
+            self,
+            col,
+            *args,
+            df: pl.DataFrame = None,
+            masks: list[pl.Expr] = None,
+            **kwargs,
+        ):
+            df = self.annotations if df is None else df
+            masks = masks or []
+            if masks:
+                df = df.with_columns(
+                    pl.when(pl.lit(True).and_(*masks))
+                    .then(pl.col(col))
+                    .otherwise(pl.lit(None))
+                )
+            return func(self, col, *args, df=df, **kwargs)
+
+        return wrapper
+
     # Call functions
     @staticmethod
-    def not_(x: np.ndarray) -> np.ndarray:
+    def not_(x: np.ndarray = None) -> np.ndarray | pl.Expr:
+        if isinstance(x, list) and len(x) > 0 or isinstance(x, pl.Expr):
+            if isinstance(x, pl.Expr):
+                x = [x]
+            masks = x
+            if len(masks) == 0:
+                mask = mask[0]
+            else:
+                mask = masks[0].and_(*[mask for mask in masks[1:]])
+            return ~mask
         return np.logical_not(x)
 
     @staticmethod
@@ -555,10 +734,20 @@ class Evaluator:
     def at_least(k: int, x: np.ndarray) -> np.ndarray:
         return x.sum(axis=1) >= k
 
+    @eval_filter_dec
     def column_count_values(
-        self, col: str, val_op: str, val_thr: float, count_op: str, count_thr: float
+        self,
+        col: str,
+        val_op: str,
+        val_thr: float,
+        count_op: str,
+        count_thr: float,
+        *,
+        df: pl.DataFrame,
     ) -> np.ndarray:
-        if col not in self.annotations.columns:
+        df = self.annotations if df is None else df
+
+        if col not in df.columns:
             raise RuleError(f"Missing column '{col}' for column_count_values()")
         if val_op not in OP_TO_EXPR:
             raise ValueError(
@@ -572,7 +761,7 @@ class Evaluator:
         count_cmp_fn = OP_TO_EXPR[count_op]
 
         df = (
-            self.annotations.group_by(self.sample_col)
+            df.group_by(self.sample_col)
             # first do the val cmp fn on the column values to get a bool of which rows
             # pass the value threshold (e.g., per row: col_val >= val_thr)
             # Then sum those booleans to get a count of how many rows per sample pass
@@ -582,33 +771,48 @@ class Evaluator:
                 )
             )
         )
+
         df = self._sort_df_to_ordered_df(df)
         return df.select(pl.col(col)).to_series().to_numpy()
 
-    def column_sum_values(self, col: str, op: str, thr: float) -> np.ndarray:
-        if col not in self.annotations.columns:
+    @eval_filter_dec
+    def column_sum_values(
+        self, col: str, op: str, thr: float, *, df: pl.DataFrame = None
+    ) -> np.ndarray:
+        df = self.annotations if df is None else df
+
+        if col not in df.columns:
             raise RuleError(f"Missing column '{col}' for column_sum_values()")
         try:
             cmp_fn = OP_TO_EXPR[op]
         except KeyError:
             raise ValueError(f"Unsupported op={op!r}. Use one of {sorted(OP_TO_EXPR)}")
 
-        df = self.annotations.group_by(self.sample_col).agg(
+        df = df.group_by(self.sample_col).agg(
             cmp_fn(pl.col(col).cast(float).sum(), thr)
         )
         df = self._sort_df_to_ordered_df(df)
         return df.select(pl.col(col)).to_series().to_numpy()
 
-    def column_contains(self, col: str, val: str) -> np.ndarray:
-        if col not in self.annotations.columns:
-            raise RuleError(f"Missing column '{col}' for column_contains()")
+    def filter_contains(
+        self, col: str, val: str, df: pl.DataFrame = None, **kwargs
+    ) -> pl.DataFrame:
+        df = self.annotations if df is None else df
+        if col not in df:
+            raise RuleError(f"Missing column '{col}' for filter_contains()")
+        return pl.col(col).str.contains(val)
 
-        df = self.annotations.group_by(self.sample_col).agg(
-            pl.col(col).str.contains(val).any()
-        )
-
-        df = self._sort_df_to_ordered_df(df)
-        return df.select(pl.col(col)).to_series().to_numpy()
+    def filter_compare(
+        self, col: str, op: str, thr: float, df: pl.DataFrame = None, **kwargs
+    ) -> pl.DataFrame:
+        df = self.annotations if df is None else df
+        if col not in df:
+            raise RuleError(f"Missing column '{col}' for filter_compare()")
+        try:
+            cmp_fn = OP_TO_EXPR[op]
+        except KeyError:
+            raise ValueError(f"Unsupported op={op!r}. Use one of {sorted(OP_TO_EXPR)}")
+        return cmp_fn(pl.col(col).cast(float), thr)
 
 
 def evaluate_rules(
@@ -617,7 +821,6 @@ def evaluate_rules(
     present_map: Dict[str, np.ndarray],
     annotations: Optional[pl.DataFrame] = None,
     sample_col: Optional[str] = None,
-    transpose: bool = False,
 ) -> pl.DataFrame:
     ev = Evaluator(
         samples=samples,
@@ -635,19 +838,6 @@ def evaluate_rules(
     df = df.with_columns(pl.Series(sample_col, samples)).select(
         [sample_col] + rule_names
     )
-
-    if transpose:
-        # rules x samples: make sample columns
-        df_t = df.drop("sample").transpose(include_header=True)
-        # df_t: first column is "column" (former rule name), others are sample-indexed columns
-        df_t = df_t.rename({"column": "rule"})
-        # add sample names as headers
-        # polars transpose produces string column names "column_0", "column_1"...; rename to sample ids
-        rename_map = {}
-        for i, s in enumerate(samples):
-            rename_map[f"column_{i}"] = s
-        df_t = df_t.rename(rename_map)
-        return df_t
 
     return df
 
@@ -687,6 +877,5 @@ def evaluate_rules_on_anno(
         present_map,
         annotations=annotations,
         sample_col=sample_col,
-        transpose=False,
     )
     return df

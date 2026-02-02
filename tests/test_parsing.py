@@ -2,11 +2,12 @@ from src.rules import (
     evaluate_rules_on_anno,
     CompiledRules,
     Name,
-    # Number,
+    PipeChain,
     And,
     Or,
     Steps,
     Call,
+    String,
 )
 import polars as pl
 from pathlib import Path
@@ -42,138 +43,140 @@ COMPOUND_NEEDS = {
 
 BASIC_PARSE = {
     "A": And(
-        a=Or(
-            a=Or(
-                a=Or(
-                    a=Or(
-                        a=Or(
-                            a=Name(name="K00399", db=None),
-                            b=Name(name="K00400", db=None),
-                        ),
-                        b=Name(name="K00401", db=None),
-                    ),
-                    b=Name(name="K00402", db=None),
-                ),
-                b=Name(name="K03421", db=None),
+        parts=(
+            Or(
+                parts=(
+                    Name(value="K00399", db=None),
+                    Name(value="K00400", db=None),
+                    Name(value="K00401", db=None),
+                    Name(value="K00402", db=None),
+                    Name(value="K03421", db=None),
+                    Name(value="K03422", db=None),
+                )
             ),
-            b=Name(name="K03422", db=None),
-        ),
-        b=Call(
-            name="not",
-            args=(
-                Or(
-                    a=Or(
-                        a=Name(name="K02591", db=None),
-                        b=Name(name="K02586", db=None),
+            Call(
+                value="not",
+                args=(
+                    Or(
+                        parts=(
+                            Name(value="K02591", db=None),
+                            Name(value="K02586", db=None),
+                            Name(value="K02588", db=None),
+                        )
                     ),
-                    b=Name(name="K02588", db=None),
                 ),
             ),
-        ),
+        )
     )
 }
 
 COMPOUND_PARSE = {
     "A": And(
-        a=Or(
-            a=Or(
-                a=Or(
-                    a=Or(
-                        a=Or(
-                            a=Name(name="K00399", db=None),
-                            b=Name(name="K00400", db=None),
-                        ),
-                        b=Name(name="K00401", db=None),
-                    ),
-                    b=Name(name="K00402", db=None),
-                ),
-                b=Name(name="K03421", db=None),
+        parts=(
+            Or(
+                parts=(
+                    Name(value="K00399", db=None),
+                    Name(value="K00400", db=None),
+                    Name(value="K00401", db=None),
+                    Name(value="K00402", db=None),
+                    Name(value="K03421", db=None),
+                    Name(value="K03422", db=None),
+                )
             ),
-            b=Name(name="K03422", db=None),
-        ),
-        b=Call(
-            name="not",
-            args=(
-                Or(
-                    a=Or(
-                        a=Name(name="K02591", db=None), b=Name(name="K02586", db=None)
+            Call(
+                value="not",
+                args=(
+                    Or(
+                        parts=(
+                            Name(value="K02591", db=None),
+                            Name(value="K02586", db=None),
+                            Name(value="K02588", db=None),
+                        )
                     ),
-                    b=Name(name="K02588", db=None),
                 ),
             ),
-        ),
+        )
     ),
     "B": Or(
-        a=Call(
-            name="percent",
-            args=(
-                Name(name="50", db=None),
-                Steps(
-                    parts=(
-                        Name(name="K00399", db=None),
-                        And(
-                            a=And(
-                                a=And(
-                                    a=Name(name="K00401", db=None),
-                                    b=Name(name="K00402", db=None),
-                                ),
-                                b=Or(
-                                    a=Name(name="K00333", db=None),
-                                    b=Name(name="K03421", db=None),
-                                ),
+        parts=(
+            Call(
+                value="percent",
+                args=(
+                    Name(value="50", db=None),
+                    Steps(
+                        parts=(
+                            Name(value="K00399", db=None),
+                            And(
+                                parts=(
+                                    Name(value="K00401", db=None),
+                                    Name(value="K00402", db=None),
+                                    Or(
+                                        parts=(
+                                            Name(value="K00333", db=None),
+                                            Name(value="K03421", db=None),
+                                        )
+                                    ),
+                                    Or(
+                                        parts=(
+                                            Name(value="K03422", db=None),
+                                            Name(value="K13380", db=None),
+                                        )
+                                    ),
+                                )
                             ),
-                            b=Or(
-                                a=Name(name="K03422", db=None),
-                                b=Name(name="K13380", db=None),
-                            ),
-                        ),
-                        Name(name="K00400", db=None),
-                        Name(name="K00401", db=None),
-                        Name(name="K00402", db=None),
-                        Name(name="K03421", db=None),
-                        Name(name="K03422", db=None),
-                    )
-                ),
-            ),
-        ),
-        b=Or(
-            a=Or(a=Name(name="K02591", db=None), b=Name(name="K02586", db=None)),
-            b=Name(name="K02588", db=None),
-        ),
-    ),
-    "C": And(
-        a=Call(
-            name="not",
-            args=(
-                Call(
-                    name="column_contains",
-                    args=(
-                        Name(name="kegg_description", db=None),
-                        Name(name="NitrateReducer", db=None),
+                            Name(value="K00400", db=None),
+                            Name(value="K00401", db=None),
+                            Name(value="K00402", db=None),
+                            Name(value="K03421", db=None),
+                            Name(value="K03422", db=None),
+                        )
                     ),
                 ),
             ),
-        ),
-        b=Call(
-            name="column_count_values",
-            args=(
-                Name(name="heme_regulatory_motif_count", db=None),
-                Name(name="ge", db=None),
-                Name(name="4", db=None),
-                Name(name="ge", db=None),
-                Name(name="3", db=None),
+            Or(
+                parts=(
+                    Name(value="K02591", db=None),
+                    Name(value="K02586", db=None),
+                    Name(value="K02588", db=None),
+                )
             ),
-        ),
+        )
+    ),
+    "C": PipeChain(
+        calls=(
+            Call(
+                value="not",
+                args=(
+                    Call(
+                        value="filter_contains",
+                        args=(
+                            Name(value="kegg_description", db=None),
+                            String(value="nitrate reductase"),
+                        ),
+                    ),
+                ),
+            ),
+            Call(
+                value="column_count_values",
+                args=(
+                    Name(value="heme_regulatory_motif_count", db=None),
+                    Name(value="ge", db=None),
+                    Name(value="2", db=None),
+                    Name(value="ge", db=None),
+                    Name(value="2", db=None),
+                ),
+            ),
+        )
     ),
     "D": Call(
-        name="percent",
+        value="percent",
         args=(
-            Name(name="50", db=None),
+            Name(value="50", db=None),
             Steps(
                 parts=(
-                    Name(name="K00399", db=None),
-                    Name(name="K14126", db=None),
-                    Name(name="K02588", db=None),
+                    Name(value="K00399", db=None),
+                    Name(value="K14126", db=None),
+                    Name(value="K02588", db=None),
                 )
             ),
         ),
@@ -225,7 +228,7 @@ def test_compound_rules_pass_annotation():
             "input_fasta": ["bin1", "bin2", "bin3", "bin4", "bin5", "bin6"],
             "A": [True, False, False, False, False, False],
             "B": [False, False, False, False, False, True],
-            "C": [False, False, False, False, True, False],
+            "C": [True, False, False, False, False, False],
             "D": [True, False, False, False, False, False],
         }
     )
