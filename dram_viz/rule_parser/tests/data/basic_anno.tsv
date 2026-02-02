@@ -1,7 +1,7 @@
 query_id	input_fasta	kegg_id	kegg_description	sulfur_id	fegenie_id	kofam_id	merops_id	methyl_id	dbcan_id	camper_id	heme_regulatory_motif_count
-bin1_1	bin1	K00399	mez:Mtc_0908 (K00399) mcrA; methyl-coenzyme M reductase alpha subunit [EC:2.8.4.1]			K00399					0
+bin1_1	bin1	K00399	mez:Mtc_0908 (K00399) mcrA; methyl-coenzyme M reductase alpha subunit [EC:2.8.4.1]			K00399					5
 bin1_2	bin1	K14126	"mez:Mtc_2479 (K14126) mvhA, vhuA, vhcA; F420-non-reducing hydrogenase large subunit [EC:1.12.99.- 1.8.98.5]"			K14126					4
-bin1_3	bin1	K14128	"mez:Mtc_2478 (K14128) mvhG, vhuG, vhcG; F420-non-reducing hydrogenase small subunit [EC:1.12.99.- 1.8.98.5]"			K14128					2
+bin1_3	bin1	K14128	"mez:Mtc_2478 (K14128) mvhG, vhuG, vhcG; F420-non-reducing hydrogenase small subunit [EC:1.12.99.- 1.8.98.5]"			K14128					4
 bin1_4	bin1	K00205	"rci:RCIX592 (K00205) fwdF, fmdF; 4Fe-4S ferredoxin"			K00205					0
 bin2_1	bin2	K03390	mla:Mlab_0239 (K03390) hdrC2; heterodisulfide reductase subunit C2 [EC:1.8.7.3 1.8.98.4 1.8.98.5 1.8.98.6]			K03390	MER0283993				0
 bin2_2	bin2	K03389	mez:Mtc_2474 (K03389) hdrB2; heterodisulfide reductase subunit B2 [EC:1.8.7.3 1.8.98.4 1.8.98.5 1.8.98.6]			K03389					0
