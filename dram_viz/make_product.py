@@ -10,10 +10,8 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import click
-import pandas as pd
 import panel as pn
 import polars as pl
 
@@ -23,47 +21,22 @@ from dram_viz.definitions import (
     BACKUP_FASTA_COLUMNS,
     BACKUP_GROUPBY_COLUMNS,
     BACKUP_LABEL_COLUMNS,
-    DBSETS_COL,
     DEFAULT_ALIAS_COLUMN,
     DEFAULT_FASTA_COLUMN,
     DEFAULT_GROUPBY_COLUMN,
     DEFAULT_LABEL_COLUMN,
-    ETC_MODULE_DF_TAG,
-    FILES_NAMES,
-    FUNCTION_HEATMAP_FORM_TAG,
-    HEATMAP_MODULES,
-    MODULE_STEPS_FORM_TAG,
 )
-from dram_viz.processing.join_annotations import join_dataframes
 from dram_viz.processing.process_annotations import (
-    build_module_net,
-    build_tax_edge_df,
     build_tax_edge_df_pl,
     build_tax_tree_selected_recurse,
-    build_taxonomy_df,
     build_taxonomy_df_pl,
-    build_tree,
     build_tree_pl,
-    fill_product_dfs,
-    get_annotation_ids_by_row,
-    get_phylum_and_most_specific,
-    get_product_df,
-    make_functional_df,
-    make_product_df,
-    make_strings_no_repeats,
-    rename_genomes_to_taxa,
 )
 from dram_viz.rule_parser.src.rules import (
     ID_EXPR_DICT,
-    Call,
     CompiledRules,
-    Evaluator,
-    Name,
-    Or,
-    Steps,
     build_present_map,
     evaluate_cycles,
-    evaluate_rules_on_anno,
 )
 
 logger = logging.getLogger("dram.viz")

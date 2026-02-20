@@ -7,8 +7,6 @@ from typing import Optional
 import pandas as pd
 import panel as pn
 import param
-from bokeh.core.property.vectorization import Field
-from bokeh.models import ColorBar, Legend, LegendItem, LinearColorMapper, Plot
 from bokeh.palettes import BuGn, Cividis256
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
