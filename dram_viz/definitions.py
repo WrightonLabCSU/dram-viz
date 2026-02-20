@@ -3,8 +3,14 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-DEFAULT_GROUPBY_COLUMN = "input_fasta"
-BACKUP_GROUPBY_COLUMNS = ["fasta", "sample"]
+DEFAULT_LABEL_COLUMN = "name"
+BACKUP_LABEL_COLUMNS = ["label"]
+DEFAULT_ALIAS_COLUMN = "alias"
+BACKUP_ALIAS_COLUMNS = ["aliases", "parent"]
+DEFAULT_FASTA_COLUMN = "input_fasta"
+BACKUP_FASTA_COLUMNS = ["fasta", "sample"]
+DEFAULT_GROUPBY_COLUMN = "group"
+BACKUP_GROUPBY_COLUMNS = ["topic_ecosystem"]
 
 HEATMAP_MODULES = [
     "M00001",

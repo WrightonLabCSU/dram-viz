@@ -9,16 +9,18 @@ from typing import Optional
 import networkx as nx
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from dram_viz.definitions import (
     DBSETS_COL,
-    DEFAULT_GROUPBY_COLUMN,
+    DEFAULT_FASTA_COLUMN,
     ETC_COVERAGE_COLUMNS,
     HEATMAP_MODULES,
     ID_FUNCTION_DICT,
     KO_REGEX,
     TAXONOMY_LEVELS,
 )
+from dram_viz.rule_parser.src.rules import ID_EXPR_DICT, CompiledRules, Evaluator, build_present_map
 
 logger = logging.getLogger("dram.viz")
 
@@ -210,7 +212,7 @@ def get_module_coverage(module_net: nx.DiGraph, genes_present: set):
 
 
 def make_module_coverage_frame(
-    annotations_df, module_nets, groupby_column=DEFAULT_GROUPBY_COLUMN, sample_names=None, module_steps_form=None
+    annotations_df, module_nets, groupby_column=DEFAULT_FASTA_COLUMN, sample_names=None, module_steps_form=None
 ):
     # go through each scaffold to check for modules
     module_coverage_dict = dict()
@@ -249,7 +251,7 @@ def make_module_coverage_frame(
     return module_coverage
 
 
-def optimized_get_all_annotation_ids(data, groupby_column=DEFAULT_GROUPBY_COLUMN):
+def optimized_get_all_annotation_ids(data, groupby_column=DEFAULT_FASTA_COLUMN):
     """Optimized version of get_all_annotation_ids using pandas explode"""
     return data[DBSETS_COL].explode().astype(str).groupby(data[groupby_column]).apply(set)
 
@@ -257,7 +259,7 @@ def optimized_get_all_annotation_ids(data, groupby_column=DEFAULT_GROUPBY_COLUMN
 def make_etc_coverage_df(
     etc_module_df: pd.DataFrame,
     annotation_ids_by_row: pd.DataFrame,
-    groupby_column=DEFAULT_GROUPBY_COLUMN,
+    groupby_column=DEFAULT_FASTA_COLUMN,
     sample_names=None,
 ):
     etc_coverage_df_rows = []
@@ -267,6 +269,8 @@ def make_etc_coverage_df(
 
     for _, module_row in etc_module_df.iterrows():
         definition = re.sub(r"-K\d\d\d\d\d", "", module_row["definition"])
+        if module_row["module_id"] == "M00156":
+            print(definition)
         module_net, _ = make_module_network(definition)
 
         # Add end node for nodes with no outgoing edges
@@ -331,7 +335,7 @@ def make_etc_coverage_df(
 def make_functional_df(
     annotation_ids_by_row: pd.DataFrame,
     function_heatmap_form: pd.DataFrame,
-    groupby_column=DEFAULT_GROUPBY_COLUMN,
+    groupby_column=DEFAULT_FASTA_COLUMN,
     sample_names=None,
 ):
     # clean up function heatmap form
@@ -345,6 +349,8 @@ def make_functional_df(
     # build long from data frame
     rows = list()
     for function, frame in function_heatmap_form.groupby("function_name", sort=False):
+        if function == "nitrogen => ammonia":
+            print(frame)
         for bin_name, id_set in genome_to_id_dict.items():
             presents_in_bin = list()
             functions_present = set()
@@ -399,6 +405,49 @@ def make_functional_df(
     return function_df
 
 
+def get_product_df(annotation_path, rules_path, groupby_column=DEFAULT_FASTA_COLUMN):
+    rules_lf = pl.scan_csv(rules_path, separator="\t", infer_schema_length=None).fill_null("")
+    anno = pl.read_csv(
+        annotation_path,
+        separator="\t",
+        infer_schema_length=10_000,
+        # columns=list(ID_EXPR_DICT.keys()) + ["input_fasta"]
+    )
+
+    compiled = CompiledRules.from_rules(rules=rules_lf, label_col="short_name", parent_col="parent", rules_col="rule")
+    samples, present_map = build_present_map(
+        anno,
+        sample_col="input_fasta",
+        besthit_cols=list(ID_EXPR_DICT.keys()),
+        needed_features=compiled.needed_features,
+    )
+    ev = Evaluator(
+        samples=samples,
+        present_map=present_map,
+        sample_col=groupby_column,
+        annotations=anno,
+    )
+    dfs = []
+    rule_names = sorted(compiled.rules.keys())
+    data = {}
+    for rn in rule_names:
+        d = {}
+        # print(rn)
+        out = ev.eval_cycle(compiled.rules[rn], simplify=False)
+        out.shape[1]
+        d["steps"] = out.shape[1]
+        d["steps_present"] = out.sum(axis=1)
+        d["variable"] = rn
+        d["genome"] = ev.samples
+        df = pl.DataFrame(d)
+        dfs.append(df)
+    df = pl.concat(dfs)
+    df = df.join(rules_lf.select(pl.col("variable"), pl.col("group")).collect(), on="variable")
+
+    df = df.with_columns(step_coverage=pl.col("steps_present") / pl.col("steps"))
+    return df
+
+
 # TODO: refactor this to handle splitting large numbers of genomes into multiple heatmaps here
 def fill_product_dfs(
     annotations_df,
@@ -407,18 +456,26 @@ def fill_product_dfs(
     etc_module_df,
     function_heatmap_form,
     # annotation_ids_by_row: pd.DataFrame,
-    groupby_column=DEFAULT_GROUPBY_COLUMN,
+    groupby_column=DEFAULT_FASTA_COLUMN,
     sample_names=None,
 ):
-    # make functional frame
-    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
+    import time
 
+    # make functional frame
+    s = time.time()
+    function_df = make_functional_df(annotations_df, function_heatmap_form, groupby_column, sample_names)
+    print("time for function frame:", time.time() - s)
+
+    s = time.time()
     module_coverage_frame = make_module_coverage_frame(
         annotations_df, module_nets, groupby_column, sample_names, module_steps_form
     )
+    print("time for module coverage frame:", time.time() - s)
 
     # make ETC frame
+    s = time.time()
     etc_coverage_df = make_etc_coverage_df(etc_module_df, annotations_df, groupby_column, sample_names)
+    print("time for etc coverage frame:", time.time() - s)
 
     return module_coverage_frame, etc_coverage_df, function_df
 
@@ -537,7 +594,7 @@ def get_ordered_uniques(seq):
     return [x for x in seq if not (x in seen or seen_add(x) or pd.isna(x))]
 
 
-def build_taxonomy_df(annotations_df: pd.DataFrame, groupby_column=DEFAULT_GROUPBY_COLUMN):
+def build_taxonomy_df(annotations_df: pd.DataFrame, groupby_column=DEFAULT_FASTA_COLUMN):
     cols = [groupby_column, "taxonomy"]
     if "Completeness" in annotations_df.columns:
         cols.append("Completeness")
@@ -545,6 +602,13 @@ def build_taxonomy_df(annotations_df: pd.DataFrame, groupby_column=DEFAULT_GROUP
         cols.append("Contamination")
     tax_df = annotations_df[cols].drop_duplicates()
     tax_df.rename(columns={groupby_column: "genome"}, inplace=True)
+    return tax_df
+
+
+def build_taxonomy_df_pl(annotations_df: pd.DataFrame, groupby_column=DEFAULT_FASTA_COLUMN) -> pl.DataFrame:
+    cols = [groupby_column, "taxonomy"]
+    tax_df = annotations_df[cols].unique()
+    tax_df = tax_df.rename({groupby_column: "genome"})
     return tax_df
 
 
@@ -574,6 +638,30 @@ def build_tax_edge_df(
         .drop_duplicates()
         .reset_index(drop=True)
     )
+
+    return tax_edge_df, tax_df
+
+
+def build_tax_edge_df_pl(
+    tax_df,
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    # regex = "".join([regex for regex in TAXONOMY_RANKS_REGEX.values()])  # regex that might be useful later
+    # tree = tax_df["taxonomy"].str.extractall(regex)
+
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+
+    tree_df = tax_df.with_columns(
+        pl.col("taxonomy").str.split(";").list.to_struct(fields=ranks).alias("taxonomy_struct")
+    ).unnest("taxonomy_struct")
+
+    # generate successive rank edges dynamically
+    tax_edge_df = pl.concat(
+        [
+            tree_df.select(pl.col(ranks[i]).alias("source"), pl.col(ranks[i + 1]).alias("target"))
+            for i in range(len(ranks) - 1)
+        ],
+        how="vertical",
+    ).unique()
 
     return tax_edge_df, tax_df
 
@@ -627,6 +715,75 @@ def build_tree(edge_df, source_col: str = "source", target_col: str = "target", 
         {"id": root, "text": root, "children": recurse_tree(root, parent_id=root, id_cb=id_cb), "state": state}
         for root in roots
     ]
+    return tree_data
+
+
+def build_tree_pl(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
+    """
+    Builds a tree structure from an edge DataFrame.
+
+    Parameters:
+    - edge_df (DataFrame): The edge DataFrame containing the source and target nodes.
+    - source_col (str): The name of the column in edge_df that represents the source nodes. Default is "source".
+    - target_col (str): The name of the column in edge_df that represents the target nodes. Default is "target".
+    - state (dict): A dictionary representing the state of the tree nodes. Default is None.
+    - id_cb (callable): A callback function that generates unique IDs for the tree nodes. Default is None.
+
+    Returns:
+    - tree_data (list): A list of dictionaries representing the tree structure.
+
+    """
+
+    if id_cb is None:
+        # sensible default: deterministic id
+        def id_cb(source, target, parent_id):
+            return f"{parent_id}->{target}"
+
+    state = state or {}
+
+    # --- build adjacency list: source -> list of targets ---
+    # This is the key optimization vs filtering inside recursion.
+    adj_df = (
+        edge_df.select([pl.col(source_col), pl.col(target_col)])
+        .group_by(source_col, maintain_order=True)
+        .agg(pl.col(target_col).alias("targets"))
+    )
+
+    adjacency = dict(zip(adj_df[source_col].to_list(), adj_df["targets"].to_list()))
+
+    # --- roots = sources that never appear as targets ---
+    roots = (
+        edge_df.select(pl.col(source_col))
+        .filter(~pl.col(source_col).is_in(edge_df.select(pl.col(target_col)).to_series()))
+        .unique()
+        .to_series()
+        .to_list()
+    )
+
+    def recurse_tree(source, parent_id=None):
+        children = []
+        for target in adjacency.get(source, []):
+            node_id = id_cb(source, target, parent_id)
+            children.append(
+                {
+                    "text": target,
+                    "children": recurse_tree(target, parent_id=node_id),
+                    "state": state,
+                    "id": node_id,
+                }
+            )
+        return children
+
+    tree_data = [
+        {
+            "id": root,
+            "text": root,
+            "children": recurse_tree(root, parent_id=root),
+            "state": state,
+        }
+        for root in roots
+    ]
+
     return tree_data
 
 
