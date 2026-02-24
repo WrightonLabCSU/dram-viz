@@ -83,7 +83,7 @@ CALL_FUNCTIONS = {
 }
 
 VISUALIZE_FUNCTIONS = {
-    "cycle_steps",
+    "path_steps",
     "path_subunits",
 }
 
@@ -140,18 +140,13 @@ class Call(Expr):
     allow_visualize_functions: bool = False
 
     def validate(self):
+        # Assume visualization function args are valid since they can
+        # take a wide variety of args
         if self.value in VISUALIZE_FUNCTIONS and self.allow_visualize_functions:
             return
-        #     match self.value:
-        #         case "cycle_steps":
-        #             if len(self.args) != 1:
-        #                 raise RuleError(f"cycle_steps(expr) expects exactly 1 argument; got {len(self.args)} with args {self.args}")
-        #         case "path_subunits":
-        #             if len(self.args) != 1:
-        #                 raise RuleError(f"path_subunits(expr) expects exactly 1 argument; got {len(self.args)} with args {self.args}")
         if self.value in VISUALIZE_FUNCTIONS and not self.allow_visualize_functions:
             raise RuleError(f"Visualize function {self.value} cannot be used in rules when allow_visualize_functions is False."
-                            " Check you aren't using a visualization rule function like cycle_steps() or path_subunits() in your rules,"
+                            " Check you aren't using a visualization rule function like path_steps() or path_subunits() in your rules,"
                             " when doing non-visualization rule evaluation such as traits.")
 
         if self.value not in CALL_FUNCTIONS:
@@ -698,7 +693,7 @@ class Evaluator:
             else np.zeros((len(self.samples), 0), dtype=bool)
         )
         if simplify:
-            mat = mat.any(axis=1)
+            mat = mat.all(axis=1)
         return mat
 
     def len_cycle(self, expr: Steps) -> int:
@@ -758,8 +753,8 @@ class Evaluator:
                     thr=_as_float(args[2]),
                     **kwargs,
                 )
-            case "cycle_steps":
-                return self.cycle_steps(args)
+            case "path_steps":
+                return self.path_steps(args)
 
             case "path_subunits":
                 return self.path_subunits(args)
@@ -904,7 +899,7 @@ class Evaluator:
             raise ValueError(f"Unsupported op={op!r}. Use one of {sorted(OP_TO_EXPR)}")
         return cmp_fn(pl.col(col).cast(float), thr)
 
-    def cycle_steps(self, expr: Steps | list[Expr], **kwargs) -> pl.DataFrame:
+    def path_steps(self, expr: Steps | list[Expr], **kwargs) -> pl.DataFrame:
         cycle = self.eval_cycle(expr, simplify=False, **kwargs)
         
         df = pl.DataFrame(
@@ -922,7 +917,7 @@ class Evaluator:
         return df
 
     def path_subunits(self,  expr: Steps | list[Expr]) -> pl.DataFrame:
-        df = self.cycle_steps(expr, reduce_outer_and=False)
+        df = self.path_steps(expr, reduce_outer_and=False)
         df = df.rename(
             {"steps": "subunits",
             "steps_present": "subunits_present"
