@@ -85,7 +85,12 @@ def get_column_name(
     help="Column from annotations file to use as fasta names",
 )
 @click.option("--output_dir", "-o", type=Path, help="Path to the output directory", default=Path.cwd().resolve())
-@click.option("--mapping", "-m", type=Path, help="Path to mapping file")
+@click.option(
+    "--mapping",
+    "-m",
+    type=Path,
+    help="Path to mapping file of gene abundances in samples. Must have a column named 'Geneid' that matches the query_id column in the annotations file.",
+)
 @click.option(
     "--label_column",
     "-l",
@@ -269,7 +274,7 @@ def main(
             port=5006,
         )
     else:
-        Dashboard(**kw)
+        db = Dashboard(**kw)
     logger.info("Completed visualization")
 
 

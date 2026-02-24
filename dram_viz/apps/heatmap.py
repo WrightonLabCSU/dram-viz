@@ -108,8 +108,16 @@ def heatmap(
         else:
             fill_color = linear_cmap(c_col, palette=palette, low=c_min, high=c_max)
     else:
-        df[c_col] = df[c_col].astype(str)
-        factors = sorted(df[c_col].unique())
+        # if the column is boolean, we want to treat it as categorical
+        # but we need to convert it to string first so that the factor_cmap works correctly
+        # And we need to make sure both false and true are included as factors
+        # even if they aren't both present in the data
+        if df[c_col].dtype == bool:
+            df[c_col] = df[c_col].astype(str)
+            factors = [str(False), str(True)]
+        else:
+            df[c_col] = df[c_col].astype(str)
+            factors = sorted(df[c_col].unique())
         max_factors = max(PALETTE_CATEGORICAL.keys())
         palette = PALETTE_CATEGORICAL[max(len(factors), 3)] if len(factors) <= max_factors else PALETTE_CONTINUOUS
         fill_color = factor_cmap(c_col, palette=tuple(reversed(palette)), factors=factors)

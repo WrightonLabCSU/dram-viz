@@ -1,5 +1,5 @@
 name	long_name	alias	rule	group
-M00001	"Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate"	m1	"cycle_steps([K00844 | K12407 | K00845 | K25026 | K00886 | K08074 | K00918],
+M00001	"Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate"	m1	"path_steps([K00844 | K12407 | K00845 | K25026 | K00886 | K08074 | K00918],
 			 [K01810 | K06859 | K13810 | K15916],
 			 [K00850 | K16370 | K21071 | K24182 | K00918],
 			 [K01623 | K01624 | K11645 | K16305 | K16306],
@@ -8,17 +8,17 @@ M00001	"Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate"	m1	"cycle_ste
 			 [K01834 | K15633 | K15634 | K15635],
 			 [K01689 | K27394],
 			 [K00873 | K12406])"	Module
-M00004	Pentose phosphate pathway (Pentose phosphate cycle)	m4	"cycle_steps([K13937 | [[K00036 | K19243],[K01057 | K07404]]],
+M00004	Pentose phosphate pathway (Pentose phosphate cycle)	m4	"path_steps([K13937 | [[K00036 | K19243],[K01057 | K07404]]],
 			  K00033,
 			  K01783,
 			  [K01807 | K01808],
 			  K00615,
 			  [[K00616,[K01810 | K06859 | K15916]] | K13810])"	Module
-M00008	"Entner-Doudoroff pathway, glucose-6P => glyceraldehyde-3P + pyruvate"	m8	"cycle_steps(K00036,
+M00008	"Entner-Doudoroff pathway, glucose-6P => glyceraldehyde-3P + pyruvate"	m8	"path_steps(K00036,
 			[K01057 | K07404],
 			K01690,
 			K01625)"	Module
-M00009	"Citrate cycle (TCA cycle, Krebs cycle)"	m9	"cycle_steps([K01647 | K05942 | K01659],
+M00009	"Citrate cycle (TCA cycle, Krebs cycle)"	m9	"path_steps([K01647 | K05942 | K01659],
 			[K01681 | K27802 | K01682],
 			[K00031 | K00030],
 			[[[[K00164 & K00658] | K01616] & K00382] | [K00174 & K00175]],
@@ -26,12 +26,12 @@ M00009	"Citrate cycle (TCA cycle, Krebs cycle)"	m9	"cycle_steps([K01647 | K05942
 			[[K00234 & K00235 & K00236 & [K00237 | K25801]] | [K00239 & K00240 & K00241] | [K00244 & K00245 & K00246]],
 			[K01676 | K01679 | [K01677 & K01678]],
 			[K00026 | K00025 | K00024 | K00116])"	Module
-M00012	Glyoxylate cycle	m12	"cycle_steps([K01647 | K01659],
+M00012	Glyoxylate cycle	m12	"path_steps([K01647 | K01659],
 			[K01681 | K27802 | K01682],
 			K01637,
 			[K01638 | K19282],
 			[K00026 | K00025 | K00024])"	Module
-M00165	Reductive pentose phosphate cycle (Calvin cycle)	m165	"cycle_steps([K00855 | K28462],
+M00165	Reductive pentose phosphate cycle (Calvin cycle)	m165	"path_steps([K00855 | K28462],
 			K01601,
 			K00927,
 			[K05298 | K00150 | K00134],
@@ -42,7 +42,7 @@ M00165	Reductive pentose phosphate cycle (Calvin cycle)	m165	"cycle_steps([K0085
 			[K01100 | K11532 | K01086],
 			[K01807 | K01808],
 			K01783)"	Module
-M00173	Reductive citrate cycle (Arnon-Buchanan cycle)	m173	"cycle_steps([[K00169 & K00170 & K00171 & K00172] | K03737 | [K28726 & K28727 & K28729 & K28728]],
+M00173	Reductive citrate cycle (Arnon-Buchanan cycle)	m173	"path_steps([[K00169 & K00170 & K00171 & K00172] | K03737 | [K28726 & K28727 & K28729 & K28728]],
 			[[[K01007 | K01006],K01595] | [K01959 & K01960] | K01958],
 			K00024,
 			[K01676 | K01679 | [K01677 & K01678]],
@@ -52,7 +52,7 @@ M00173	Reductive citrate cycle (Arnon-Buchanan cycle)	m173	"cycle_steps([[K00169
 			K00031,
 			[K27802 | K01682],
 			[[K15230 & K15231] | [K15232 & K15233,K15234]])"	Module
-M00374	Dicarboxylate-hydroxybutyrate cycle	m374	"cycle_steps([K00169 & K00170 & K00171 & K00172],
+M00374	Dicarboxylate-hydroxybutyrate cycle	m374	"path_steps([K00169 & K00170 & K00171 & K00172],
 			K01007,
 			K01595,
 			K00024,
@@ -65,7 +65,7 @@ M00374	Dicarboxylate-hydroxybutyrate cycle	m374	"cycle_steps([K00169 & K00170 & 
 			K14534,
 			K15016,
 			K00626)"	Module
-M00375	Hydroxypropionate-hydroxybutylate cycle	m375	"cycle_steps([K01964 & K15037 & K15036],
+M00375	Hydroxypropionate-hydroxybutylate cycle	m375	"path_steps([K01964 & K15037 & K15036],
 			K15017,
 			K15039,
 			K15018,
@@ -79,7 +79,7 @@ M00375	Hydroxypropionate-hydroxybutylate cycle	m375	"cycle_steps([K01964 & K1503
 			K14534,
 			K15016,
 			K00626)"	Module
-M00376	3-Hydroxypropionate bi-cycle	m376	"cycle_steps([K02160 & K01961 & K01962 & K01963],
+M00376	3-Hydroxypropionate bi-cycle	m376	"path_steps([K02160 & K01961 & K01962 & K01963],
 			K14468,
 			K14469,
 			K15052,
@@ -92,15 +92,15 @@ M00376	3-Hydroxypropionate bi-cycle	m376	"cycle_steps([K02160 & K01961 & K01962 
 			K14449,
 			K14470,
 			K09709)"	Module
-M00377	Reductive acetyl-CoA pathway (Wood-Ljungdahl pathway)	m377	"cycle_steps(K00198,
+M00377	Reductive acetyl-CoA pathway (Wood-Ljungdahl pathway)	m377	"path_steps(K00198,
 			[K05299 | [K22015 & K25123 & K25124]],
 			K01938,
 			K01491,
 			K00297,
 			K15023,
 			K14138 & K00197 & K00194)"	Module
-M00422	"Acetyl-CoA pathway, CO2 => acetyl-CoA"	m422	"cycle_steps(K00192 & K00195,K00193 & K00197 & K00194)"	Module
-M00567	"Methanogenesis, CO2 => methane"	m567	"cycle_steps([K00200 & K00201 & K00202 & K00203 & [K00205 | K11260 | K00204]],
+M00422	"Acetyl-CoA pathway, CO2 => acetyl-CoA"	m422	"path_steps(K00192 & K00195,K00193 & K00197 & K00194)"	Module
+M00567	"Methanogenesis, CO2 => methane"	m567	"path_steps([K00200 & K00201 & K00202 & K00203 & [K00205 | K11260 | K00204]],
 			K00672,
 			K01499,
 			[K00319 | K13942],
@@ -108,7 +108,7 @@ M00567	"Methanogenesis, CO2 => methane"	m567	"cycle_steps([K00200 & K00201 & K00
 			[K00577 & K00578 & K00579 & K00580 & K00581 & K00584],
 			[K00399 & K00401 & K00402],
 			[[K22480 & K22481 & K22482] | [K03388 & K03389 & K03390] | [K08264 & K08265] | [K03388 & K03389 & K03390 & K14127 & [[K14126 & K14128] | [K22516 & K00125]]]])"	Module
-M00144	"NADH:quinone oxidoreductase, prokaryotes"	m144	path_subunits(K00330 & [[K00331 & K00332 & K00333] | [K00331 & K13378] | K13380] & K00334 & K00335 & K00336 & K00337 & K00338 & K00339 & K00340 & [[K00341 & K00342] | K15863] & K00343)	Complex I
+M00144	"NADH:quinone oxidoreductase, prokaryotes"	m144	"path_subunits(K00330 & [[K00331 & K00332 & K00333] | [K00331 & K13378] | K13380] & K00334 & K00335 & K00336 & K00337 & K00338 & K00339 & K00340 & [[K00341 & K00342] | K15863] & K00343)"	Complex I
 M00145	"NAD(P)H:quinone oxidoreductase, chloroplasts and cyanobacteria"	m145	path_subunits(K05574 & K05582 & K05581 & K05579 & K05572 & K05580 & K05578 & K05576 & K05577 & K05575 & K05573)	Complex I
 M00146	NADH dehydrogenase (ubiquinone) 1 alpha subcomplex	m146	path_subunits(K03945 & K03946 & K03947 & K03948 & K03949 & K03950 & K03951 & K03952 & K03953 & K03954 & K03955 & K03956 & K11352 & K11353)	Complex I
 M00148	Succinate dehydrogenase (ubiquinone)	m148	path_subunits(K00236 & K00237 & K00234 & K00235)	Complex II
