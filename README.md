@@ -83,3 +83,43 @@ When you are finished viewing the dashboard, you should kill the process on the 
 ```bash
 kill $(lsof -ti:5006)
 ```
+
+### Rules File
+
+The DRAM Visualization Library uses a rules file to generate the figures. This rules file is a TSV rules file similar to the DRAM traits rules. Information on the general rules parsing can be found [on the DRAM Rules Parsing Page](https://dramit.readthedocs.io/en/latest/rules_parser.html). The rules file for the DRAM Visualization Library is located in at `dram_viz/data/rules.tsv`. You can use this rule file as a template for your own rules. The rules file contains the following columns:
+
+
+| name | long_name | alia | rule | group |
+|---|---|---|---|---|
+| Name to appear for x column of heatmap | Optional name to add to heatmap hover | Optional rule alias to allow alliasing one rule line to another to break it up | The actual rule | Optional grouping variable to add multiple heatmaps next to each other |
+
+Example of a rules file (excerpt from `dram_viz/data/rules.tsv`):
+
+```tsv
+name	long_name	alias	rule	group
+M00422	"Acetyl-CoA pathway, CO2 => acetyl-CoA"	m422	"path_steps(K00192 & K00195,K00193 & K00197 & K00194)"	Module
+M00150	"Fumarate reductase, prokaryotes"	m150	path_subunits(K00244 & K00245 & K00246 & K00247)	Complex II
+tetrathionate => thiosulfate			K08357	Sulfur
+```
+
+By default, rules evuate as True/False (Presence or Absence), but the rules can also be set to evaluate as a percentage of steps present in the rule by adding either `path_steps()` or `path_subunits()` around a rule. `path_steps()` is utilized for when there are mutliple steps in a pathway seperated by a comma and you want to capture the number of steps and what percentage of steps are present. `path_subunits()` is utilized for when there are multiple subunits in a pathway seperated by ANDs (`&`) and you want to capture how many subunits are present and what percentage. You can not mix and match `path_steps()`, `path_subunits()`, and bare True/False rules in the same group, but all other rule parsing syntax is the same as the DRAM rules parsing syntax (see the DRAM Rules Parsing Page for more information).
+
+Rules can be defined across multiple lines if they are enclosed in double quotes (`"`), they do not have to be enclosed in quotes if contained on a single line. White space can be used for formatting.
+
+You can convert a KEGG module definition to a DRAM rule by first substituting the commas (`,`) for pipes (`|`), and then the pluses (`+`) for ampersands (`&`), then substitue the spaces (` `) for commas (`,`). Substitute parenthesis for brackers (`(`) for (`[`) and (`)`) for (`]`). For example, the KEGG module definition for M00422 is:
+
+```
+(K00844,K12407,K00845,K25026,K00886,K08074,K00918) (K01810,K06859,K13810,K15916) (K00850,K16370,K21071,K24182,K00918) (K01623,K01624,K11645,K16305,K16306) K01803 ((K00134,K00150) K00927,K11389) (K01834,K15633,K15634,K15635) (K01689,K27394) (K00873,K12406)
+```
+
+becomes:
+
+```
+[K00844|K12407|K00845|K25026|K00886|K08074|K00918],[K01810|K06859|K13810|K15916] [K00850|K16370|K21071|K24182|K00918],[K01623|K01624|K11645|K16305|K16306],K01803 [[K00134|K00150],K00927|K11389],[K01834|K15633|K15634|K15635],[K01689|K27394] [K00873|K12406]
+```
+
+#### No Imcplicit Boolean Precedence
+
+Sometimes DRAM's rules parsing can be stricter about binary operator grouping than KEGG module definitions. This is mostly to prevent confusion on the order of ANDs and ORs with custom rules. For example, `A | B | C & D` is not a valid rule because though most parsing languages (include KEGG module definitions) would parse that as `A | B | [C & D]`, it can and has caused confusion. In DRAM's rules parsing, you would need to add brackets to make the grouping explicit: `A | B | [C & D]`. So, when converting KEGG module definitions to DRAM rules, you may need to add brackets to make the grouping explicit sometimes. See the [DRAM Rules Parsing Page](https://dramit.readthedocs.io/en/latest/rules_parser.html#core-design-principle-no-implicit-boolean-precedence) for more information on the rules parsing syntax and how to write rules.
+
+DRAM Parsing will also warn you and error if your rules file is not grouped properly.

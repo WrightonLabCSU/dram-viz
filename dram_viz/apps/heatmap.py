@@ -7,12 +7,11 @@ from typing import Optional
 import pandas as pd
 import panel as pn
 import param
-from bokeh.core.property.vectorization import Field
-from bokeh.models import ColorBar, Legend, LegendItem, LinearColorMapper, Plot
 from bokeh.palettes import BuGn, Cividis256
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
-from bokeh.transform import factor_cmap, linear_cmap
+from bokeh.transform import factor_cmap, linear_cmap, log_cmap
+from pandas.api.types import is_numeric_dtype
 from panel_jstree import Tree
 
 from dram_viz.definitions import NO_TAXONOMY_RANKS, TAXONOMY_RANKS_REGEX
@@ -26,83 +25,6 @@ HEATMAP_CELL_HEIGHT = 15
 HEATMAP_CELL_WIDTH = 15
 
 
-def make_heatmap_groups(df: pd.DataFrame, groupby: Optional[str] = None, title: Optional[str] = None, **kwargs):
-    """
-    Generate a list of heatmaps based on the given DataFrame and grouping.
-
-    Parameters:
-    - df (pd.DataFrame): The DataFrame containing the data for the heatmaps.
-    - groupby (Optional[str]): The column name to group the data by. If not provided, a single heatmap will be generated for the entire DataFrame.
-    - title (Optional[str]): The title for the heatmaps. If provided, it will be used as the title for all heatmaps. If not provided, the groups will be used as titles.
-    - **kwargs: Additional keyword arguments to be passed to the heatmap function.
-
-    Returns:
-    - List[plt.Figure]: A list of heatmaps, each represented as a matplotlib Figure object.
-    """
-    if title:
-        kwargs["title"] = title
-    if not groupby:
-        return [heatmap(df, **kwargs)]
-    # if not title, use groups as titles
-    return [
-        heatmap(frame, **{"title": maybe_title, **kwargs}) for maybe_title, frame in df.groupby(groupby, sort=False)
-    ]
-
-
-def add_legend(p_orig: Plot | list[Plot], labels: str | list[str], side="right", index: Optional[int] = None):
-    """
-    Add a legend to a Bokeh plot.
-
-    Parameters:
-    - p_orig (Plot | list[Plot]): The Bokeh plot or a list of Bokeh plots to add the legend to.
-    - labels (str | list[str]): The label(s) to display in the legend. Can be a single string or a list of strings.
-    - side (str): The side of the plot where the legend should be placed. Default is "right".
-    - index (Optional[int]): The index of the plot in the list of plots (if p_orig is a list). Default is None.
-
-    Returns:
-    - p_orig: The original Bokeh plot(s) with the legend added.
-    """
-
-    if isinstance(p_orig, list) and index is None:
-        raise ValueError("If p is a list, i must be an integer")
-    if isinstance(p_orig, list):
-        if len(p_orig) == 0:
-            return p_orig
-        p = p_orig[index]
-    else:
-        p = p_orig
-    if isinstance(labels, str):
-        label = labels
-        legend = Legend(items=[LegendItem(label=Field(field=label), renderers=p.renderers)])
-        p.add_layout(legend, side)
-    else:
-        legend = Legend(
-            items=[LegendItem(label=Field(field=label), renderers=[p.renderers[i]]) for i, label in enumerate(labels)]
-        )
-        p.add_layout(legend, side)
-    return p_orig
-
-
-def add_colorbar(p_orig: Plot | list[Plot], index: Optional[int] = None):
-    """
-    Add a colorbar to a plot
-    """
-    if isinstance(p_orig, list) and index is None:
-        raise ValueError("If p is a list, i must be an integer")
-    if isinstance(p_orig, list):
-        if len(p_orig) == 0:
-            return p_orig
-        p = p_orig[index]
-    else:
-        p = p_orig
-    color_bar = ColorBar(
-        color_mapper=LinearColorMapper(palette=tuple(reversed(PALETTE_CONTINUOUS)), low=0, high=1),
-        height=HEATMAP_CELL_HEIGHT * 30,
-    )
-    p.add_layout(color_bar, "right")
-    return p_orig
-
-
 def heatmap(
     df,
     y_col,
@@ -114,7 +36,7 @@ def heatmap(
     c_col: str = None,
     x_col: str = None,
     x_cols: list[str] = None,
-    extra_y_col: str = None,
+    log_colors: bool = False,
     **fig_kwargs,
 ):
     """
@@ -140,8 +62,6 @@ def heatmap(
         The minimum value for the color
     c_max : float
         The maximum value for the color
-    extra_y_col: str
-        An extra column to use for the y-axis
 
     Returns
     -------
@@ -180,12 +100,24 @@ def heatmap(
     )
 
     # if x_col:
-    if df[c_col].dtype == float:
+    # if df[c_col].dtype == float:
+    if is_numeric_dtype(df[c_col]) and df[c_col].dtype != bool:
         palette = tuple(reversed(PALETTE_CONTINUOUS))
-        fill_color = linear_cmap(c_col, palette=palette, low=c_min, high=c_max)
+        if log_colors:
+            fill_color = log_cmap(c_col, palette=palette, low=c_min, high=c_max)
+        else:
+            fill_color = linear_cmap(c_col, palette=palette, low=c_min, high=c_max)
     else:
-        df[c_col] = df[c_col].astype(str)
-        factors = sorted(df[c_col].unique())
+        # if the column is boolean, we want to treat it as categorical
+        # but we need to convert it to string first so that the factor_cmap works correctly
+        # And we need to make sure both false and true are included as factors
+        # even if they aren't both present in the data
+        if df[c_col].dtype == bool:
+            df[c_col] = df[c_col].astype(str)
+            factors = [str(False), str(True)]
+        else:
+            df[c_col] = df[c_col].astype(str)
+            factors = sorted(df[c_col].unique())
         max_factors = max(PALETTE_CATEGORICAL.keys())
         palette = PALETTE_CATEGORICAL[max(len(factors), 3)] if len(factors) <= max_factors else PALETTE_CONTINUOUS
         fill_color = factor_cmap(c_col, palette=tuple(reversed(palette)), factors=factors)
@@ -200,142 +132,6 @@ def heatmap(
     p.xaxis.major_label_orientation = pi / 2
 
     return p
-
-
-def make_product_heatmap(
-    module_df: pd.DataFrame,
-    etc_df: pd.DataFrame,
-    function_df: pd.DataFrame,
-    y_col: str = "genome",
-    taxonomy_label: pd.Series | None = None,
-    mapping: bool = False,
-    normalize: bool = False,
-):
-    """
-    Make a product heatmap group from the module_coverage_df, etc_coverage_df, and functional_df
-
-    Parameters
-    ----------
-    module_df : pd.DataFrame
-        A dataframe of module coverage information
-    etc_df : pd.DataFrame
-        A dataframe of ETC coverage information
-    function_df : pd.DataFrame
-        A dataframe of functional coverage information
-    y_col : str
-        The column to use for the y-axis in the heatmaps, must be present in all dataframes
-        default: "genome"
-    taxonomy_label : pd.Series
-        The current taxonomy label to use for the y-axis in the heatmaps
-
-    Returns
-    -------
-    list
-        A list of heatmaps
-    """
-
-    extra_tooltip_cols = []
-    if "taxonomy" in module_df.columns:
-        extra_tooltip_cols.append("taxonomy")
-
-    first_charts_kw = {}
-    if taxonomy_label is not None:
-        module_df["label"] = module_df[taxonomy_label] + " | " + module_df[y_col]
-        # fig1_kw["extra_y_col"] = taxonomy_label
-    else:
-        module_df["label"] = module_df[y_col]
-
-    completeness_charts = []
-    if "Completeness" in module_df.columns:
-        completeness_charts.extend(
-            make_heatmap_groups(module_df, x_cols=["Contamination"], y_col="label", tooltip_cols=[y_col])
-        )
-        extra_tooltip_cols.append("Completeness")
-        # The first chart we see (completeness, contamination, module) will have the y-axis on the left
-        first_charts_kw["y_axis_location"] = None
-    if "Contamination" in module_df.columns:
-        completeness_charts.extend(
-            make_heatmap_groups(
-                module_df, x_cols=["Completeness"], y_col=y_col, tooltip_cols=[y_col], **first_charts_kw
-            )
-        )
-        extra_tooltip_cols.append("Contamination")
-        # The first chart we see (completeness, contamination, module) will have the y-axis on the left
-        first_charts_kw["y_axis_location"] = None
-
-    if taxonomy_label is not None:
-        first_charts_kw["extra_y_col"] = taxonomy_label
-    # c_col = "step_coverage" if not mapping else "summed_sample_abundances"
-    c_col = (
-        "step_coverage" if not mapping else "normalized_sample_abundances" if normalize else "summed_sample_abundances"
-    )
-    module_charts = make_heatmap_groups(
-        module_df,
-        x_col="module_name",
-        y_col=y_col,
-        c_col=c_col,
-        tooltip_cols=["genome", "module_name", "steps", "steps_present", *extra_tooltip_cols],
-        **first_charts_kw,
-        title="Module",
-    )
-    # etc_charts = add_colorbar(make_heatmap_groups(etc_df, x_col="module_name", y_col=y_col, c_col="percent_coverage",
-    #                                  groupby="complex",
-    #                                  tooltip_cols=["genome", "module_name", "path_length", "path_length_coverage",
-    #                                                "genes", "missing_genes", *extra_tooltip_cols],
-    #                                               y_axis_location=None,),
-    #                           index=-1)
-    # c_col = "percent_coverage" if not mapping else "summed_sample_abundances"
-    c_col = (
-        "percent_coverage"
-        if not mapping
-        else "normalized_sample_abundances"
-        if normalize
-        else "summed_sample_abundances"
-    )
-    etc_charts = make_heatmap_groups(
-        etc_df,
-        x_col="module_name",
-        y_col=y_col,
-        c_col=c_col,
-        groupby="complex",
-        tooltip_cols=[
-            "genome",
-            "module_name",
-            "path_length",
-            "path_length_coverage",
-            "genes",
-            "missing_genes",
-            *extra_tooltip_cols,
-        ],
-        y_axis_location=None,
-    )
-    #
-    # c_col = "present" if not mapping else "summed_sample_abundances"
-    c_col = "present" if not mapping else "normalized_sample_abundances" if normalize else "summed_sample_abundances"
-    function_charts = add_legend(
-        make_heatmap_groups(
-            function_df,
-            x_col="function_name",
-            y_col=y_col,
-            c_col=c_col,
-            groupby="category",
-            tooltip_cols=[
-                "genome",
-                "category",
-                "subcategory",
-                ("Function IDs", "@function_ids"),
-                "function_name",
-                "long_function_name",
-                "gene_symbol",
-                *extra_tooltip_cols,
-            ],
-            y_axis_location=None,
-        ),
-        "present",
-        side="right",
-        index=-1,
-    )
-    return [*completeness_charts, *module_charts, *etc_charts, *function_charts]
 
 
 class Dashboard(pn.viewable.Viewer):
@@ -360,22 +156,17 @@ class Dashboard(pn.viewable.Viewer):
 
     def __init__(
         self,
-        module_df: pd.DataFrame,
-        etc_df: pd.DataFrame,
-        function_df: pd.DataFrame,
-        tax_tree_data=None,
-        selected_tax_tree=None,
-        output_dir=None,
-        mapping=None,
+        dfs: dict[str, pd.DataFrame],
+        taxanomy_tree_data: Optional[pd.DataFrame] = None,
+        selected_tax_tree: Optional[list[str]] = None,
+        mapping: bool = False,
     ):
         super().__init__()
-        self.module_df = module_df
-        self.etc_df = etc_df
-        self.function_df = function_df
-        self.tax_tree_data = tax_tree_data
-        self._output_dir = output_dir or Path.cwd()
-        self._mapping = mapping
+        self.dfs = dfs
+        self.taxonomy_tree_data = taxanomy_tree_data
+        self._output_dir = Path.cwd()
         self.plot_view = pn.Row()
+        self._mapping = mapping
         self.download_button = pn.widgets.Button(name="Download Heatmap", button_type="primary")
         self.download_button.on_click(self.download_heatmap)
 
@@ -383,7 +174,7 @@ class Dashboard(pn.viewable.Viewer):
         self.reset_button = pn.widgets.Button(name="Reset Filters", button_type="warning")
         self.reset_button.on_click(self.reset_filters)
 
-        self.redraw_button.on_click(self.make_plot)
+        self.redraw_button.on_click(self.update_plot)
 
         self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy on Y Axis", value=False)
         self.tax_axis_rank = pn.widgets.Select(
@@ -393,24 +184,21 @@ class Dashboard(pn.viewable.Viewer):
         pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
 
         self.mapping_filter = pn.widgets.Checkbox(name="Switch to Mapping View", value=False)
-        self.normalize_mapping_filter = pn.widgets.Checkbox(name="Normalize Mapping", value=False)
         self.show_mapping_box = pn.Column(self.mapping_filter)
 
-        if "taxonomy" in self.module_df.columns:
-            self.taxonomy_filter = Tree(data=self.tax_tree_data, show_icons=False, cascade=True)
+        sort_options = ["genome"]
+        self.taxonomy_filter = None
+        if self.taxonomy_tree_data is not None:
+            self.taxonomy_filter = Tree(data=self.taxonomy_tree_data, show_icons=False, cascade=True)
 
             # hack to make sure the taxonomy filter tree.value is set since it isn't set on the first load
             # TODO: remove maybe when this is put into panel
             self.taxonomy_filter.value = selected_tax_tree or []
 
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
-        else:
-            self.taxonomy_filter = None
-            sort_options = ["genome"]
-        if "Completeness" in self.module_df.columns:
-            sort_options.append("Completeness")
-        if "Contamination" in self.module_df.columns:
-            sort_options.append("Contamination")
+
+        if "Metadata" in self.dfs:
+            sort_options.append(col for col in self.dfs["Metadata"].columns if col != "genome")
 
         self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
 
@@ -422,24 +210,12 @@ class Dashboard(pn.viewable.Viewer):
 
     def _init_view(self):
         additional_sidebar = []
-        module_df = self.module_df.copy()
-        etc_df = self.etc_df.copy()
-        function_df = self.function_df.copy()
-
-        charts = make_product_heatmap(
-            module_df,
-            etc_df,
-            function_df,
-            taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value,
-        )
-
-        self.plot_view[:] = charts
+        self.update_plot()
 
         if self._mapping:
             additional_sidebar.append(self.show_mapping_box)
-            additional_sidebar.append(self.normalize_mapping_filter)
 
-        if "taxonomy" in self.module_df.columns:
+        if self.taxonomy_tree_data is not None:
             additional_sidebar.append(self.show_tax_box)
             additional_sidebar.append("## Taxonomy Filter")
             additional_sidebar.append(self.taxonomy_filter)
@@ -450,9 +226,10 @@ class Dashboard(pn.viewable.Viewer):
             main=[
                 pn.Tabs(
                     ("Heatmap", self.plot_view),
-                    ("Module Coverage DF", pn.widgets.Tabulator(self.module_df, page_size=50)),
-                    ("ETC Coverage DF", pn.widgets.Tabulator(self.etc_df, page_size=50)),
-                    ("Function DF", pn.widgets.Tabulator(self.function_df, page_size=50)),
+                    *[
+                        (f"{group} df", pn.widgets.Tabulator(df.to_pandas(), page_size=50))
+                        for group, df in self.dfs.items()
+                    ],
                 )
             ],
             sidebar=[
@@ -464,33 +241,48 @@ class Dashboard(pn.viewable.Viewer):
             ],
         )
 
-    def make_plot(self, event=None):
+    def update_plot(self, event=None):
         """
         Make the product plot
         """
-        additional_sidebar = []
-        module_df = self.module_df.copy()
-        etc_df = self.etc_df.copy()
-        function_df = self.function_df.copy()
+        None if not self.tax_axis_filter.value else self.tax_axis_rank.value
+        charts = []
+        for i, (group, df) in enumerate(self.dfs.items()):
+            df = df.to_pandas()
+            tooltip_cols = df.columns.tolist()
+            kw = {"y_col": "genome"}
+            if i == 0 and self.tax_axis_filter.value:
+                kw["y_col"] = "taxonomy"
+            if i != 0:
+                kw["y_axis_location"] = None
+            if "coverage_percentage" in df.columns:
+                c_col = "coverage_percentage"
+                if self.min_coverage > 0:
+                    df.loc[df["coverage_percentage"] < self.min_coverage, "coverage_percentage"] = 0
+            elif "present" in df.columns:
+                c_col = "present"
+            elif "value" in df.columns:
+                c_col = "value"
+            else:
+                raise ValueError(f"No coverage column found in {group} dataframe")
 
-        if self.min_coverage > 0:
-            print(self.min_coverage)
-            # module_df = self.module_df[self.module_df["step_coverage"] >= self.min_coverage]
-            module_df.loc[self.module_df["step_coverage"] < self.min_coverage, "step_coverage"] = 0
-            # etc_df = self.etc_df[self.etc_df["percent_coverage"] >= self.min_coverage]
-            etc_df.loc[self.etc_df["percent_coverage"] < self.min_coverage, "percent_coverage"] = 0
+            if self.mapping_filter.value and "summed_sample_abundance" in df.columns:
+                c_col = "summed_sample_abundance"
+                kw["c_max"] = df[c_col].max()
+                if kw["c_max"] == 0:
+                    kw["c_max"] = 1
 
-        module_df, etc_df, function_df = self.filter_by_taxonomy(module_df, etc_df, function_df)
-        module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
+            df = self.filter_by_taxonomy(df)
+            df = self.get_sorted_dfs(df, by=self.sort_by.value)
 
-        charts = make_product_heatmap(
-            module_df,
-            etc_df,
-            function_df,
-            taxonomy_label=None if not self.tax_axis_filter.value else self.tax_axis_rank.value,
-            mapping=self.mapping_filter.value,
-            normalize=self.normalize_mapping_filter.value,
-        )
+            hm = heatmap(df, x_col="name", c_col=c_col, tooltip_cols=tooltip_cols, title=group, **kw)
+            # insert metadata at the beginning so it shows as the first hm, regardless of the order of the dfs dict
+            # if group == "Metadata":
+            #     charts.insert(0, hm)
+            # else:
+            charts.append(hm)
+
+        # module_df, etc_df, function_df = self.get_sorted_dfs(module_df, etc_df, function_df, by=self.sort_by.value)
 
         self.plot_view[:] = charts
 
@@ -512,21 +304,19 @@ class Dashboard(pn.viewable.Viewer):
 
         self.sort_by.value = []
 
-    def filter_by_taxonomy(self, module_df, etc_df, function_df):
+    def filter_by_taxonomy(self, df):
         """
         Filter the dataframes by selected taxonomy ranks
         """
         if self.taxonomy_filter is None:
-            return module_df, etc_df, function_df
+            return df
         selected = self.taxonomy_filter.value
         # leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
         # maybe we don't need this replace, but leaving in for now to be sure we match the data
         leaves = [node.replace("; ", ";") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
-        module_df = module_df.loc[module_df["taxonomy"].isin(leaves)]
-        etc_df = etc_df.loc[etc_df["taxonomy"].isin(leaves)]
-        function_df = function_df.loc[function_df["taxonomy"].isin(leaves)]
+        df = df.loc[df["taxonomy"].isin(leaves)]
 
-        return module_df, etc_df, function_df
+        return df
 
     def reveal_tax_axis_rank_selector(self, event=None, tax_axis_filter_value: bool = None):
         """
@@ -539,11 +329,11 @@ class Dashboard(pn.viewable.Viewer):
             return
         self.tax_axis_rank.visible = False
 
-    def get_sorted_dfs(self, module_df, etc_df, function_df, by="genome"):
+    def get_sorted_dfs(self, df, by="genome"):
         """
         Sort the dataframes by taxonomy
         """
-        return module_df.sort_values(by=by), etc_df.sort_values(by=by), function_df.sort_values(by=by)
+        return df.sort_values(by=by)
 
     def download_heatmap(self, event=None, output_dir=None):
         """

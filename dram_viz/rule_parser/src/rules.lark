@@ -1,0 +1,46 @@
+?start: step_expr
+      | expr
+
+step_expr: expr ("," expr)+               -> step_
+
+# expr can be a pure-or chain, a pure-and chain, or a single pipe_expr
+?expr: or_expr
+     | and_expr
+     | pipe_expr
+
+# OR is a chain of pipe_expr operands (NOT and_expr operands)
+or_expr: pipe_expr ("|" pipe_expr)+       -> or_
+
+# AND is a chain of pipe_expr operands (NOT or_expr operands)
+and_expr: pipe_expr ("&" pipe_expr)+      -> and_
+
+?pipe_expr: atom
+          | pipe_expr "->" call           -> pipe_
+
+?atom: call
+     | literal
+     | "[" expr "]"                       -> group
+     | "[" step_expr "]"                  -> group
+
+call: IDENT "(" [arg ("," arg)*] ")"    -> call
+
+// list literal as a VALUE (requires at least one comma)
+list_lit: "[" expr ("," expr)+ "]"   -> step_
+
+?arg: list_lit
+    | expr
+
+?literal: name_ref
+        | NUMBER                          -> number
+        | STRING                          -> string
+
+name_ref: IDENT ":" IDENT                 -> qualified_name
+        | IDENT                           -> simple_name
+
+IDENT: /[A-Za-z0-9_\-\.]+/
+NUMBER: /[0-9]+(\.[0-9]+)?/
+STRING: ESCAPED_STRING
+
+%import common.ESCAPED_STRING
+%import common.WS
+%ignore WS

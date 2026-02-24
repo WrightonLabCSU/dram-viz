@@ -31,6 +31,9 @@ dependencies = [
     'param >=2.0,<3.0',
     'panel-jstree >=0.3.5,<0.4.0',
     'pandas >=1.2,<3.0',
+    'polars >1',
+    'pyarrow',
+    'lark'
 ]
 
 [project.urls]
