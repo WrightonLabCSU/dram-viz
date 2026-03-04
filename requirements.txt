@@ -1,3 +1,4 @@
 polars
 lark
 numpy
+networkx
