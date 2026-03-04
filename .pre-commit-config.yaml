@@ -1,10 +1,10 @@
 # This is the configuration for pre-commit, a local framework for managing pre-commit hooks
 #   Check out the docs at: https://pre-commit.com/
 
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-case-conflict
       - id: check-docstring-first
@@ -15,7 +15,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.5
+    rev: v0.15.4
     hooks:
       # Run the linter.
       - id: ruff
