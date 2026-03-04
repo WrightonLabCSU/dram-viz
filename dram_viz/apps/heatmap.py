@@ -70,7 +70,9 @@ def heatmap(
     """
 
     if x_cols:
-        df = pd.melt(df, id_vars=y_col, value_vars=x_cols, var_name="x_col").drop_duplicates()
+        df = pd.melt(
+            df, id_vars=y_col, value_vars=x_cols, var_name="x_col"
+        ).drop_duplicates()
         x_col = "x_col"
         c_col = "value"
         tooltip_cols = [y_col, "value"]
@@ -119,9 +121,24 @@ def heatmap(
             df[c_col] = df[c_col].astype(str)
             factors = sorted(df[c_col].unique())
         max_factors = max(PALETTE_CATEGORICAL.keys())
-        palette = PALETTE_CATEGORICAL[max(len(factors), 3)] if len(factors) <= max_factors else PALETTE_CONTINUOUS
-        fill_color = factor_cmap(c_col, palette=tuple(reversed(palette)), factors=factors)
-    p.rect(x=x_col, y=y_col, width=0.9, height=0.9, source=df, fill_alpha=0.9, color=fill_color, **rect_kw)
+        palette = (
+            PALETTE_CATEGORICAL[max(len(factors), 3)]
+            if len(factors) <= max_factors
+            else PALETTE_CONTINUOUS
+        )
+        fill_color = factor_cmap(
+            c_col, palette=tuple(reversed(palette)), factors=factors
+        )
+    p.rect(
+        x=x_col,
+        y=y_col,
+        width=0.9,
+        height=0.9,
+        source=df,
+        fill_alpha=0.9,
+        color=fill_color,
+        **rect_kw,
+    )
 
     p.title.text_font_size = "8pt"
 
@@ -167,29 +184,42 @@ class Dashboard(pn.viewable.Viewer):
         self._output_dir = Path.cwd()
         self.plot_view = pn.Row()
         self._mapping = mapping
-        self.download_button = pn.widgets.Button(name="Download Heatmap", button_type="primary")
+        self.download_button = pn.widgets.Button(
+            name="Download Heatmap", button_type="primary"
+        )
         self.download_button.on_click(self.download_heatmap)
 
         self.redraw_button = pn.widgets.Button(name="Redraw", button_type="primary")
-        self.reset_button = pn.widgets.Button(name="Reset Filters", button_type="warning")
+        self.reset_button = pn.widgets.Button(
+            name="Reset Filters", button_type="warning"
+        )
         self.reset_button.on_click(self.reset_filters)
 
         self.redraw_button.on_click(self.update_plot)
 
-        self.tax_axis_filter = pn.widgets.Checkbox(name="Show Taxonomy on Y Axis", value=False)
+        self.tax_axis_filter = pn.widgets.Checkbox(
+            name="Show Taxonomy on Y Axis", value=False
+        )
         self.tax_axis_rank = pn.widgets.Select(
-            name="Taxonomy Label", options=list(TAXONOMY_RANKS_REGEX), visible=False, value="genus"
+            name="Taxonomy Label",
+            options=list(TAXONOMY_RANKS_REGEX),
+            visible=False,
+            value="genus",
         )
         self.show_tax_box = pn.Column(self.tax_axis_filter, self.tax_axis_rank)
         pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
 
-        self.mapping_filter = pn.widgets.Checkbox(name="Switch to Mapping View", value=False)
+        self.mapping_filter = pn.widgets.Checkbox(
+            name="Switch to Mapping View", value=False
+        )
         self.show_mapping_box = pn.Column(self.mapping_filter)
 
         sort_options = ["genome"]
         self.taxonomy_filter = None
         if self.taxonomy_tree_data is not None:
-            self.taxonomy_filter = Tree(data=self.taxonomy_tree_data, show_icons=False, cascade=True)
+            self.taxonomy_filter = Tree(
+                data=self.taxonomy_tree_data, show_icons=False, cascade=True
+            )
 
             # hack to make sure the taxonomy filter tree.value is set since it isn't set on the first load
             # TODO: remove maybe when this is put into panel
@@ -198,7 +228,9 @@ class Dashboard(pn.viewable.Viewer):
             sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
 
         if "Metadata" in self.dfs:
-            sort_options.append(col for col in self.dfs["Metadata"].columns if col != "genome")
+            sort_options.append(
+                col for col in self.dfs["Metadata"].columns if col != "genome"
+            )
 
         self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
 
@@ -227,7 +259,10 @@ class Dashboard(pn.viewable.Viewer):
                 pn.Tabs(
                     ("Heatmap", self.plot_view),
                     *[
-                        (f"{group} df", pn.widgets.Tabulator(df.to_pandas(), page_size=50))
+                        (
+                            f"{group} df",
+                            pn.widgets.Tabulator(df.to_pandas(), page_size=50),
+                        )
                         for group, df in self.dfs.items()
                     ],
                 )
@@ -258,7 +293,10 @@ class Dashboard(pn.viewable.Viewer):
             if "coverage_percentage" in df.columns:
                 c_col = "coverage_percentage"
                 if self.min_coverage > 0:
-                    df.loc[df["coverage_percentage"] < self.min_coverage, "coverage_percentage"] = 0
+                    df.loc[
+                        df["coverage_percentage"] < self.min_coverage,
+                        "coverage_percentage",
+                    ] = 0
             elif "present" in df.columns:
                 c_col = "present"
             elif "value" in df.columns:
@@ -275,7 +313,14 @@ class Dashboard(pn.viewable.Viewer):
             df = self.filter_by_taxonomy(df)
             df = self.get_sorted_dfs(df, by=self.sort_by.value)
 
-            hm = heatmap(df, x_col="name", c_col=c_col, tooltip_cols=tooltip_cols, title=group, **kw)
+            hm = heatmap(
+                df,
+                x_col="name",
+                c_col=c_col,
+                tooltip_cols=tooltip_cols,
+                title=group,
+                **kw,
+            )
             # insert metadata at the beginning so it shows as the first hm, regardless of the order of the dfs dict
             # if group == "Metadata":
             #     charts.insert(0, hm)
@@ -297,7 +342,9 @@ class Dashboard(pn.viewable.Viewer):
         self.min_coverage = self.param.min_coverage.default
 
         if self.taxonomy_filter is not None:
-            self.taxonomy_filter.value = [node["id"] for node in self.taxonomy_filter.flat_tree]
+            self.taxonomy_filter.value = [
+                node["id"] for node in self.taxonomy_filter.flat_tree
+            ]
             self.tax_axis_filter.value = False
             self.tax_axis_rank.visible = False
             self.tax_axis_rank.value = "genus"
@@ -313,12 +360,18 @@ class Dashboard(pn.viewable.Viewer):
         selected = self.taxonomy_filter.value
         # leaves = [node for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
         # maybe we don't need this replace, but leaving in for now to be sure we match the data
-        leaves = [node.replace("; ", ";") for node in selected if len(node.split(";")) == NO_TAXONOMY_RANKS]
+        leaves = [
+            node.replace("; ", ";")
+            for node in selected
+            if len(node.split(";")) == NO_TAXONOMY_RANKS
+        ]
         df = df.loc[df["taxonomy"].isin(leaves)]
 
         return df
 
-    def reveal_tax_axis_rank_selector(self, event=None, tax_axis_filter_value: bool = None):
+    def reveal_tax_axis_rank_selector(
+        self, event=None, tax_axis_filter_value: bool = None
+    ):
         """
         Set the taxonomy filter
         """

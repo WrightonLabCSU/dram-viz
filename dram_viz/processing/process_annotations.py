@@ -10,7 +10,9 @@ from dram_viz.definitions import DEFAULT_FASTA_COLUMN
 logger = logging.getLogger("dram.viz")
 
 
-def build_taxonomy_df_pl(annotations_df: pd.DataFrame, groupby_column=DEFAULT_FASTA_COLUMN) -> pl.DataFrame:
+def build_taxonomy_df_pl(
+    annotations_df: pd.DataFrame, groupby_column=DEFAULT_FASTA_COLUMN
+) -> pl.DataFrame:
     cols = [groupby_column, "taxonomy"]
     tax_df = annotations_df[cols].unique()
     tax_df = tax_df.rename({groupby_column: "genome"})
@@ -26,13 +28,18 @@ def build_tax_edge_df_pl(
     ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
     tree_df = tax_df.with_columns(
-        pl.col("taxonomy").str.split(";").list.to_struct(fields=ranks).alias("taxonomy_struct")
+        pl.col("taxonomy")
+        .str.split(";")
+        .list.to_struct(fields=ranks)
+        .alias("taxonomy_struct")
     ).unnest("taxonomy_struct")
 
     # generate successive rank edges dynamically
     tax_edge_df = pl.concat(
         [
-            tree_df.select(pl.col(ranks[i]).alias("source"), pl.col(ranks[i + 1]).alias("target"))
+            tree_df.select(
+                pl.col(ranks[i]).alias("source"), pl.col(ranks[i + 1]).alias("target")
+            )
             for i in range(len(ranks) - 1)
         ],
         how="vertical",
@@ -41,7 +48,13 @@ def build_tax_edge_df_pl(
     return tax_edge_df, tax_df
 
 
-def build_tree_pl(edge_df, source_col: str = "source", target_col: str = "target", state: dict = None, id_cb=None):
+def build_tree_pl(
+    edge_df,
+    source_col: str = "source",
+    target_col: str = "target",
+    state: dict = None,
+    id_cb=None,
+):
     """
     Builds a tree structure from an edge DataFrame.
 
@@ -77,7 +90,9 @@ def build_tree_pl(edge_df, source_col: str = "source", target_col: str = "target
     # --- roots = sources that never appear as targets ---
     roots = (
         edge_df.select(pl.col(source_col))
-        .filter(~pl.col(source_col).is_in(edge_df.select(pl.col(target_col)).to_series()))
+        .filter(
+            ~pl.col(source_col).is_in(edge_df.select(pl.col(target_col)).to_series())
+        )
         .unique()
         .to_series()
         .to_list()

@@ -65,10 +65,6 @@ include = ["dram_viz*"]
 [tool.setuptools_scm]
 write_to = "dram_viz/_version.py"
 
-[tool.ruff]
-line-length = 120
-indent-width = 4
-
 # These are regular expressions (hence the \. is escaping the ., and not a literal \.)
 exclude = [
     "_version.py",
