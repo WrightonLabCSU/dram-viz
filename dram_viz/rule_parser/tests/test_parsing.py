@@ -1,16 +1,18 @@
+from pathlib import Path
+
+import polars as pl
+
 from src.rules import (
-    evaluate_rules_on_anno,
+    And,
+    Call,
     CompiledRules,
     Name,
-    PipeChain,
-    And,
     Or,
+    PipeChain,
     Steps,
-    Call,
     String,
+    evaluate_rules_on_anno,
 )
-import polars as pl
-from pathlib import Path
 
 DATA_DIR = Path(__file__).parent / "data"
 

@@ -1,5 +1,7 @@
 polars
 lark
 numpy
+networkx
 pytest
 black
+pre-commit

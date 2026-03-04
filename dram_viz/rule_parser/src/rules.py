@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, Tuple, List, Optional, Set, Iterable
+import functools
 import operator
 import os
+from dataclasses import dataclass
 from pathlib import Path
-import functools
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import networkx as nx
 import numpy as np
 import polars as pl
-from lark import Lark, Transformer, LarkError
+from lark import Lark, LarkError, Transformer
 
 OP_TO_EXPR = {
     "gt": operator.gt,
@@ -44,7 +44,8 @@ ID_EXPR_DICT = {
     "pfam_hits": pl.col("pfam_hits").str.extract_all(r"\[(PF\d{5})\.\d+\]"),
     "pfam_id": pl.col("pfam_id").str.extract_all(r"\[(PF\d{5})\.\d+\]"),
     "cazy_hits": (
-        pl.col("cazy_hits").cast(pl.Utf8)
+        pl.col("cazy_hits")
+        .cast(pl.Utf8)
         # capture just the EC number part inside "(EC ...)"
         .str.extract_all(r"\(EC\s+([\d\.\-]+)\)")
         # prefix each captured number with "EC:"
@@ -145,9 +146,11 @@ class Call(Expr):
         if self.value in VISUALIZE_FUNCTIONS and self.allow_visualize_functions:
             return
         if self.value in VISUALIZE_FUNCTIONS and not self.allow_visualize_functions:
-            raise RuleError(f"Visualize function {self.value} cannot be used in rules when allow_visualize_functions is False."
-                            " Check you aren't using a visualization rule function like path_steps() or path_subunits() in your rules,"
-                            " when doing non-visualization rule evaluation such as traits.")
+            raise RuleError(
+                f"Visualize function {self.value} cannot be used in rules when allow_visualize_functions is False."
+                " Check you aren't using a visualization rule function like path_steps() or path_subunits() in your rules,"
+                " when doing non-visualization rule evaluation such as traits."
+            )
 
         if self.value not in CALL_FUNCTIONS:
             raise RuleError(f"Unknown function: {self.value}")
@@ -253,7 +256,7 @@ class ASTTransformer(Transformer):
     def __init__(self, allow_visualize_functions=False):
         self.allow_visualize_functions = allow_visualize_functions
         super().__init__()
-        
+
     def simple_name(self, items):
         return Name(value=str(items[0]), db=None)
 
@@ -287,7 +290,9 @@ class ASTTransformer(Transformer):
     def call(self, items):
         name = str(items[0])
         args = tuple(items[1:])
-        return Call(name, args, allow_visualize_functions=self.allow_visualize_functions)
+        return Call(
+            name, args, allow_visualize_functions=self.allow_visualize_functions
+        )
 
     def pipe_(self, items):
         left, right = items
@@ -318,12 +323,17 @@ class CompiledRules:
         }
 
         # Expand rules using expanded defs
-        # we need to hit again in case defs is empty (no parent col)
+        # we need to hit again in case defs is empty (no alias col)
         # and we still need to add needed features from rules
         features_by_rules = {k: set() for k in rules.keys()}
         trees_by_rules = {k: nx.DiGraph() for k in rules.keys()}
         rules_expanded = {
-            k: expand_macros(v, defs_expanded, needed_features=features_by_rules[k], graph=trees_by_rules[k])
+            k: expand_macros(
+                v,
+                defs_expanded,
+                needed_features=features_by_rules[k],
+                graph=trees_by_rules[k],
+            )
             for k, v in rules.items()
         }
         needed_features = set().union(*[s for s in features_by_rules.values()])
@@ -333,7 +343,7 @@ class CompiledRules:
             needed_features=needed_features,
             features_by_rules=features_by_rules,
             trees_by_rules=trees_by_rules,
-            df=lf.collect()
+            df=lf.collect(),
         )
 
 
@@ -341,20 +351,20 @@ def load_rules(
     rules_path: str = None,
     rules: pl.LazyFrame = None,
     label_col: str = "name",
-    parent_col: str = "parent",
-    rules_col: str = "child",
+    alias_col: str = "alias",
+    rules_col: str = "rule",
     allow_visualize_functions: bool = False,
 ) -> Tuple[Dict[str, Expr], Dict[str, Expr]]:
     """
-    Assumes TSV has columns at least: name, parent, child
+    Assumes TSV has columns at least: name, rule
     Convention used here:
-      - if `name` is non-empty: this is an OUTPUT RULE whose expression is in `child`
-      - if `name` is empty and `parent` is non-empty: this is a DEFINITION macro: parent := child
+      - if `name` is non-empty: this is an OUTPUT RULE whose expression is in `rule`
+      - if `name` is empty and `alias` is non-empty: this is a DEFINITION macro: alias := rule
     If your file uses a slightly different convention, adjust this function only.
     """
-    assert (rules_path is not None) != (
-        rules is not None
-    ), "Either rules_path or rules DataFrame must be provided, but not both."
+    assert (rules_path is not None) != (rules is not None), (
+        "Either rules_path or rules DataFrame must be provided, but not both."
+    )
     if rules_path:
         lf = pl.scan_csv(
             rules_path, separator="\t", infer_schema_length=None
@@ -370,10 +380,16 @@ def load_rules(
             f"rules TSV missing required columns {required}. Found: {lf.columns}"
         )
 
-    has_parent_col = parent_col and (parent_col in cols)
+    has_alias_col = alias_col and (alias_col in cols)
 
     with open(Path(__file__).parent.absolute() / "rules.lark") as f:
-        parser = Lark(f, parser="lalr", transformer=ASTTransformer(allow_visualize_functions=allow_visualize_functions))
+        parser = Lark(
+            f,
+            parser="lalr",
+            transformer=ASTTransformer(
+                allow_visualize_functions=allow_visualize_functions
+            ),
+        )
 
     def parse_rule_expr(expr_str: str) -> Expr:
         """We use a closure to capture the parser instance since
@@ -415,11 +431,11 @@ def load_rules(
     }
 
     definitions = {}
-    if has_parent_col:
+    if has_alias_col:
         definitions = {
             a: b
-            for a, b in lf.filter(~pl.col(parent_col).is_null())
-            .select([pl.col(parent_col), pl.col(rules_col)])
+            for a, b in lf.filter(~pl.col(alias_col).is_null())
+            .select([pl.col(alias_col), pl.col(rules_col)])
             .collect()
             .iter_rows()
         }
@@ -428,7 +444,10 @@ def load_rules(
 
 
 def expand_macros(
-    expr: Expr, definitions: Dict[str, Expr], needed_features: Set[str] = None, graph: Optional[nx.DiGraph] = None
+    expr: Expr,
+    definitions: Dict[str, Expr],
+    needed_features: Set[str] = None,
+    graph: Optional[nx.DiGraph] = None,
 ) -> Expr:
     """Expand recursively macros in expr using definitions"""
     memo: Dict[Expr, Expr] = {}
@@ -440,7 +459,7 @@ def expand_macros(
     def recurse(expr: Expr, add_name_to_needed: bool = True) -> Expr:
         if expr in memo:
             return memo[expr]
-        
+
         entries, exits = None, None
 
         if isinstance(expr, Name):
@@ -533,27 +552,34 @@ def expand_macros(
                 # a gene id. So almost always harmless.
                 else:
                     add_name = True
-                o, _, _= recurse(arg, add_name_to_needed=add_name)
-                call_rec.append(o) 
-            out = Call(expr.value, tuple(call_rec), allow_visualize_functions=expr.allow_visualize_functions)
+                o, _, _ = recurse(arg, add_name_to_needed=add_name)
+                call_rec.append(o)
+            out = Call(
+                expr.value,
+                tuple(call_rec),
+                allow_visualize_functions=expr.allow_visualize_functions,
+            )
         elif isinstance(expr, PipeChain):
             calls = list(expr.calls)
             for i, call in enumerate(expr.calls):
-                o, _, _= recurse(call)
+                o, _, _ = recurse(call)
                 calls[i] = o
             out = PipeChain(calls=tuple(calls))
         else:
             raise TypeError(expr)
-        # Some nodes need validation and have to be done after children are expanded
+        # Some nodes need validation and have to be done after rules are expanded
         try:
             out.validate()
         except Exception as e:
-            print(f"Error validating expression after macro expansion. Expression: {out}")
+            print(
+                f"Error validating expression after macro expansion. Expression: {out}"
+            )
             print(expr)
-            raise 
+            raise
         ret = out, entries or set(), exits or set()
         memo[expr] = ret
         return ret
+
     return recurse(expr)[0]
 
 
@@ -680,13 +706,17 @@ class Evaluator:
         )
 
     @functools.cache
-    def eval_cycle(self, expr: Steps | list[Expr], simplify=True, **kwargs) -> np.ndarray:
+    def eval_cycle(
+        self, expr: Steps | list[Expr], simplify=True, **kwargs
+    ) -> np.ndarray:
         if isinstance(expr, Iterable):
             parts = [self.eval_bool(p, **kwargs) for p in expr]
         elif isinstance(expr, Steps):
             parts = [self.eval_bool(p, **kwargs) for p in expr.parts]
         else:
-            raise RuleError(f"Expected Steps or Iterable of Expr for cycle evaluation, got {expr}")
+            raise RuleError(
+                f"Expected Steps or Iterable of Expr for cycle evaluation, got {expr}"
+            )
         mat = (
             np.stack(parts, axis=1)
             if parts
@@ -716,9 +746,13 @@ class Evaluator:
                     return self.not_(masks=kwargs["masks"])
                 return self.not_(self.eval_bool(args[0]))
             case "percent":
-                return self.percent(_as_int(args[0]), self.eval_cycle(args[1], simplify=False))
+                return self.percent(
+                    _as_int(args[0]), self.eval_cycle(args[1], simplify=False)
+                )
             case "at_least":
-                return self.at_least(_as_int(args[0]), self.eval_cycle(args[1], simplify=False))
+                return self.at_least(
+                    _as_int(args[0]), self.eval_cycle(args[1], simplify=False)
+                )
             case "column_count_values":
                 return self.column_count_values(
                     col=_as_str(args[0]),
@@ -901,27 +935,26 @@ class Evaluator:
 
     def path_steps(self, expr: Steps | list[Expr], **kwargs) -> pl.DataFrame:
         cycle = self.eval_cycle(expr, simplify=False, **kwargs)
-        
+
         df = pl.DataFrame(
-                {
-                    "steps": cycle.shape[-1],
-                    # sum across all axis except the first one. We don't know the number of dim
-                    # since path_subunits doesn't reduce the and
-                    "steps_present": cycle.sum(axis=tuple(i for i in range(len(cycle.shape)) if i > 0)),
-                    "genome": self.samples,
-                    }
-                )
+            {
+                "steps": cycle.shape[-1],
+                # sum across all axis except the first one. We don't know the number of dim
+                # since path_subunits doesn't reduce the and
+                "steps_present": cycle.sum(
+                    axis=tuple(i for i in range(len(cycle.shape)) if i > 0)
+                ),
+                "genome": self.samples,
+            }
+        )
         df = df.with_columns(
-            coverage_percentage = pl.col("steps_present") / pl.col("steps")
+            coverage_percentage=pl.col("steps_present") / pl.col("steps")
         )
         return df
 
-    def path_subunits(self,  expr: Steps | list[Expr]) -> pl.DataFrame:
+    def path_subunits(self, expr: Steps | list[Expr]) -> pl.DataFrame:
         df = self.path_steps(expr, reduce_outer_and=False)
-        df = df.rename(
-            {"steps": "subunits",
-            "steps_present": "subunits_present"
-            })
+        df = df.rename({"steps": "subunits", "steps_present": "subunits_present"})
         return df
 
 
@@ -977,17 +1010,22 @@ def evaluate_cycles(
         for rn in frame.select(pl.col(label_col)).to_series():
             if rn is None:
                 continue
-        # for rn, expr in compiled.rules.items():
+            # for rn, expr in compiled.rules.items():
             expr = compiled.rules[rn]
             out = ev.eval_bool(expr)
             if isinstance(out, np.ndarray):
-                 out = pl.DataFrame(dict(present=out, genome=ev.samples))
+                out = pl.DataFrame(dict(present=out, genome=ev.samples))
             out = out.with_columns(pl.lit(rn).alias(label_col))
             dfs[group].append(out)
 
-        assert all(isinstance(df, pl.DataFrame) for df in dfs[group]), f"All rules in group {group} should evaluate to the same type, but got different types: {[type(df) for df in dfs[group]]}"
+        assert all(isinstance(df, pl.DataFrame) for df in dfs[group]), (
+            f"All rules in group {group} should evaluate to the same type, but got different types: {[type(df) for df in dfs[group]]}"
+        )
         df = pl.concat(dfs[group])
-        df = df.join(compiled.df.select(pl.col(label_col), pl.col(group_col), *additional_cols), on=label_col)  
+        df = df.join(
+            compiled.df.select(pl.col(label_col), pl.col(group_col), *additional_cols),
+            on=label_col,
+        )
         dfs[group] = df
 
     return dfs
@@ -1002,9 +1040,9 @@ def evaluate_rules_on_anno(
 ):
     compiled = CompiledRules.from_rules(*args, **kwargs)
     print(f"Need {len(compiled.needed_features)} features")
-    assert (annotations_path is not None) != (
-        annotations is not None
-    ), "Exactly one of annotations_path or annotations DataFrame must be provided."
+    assert (annotations_path is not None) != (annotations is not None), (
+        "Exactly one of annotations_path or annotations DataFrame must be provided."
+    )
     if annotations_path:
         try:
             annotations = pl.read_csv(
