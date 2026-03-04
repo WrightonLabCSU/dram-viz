@@ -570,7 +570,7 @@ def expand_macros(
         # Some nodes need validation and have to be done after rules are expanded
         try:
             out.validate()
-        except Exception as e:
+        except Exception:
             print(
                 f"Error validating expression after macro expansion. Expression: {out}"
             )
@@ -678,7 +678,6 @@ class Evaluator:
                 raise RuleError(f"Error evaluating OR expression: {expr}") from e
 
         if isinstance(expr, PipeChain):
-            out_or_df = self.annotations
             kwargs = {"df": self.annotations, "masks": []}
             for call in expr.calls:
                 out = self.eval_call(call, **kwargs)
@@ -835,7 +834,7 @@ class Evaluator:
                 x = [x]
             masks = x
             if len(masks) == 0:
-                mask = mask[0]
+                mask = masks[0]
             else:
                 mask = masks[0].and_(*[mask for mask in masks[1:]])
             return ~mask
@@ -1048,7 +1047,7 @@ def evaluate_rules_on_anno(
             annotations = pl.read_csv(
                 annotations_path, separator="\t", infer_schema_length=10_000
             )
-        except Exception as e:
+        except Exception:
             annotations = pl.read_csv(
                 annotations_path, separator="\t", infer_schema_length=None
             )
