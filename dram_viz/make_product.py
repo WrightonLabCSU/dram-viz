@@ -51,6 +51,7 @@ def get_column_name(
     name_of_data: str,
     df: pl.LazyFrame | pl.DataFrame = None,
     cols: list[str] = None,
+    raise_error: bool = True,
 ) -> str:
     assert (
         df is not None or cols is not None
@@ -65,7 +66,12 @@ def get_column_name(
     for backup_name in backup_names:
         if backup_name in cols:
             return backup_name
-    raise ValueError(f"None of the following column names were found in the {name_of_data}: {[name] + backup_names}")
+    if raise_error:
+        raise ValueError(
+            f"None of the following column names were found in the {name_of_data}: {[name] + backup_names}"
+        )
+    else:
+        return name
 
 
 @click.command()
@@ -148,9 +154,11 @@ def main(
     rules_lf = pl.scan_csv(rules_tsv, separator="\t", infer_schema_length=None).fill_null("")
 
     rules_cols = rules_lf.collect_schema().names()
-    group_colunm = get_column_name(group_colunm, BACKUP_GROUPBY_COLUMNS, "rules", cols=rules_cols)
-    label_column = get_column_name(label_column, BACKUP_LABEL_COLUMNS, "rules", cols=rules_cols)
-    alias_column = get_column_name(alias_column, BACKUP_ALIAS_COLUMNS, "rules", cols=rules_cols)
+    group_colunm = get_column_name(group_colunm, BACKUP_GROUPBY_COLUMNS, name_of_data="rules", cols=rules_cols)
+    label_column = get_column_name(label_column, BACKUP_LABEL_COLUMNS, name_of_data="rules", cols=rules_cols)
+    alias_column = get_column_name(
+        alias_column, BACKUP_ALIAS_COLUMNS, name_of_data="rules", cols=rules_cols, raise_error=False
+    )
     if "long_name" not in rules_cols:
         rules_lf = rules_lf.with_columns(long_name=pl.col(label_column))
 
@@ -162,19 +170,19 @@ def main(
         infer_schema_length=10_000,
         # columns=list(ID_EXPR_DICT.keys()) + [groupby_column]
     )
-    fasta_column = get_column_name(fasta_column, BACKUP_FASTA_COLUMNS, "annotations", df=anno)
+    fasta_column = get_column_name(fasta_column, BACKUP_FASTA_COLUMNS, name_of_data="annotations", df=anno)
     anno = anno.rename({fasta_column: "genome"})
 
     kw = dict(
         rules=rules_lf,
         label_col=label_column,
-        parent_col=alias_column,
+        alias_col=alias_column,
         rules_col="rule",
         allow_visualize_functions=True,
     )
     # kw = dict(rules_path=rules_path, label_col="module", parent_col=alias_column, rules_col="rule")
     compiled = CompiledRules.from_rules(**kw)
-    print(f"Compiled rules in {time.time() - s} seconds")
+    logger.info(f"Compiled rules in {time.time() - s} seconds")
     if mapping:
         mapping_df = pl.read_csv(mapping, separator="\t", ignore_errors=True).fill_null(0)
         sample_names = mapping_df.columns[1:]
@@ -201,7 +209,7 @@ def main(
             needed_features=compiled.needed_features,
         )
 
-    print(f"Built present map in {time.time() - s} seconds")
+    logger.info(f"Built present map in {time.time() - s} seconds")
 
     dfs = evaluate_cycles(
         compiled=compiled,
@@ -212,8 +220,8 @@ def main(
         additional_cols=["long_name"],
         group_col=group_colunm,
     )
-    print("Evaluated all rules in:")
-    print(time.time() - s)
+    logger.info("Evaluated all rules in:")
+    logger.info(time.time() - s)
 
     if mapping:
         mapped_dfs = {}
@@ -266,8 +274,10 @@ def main(
     if save_dataframes:
         for key, df in dfs.items():
             df.write_csv(output_dir / f"{key}_df.tsv", separator="\t")
+            logger.info(f"Saved {key} dataframe to {output_dir / f'{key}_df.tsv'}")
 
     kw = dict(dfs=dfs, taxanomy_tree_data=tax_tree_data, selected_tax_tree=selected_tax_tree, mapping=bool(mapping))
+    logger.info(f"Finished all processing in: {time.time() - s} seconds, starting visualization")
     if dashboard:
         pn.serve(
             lambda: Dashboard(**kw),
@@ -275,7 +285,6 @@ def main(
         )
     else:
         db = Dashboard(**kw)
-    logger.info("Completed visualization")
 
 
 if __name__ == "__main__":
