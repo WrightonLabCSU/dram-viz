@@ -75,6 +75,14 @@ python -m dram_viz --annotations <path/to/annotations.tsv> --outdir <path/to/out
 ```
 This should open your default web browser and display the dashboard. If the dashboard does not open automatically, you can navigate to http://localhost:5006 to view the dashboard.
 
+There are a number of other options available such as alternative rules to generate other dashbaords (`--rule_sysem ag` for example), ability to add abundance data through a mapping file and others. Use:
+
+```bash
+python -m dram_viz --help
+```
+
+to see all options
+
 ### SSH Tunneling
 
 If you are using the DRAM Visualization Library as a standalone Python package, you can run the dashboard on a remote server and use SSH tunneling to view the dashboard on your local machine. This will allow you to avoid downloading large data files to your local machine. To do this, first launch the dashboard on the remote server by ssh'ing into the server, navigating to the DRAM visualization directory, and running the above dashboard command. Then, on your local machine, run the following command:
@@ -124,7 +132,7 @@ becomes:
 [K00844|K12407|K00845|K25026|K00886|K08074|K00918],[K01810|K06859|K13810|K15916] [K00850|K16370|K21071|K24182|K00918],[K01623|K01624|K11645|K16305|K16306],K01803 [[K00134|K00150],K00927|K11389],[K01834|K15633|K15634|K15635],[K01689|K27394] [K00873|K12406]
 ```
 
-#### No Imcplicit Boolean Precedence
+#### No Implicit Boolean Precedence
 
 Sometimes DRAM's rules parsing can be stricter about binary operator grouping than KEGG module definitions. This is mostly to prevent confusion on the order of ANDs and ORs with custom rules. For example, `A | B | C & D` is not a valid rule because though most parsing languages (include KEGG module definitions) would parse that as `A | B | [C & D]`, it can and has caused confusion. In DRAM's rules parsing, you would need to add brackets to make the grouping explicit: `A | B | [C & D]`. So, when converting KEGG module definitions to DRAM rules, you may need to add brackets to make the grouping explicit sometimes. See the [DRAM Rules Parsing Page](https://dramit.readthedocs.io/en/latest/rules_parser.html#core-design-principle-no-implicit-boolean-precedence) for more information on the rules parsing syntax and how to write rules.
 

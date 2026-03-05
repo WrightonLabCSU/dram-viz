@@ -44,6 +44,11 @@ logger = logging.getLogger("dram.viz")
 pn.config.reuse_sessions = True
 pn.config.global_loading_spinner = True
 
+RULES_SYSTEMS = {
+    "default": Path(__file__).parent / "data/rules.tsv",
+    "ag": Path(__file__).parent / "data/ag_rules.tsv",
+}
+
 
 def get_column_name(
     name: str,
@@ -75,13 +80,6 @@ def get_column_name(
 
 
 @click.command()
-@click.option(
-    "--rules_tsv",
-    "-r",
-    type=click.Path(exists=True),
-    default=Path(__file__).parent / "data/rules.tsv",
-    help="This is an optional path to a rules file with strict formatting. It will over write the original rules file that is stored with the script.",
-)
 @click.option("--annotations", "-a", type=Path, help="Path to the annotations tsv file")
 @click.option(
     "--fasta_column",
@@ -96,6 +94,25 @@ def get_column_name(
     type=Path,
     help="Path to the output directory",
     default=Path.cwd().resolve(),
+)
+@click.option(
+    "--dashboard",
+    "-d",
+    is_flag=True,
+    show_default=True,
+    default=False,
+)
+@click.option(
+    "--rules_system",
+    "-rs",
+    type=click.Choice(["default", "ag"], case_sensitive=True),
+    help="Choose alternative in-built rules for the visualization. This option cannot be specified if `--rule_tsv` is specified. Will default to default if neither this or rule_tsv is provided",
+)
+@click.option(
+    "--rules_tsv",
+    "-r",
+    type=click.Path(exists=True),
+    help="This is an optional path to a custom rules file with strict formatting. It will over write the original rules file that is stored with the script. This option cannot be specified if `--rule_tsv` is specified.",
 )
 @click.option(
     "--mapping",
@@ -125,35 +142,45 @@ def get_column_name(
     default=DEFAULT_GROUPBY_COLUMN,
 )
 @click.option(
-    "--dashboard",
-    "-d",
-    is_flag=True,
-    show_default=True,
-    default=False,
+    "--port",
+    default=5006,
+    type=click.INT,
+    help="Port to launch dashboard on if launching dashboard",
 )
 @click.option(
-    "--save-dataframes",
+    "--save_dataframes",
     "-sd",
     is_flag=True,
     show_default=True,
     default=False,
 )
 def main(
-    rules_tsv,
     annotations,
-    fasta_column=DEFAULT_FASTA_COLUMN,
-    output_dir=None,
-    mapping=None,
-    label_column=DEFAULT_LABEL_COLUMN,
-    alias_column=DEFAULT_ALIAS_COLUMN,
-    group_colunm=DEFAULT_GROUPBY_COLUMN,
-    dashboard=False,
-    save_dataframes=False,
+    fasta_column,
+    output_dir,
+    dashboard,
+    rules_system,
+    rules_tsv,
+    mapping,
+    label_column,
+    alias_column,
+    group_colunm,
+    port,
+    save_dataframes,
 ):
     """
     Make a product heatmap visualization from the DRAM output.
     """
     import time
+
+    if rules_system and rules_tsv:
+        raise click.BadArgumentUsage(
+            "You may only supply either a rules system or a custom rules tsv, not both"
+        )
+    if rules_system:
+        rules_tsv = RULES_SYSTEMS[rules_system]
+    if not rules_system and not rules_tsv:
+        rules_tsv = RULES_SYSTEMS["default"]
 
     s = time.time()
 
@@ -322,7 +349,7 @@ def main(
     if dashboard:
         pn.serve(
             lambda: Dashboard(**kw),
-            port=5006,
+            port=port,
         )
     else:
         Dashboard(**kw)
