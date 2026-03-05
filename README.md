@@ -26,6 +26,12 @@ The DRAM Visualization Library can also be used as a standalone Python package t
 
 The DRAM Visualization Library can also be used as a standalone Python package to generate figures and dashboards. To install the DRAM Visualization Library stable release, in whatever environment you are using, run:
 
+```
+conda install conda-forge::dram-viz
+```
+
+or with pip
+
 ```bash
 pip install git+https://github.com/WrightonLabCSU/dram-viz.git
 ```
