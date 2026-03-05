@@ -1,0 +1,71 @@
+name	rule	group
+Cellulose	[GH5 | GH8 | GH9 | GH10 | GH12 | GH44 | GH45 | GH124] & [GH6 | GH7 | GH48] & [GH1 | GH3 | GH94 | GH116]	Carbon Processing
+Hemicellulose	[GH5 | GH9 | GH10 | GH11 | GH12 | GH16 | GH26 | GH44 | GH45 | GH74 | GH113 | GH134] & [GH2 | GH31 | GH38 | GH43 | GH51 | GH63 | GH92 | GH125 | GH130 | CE1 | CE2 | CE4 | CE17]	Carbon Processing
+Lignin	[AA1 | mco | AA2 | dyp] & [AA3_1 | AA3_2 | AA5_1 | AA8]	Carbon Processing
+Starch	[GH13 | GH14 | GH15 | GH57 | GH97 | GH119 | GH126 | GH133]	Carbon Processing
+Pectin	[GH28 | PL1 | PL2 | PL3 | PL4 | PL9 | PL10 | PL11 | PL22 | PL26] & [GH78 | GH106 | GH105 | GH4 | GH2 | GH138 | GH139 | GH143] & [CE8 | CE12]	Carbon Processing
+Sucrose	K01182 | K01203 | K12047 | K01187 | K12316 | K12317 | K06617 | K01193 | K00695 | K02810 | K00690 | K05341 | K00689 | K00692	Carbon Processing
+Mannose	[K01809 | K02793 | K02794 | K02795] | K02796	Carbon Processing
+Galactose	[K00849 | K00965 | K01784] | K01785	Carbon Processing
+Fucose	[K00879 | K01628] | K01818	Carbon Processing
+Xylose	[K00854 | K01805 | K00008 | K00011 | K00854 | K05351 | K17743 | K00078 | K14273 | K14274] | K14275	Carbon Processing
+Fructose	K00008 | K00045 | K27924 | K00007 | K00844 | K00847 | K01805 | K00846 | K27475 | K02768 | K02769 | K02770 | K02771 | K11194 | K11195 | K11196	Carbon Processing
+Arabinose	K01804 | K00011 | K26066 | K13873 | K19660 | K12446	Carbon Processing
+Rhamnose	K01813 | K01820 | K18337	Carbon Processing
+Pyruvate (SCFA)	[K00163 | K00174 | K00656]	Carbon Processing
+Acetate (SCFA)	[[K00625 & K00925] | K01905 | K01067]	Carbon Processing
+Lactate (SCFA)	[K00016 | K00101 | K03778 | K03777]	Carbon Processing
+Butyrate (SCFA)	[K00634 & [K00929 | K01896]]	Carbon Processing
+Propionate (SCFA)	[K19697 & K01026]	Carbon Processing
+Alcohol 	[K00001 | K00121 | K04072 | K13951 | K13952 | K13953 | K13954 | K13980 | K18857]	Carbon Processing
+CO2 Fixation	[K00192 & K00193 & K00194 & K00195 & K00197]	Carbon Processing
+CH4 Oxidation	[K10944 & K10945 & K10946] | [K16157 & K16158 & K16159 & K16160 & K16161 & K16162]	Carbon Processing
+Nitrate Transformation	[[K00370 & K00371] | [K02567 & K02568]] & [K00368 | K15864]	Nitrogen Cycling
+Urea Transformation	[K01428 & K01429 & K01430]	Nitrogen Cycling
+Ammonium Transformation	[K28504 | K10944 | K10945 | K10946] & K10535	Nitrogen Cycling
+Nitrite Reduction	[K00368 | K15864]	Nitrogen Cycling
+Nitrate Reduction	[K00370 & K00371]|[K02567 & K02568]	Nitrogen Cycling
+NO to N2O 	[K04561 | K15877]	Nitrogen Cycling
+N2O to N2	K00376	Nitrogen Cycling
+DNRA to Ammonium	[[K00370 & K00371] | [K02567 & K02568]] & [[K00362 & K00363] | [K03385 & K15876]]	Nitrogen Cycling
+Assimilatory Nitrate Reduction	[[K00367 | K10534 | [K00372 & K00360]] & [K00366 | K17877 | [K26138 & K26139] | K00361]] | K02575	Nitrogen Cycling
+N2 Fixation	[K00531 & [K02586 & K02588 & K02591]] | [K22896 & K22897 & K22898 & K22899]	Nitrogen Cycling
+Aerobic Ammonium Oxidation	[K28504 | K10945 | K10946] & K10535	Nitrogen Cycling
+Aerobic Nitrate	K00370 & K00371	Nitrogen Cycling
+Anaerobic Ammonium	[K00368 | K15864] & [K20932 & K20933 & K20934] & K20935	Nitrogen Cycling
+Mineralization	[K01428 & K01429 & K01430] | K01426 | K01455 | K18282 | K01207 | K01183 | K03791 | K13381 | K20547 | K17523 | K17524 | K17525 | K01150 | A01 | A02 | A05 | A08 | A11 | A22 | A24 | A26 | A28 | A31 | A32 | A37 | C01 | C02 | C10 | C11 | C110 | C113 | C13 | C14 | C15 | C19 | C25 | C26 | C39 | C40 | C44 | C45 | C46 | C47 | C51 | C56 | C59 | C60 | C66 | C69 | C82 | C83 | C89 | C93 | G01 | M01 | M02 | M03 | M04 | M05 | M06 | M07 | M08 | M09 | M10 | M11 | M12 | M13 | M14 | M15 | M16 | M17 | M18 | M19 | M20 | M23 | M24 | M26 | M28 | M30 | M32 | M34 | M35 | M36 | M38 | M41 | M42 | M43 | M44 | M48 | M49 | M50 | M54 | M55 | M56 | M57 | M60 | M61 | M64 | M66 | M67 | M72 | M73 | M74 | M75 | M76 | M78 | M79 | M81 | M82 | M84 | M85 | M86 | M88 | M93 | M96 | M97 | M98 | N04 | N10 | N11 | P01 | S01 | S06 | S08 | S09 | S10 | S11 | S12 | S13 | S14 | S15 | S16 | S24 | S26 | S28 | S33 | S37 | S41 | S45 | S46 | S49 | S50 | S51 | S53 | S54 | S55 | S59 | S60 | S66 | S73 | T01 | T02 | T03 | T05 | T07 | U32 | U62 | U69 | U72 | U73 | U74	Nitrogen Cycling
+Assimilation	[[K01915 & K00266] | K00261] | [K01955 & K01956]	Nitrogen Cycling
+Phosphate Mineralization	[K07093 | K09474 | K03788 | K01078 | K01093 | K01083] | [K06166 & K06165 & K06164 & K06163 & K05781 & K05780 & K06162]	Other Nutrients
+Beta-D-glucosidase	K01188 | K05349 | K05350	Enzyme Assay Analog
+Beta-D-xylosidase	K01198 | K15920 | K22268	Enzyme Assay Analog
+Arylsulphatase	K01130	Enzyme Assay Analog
+N-acetyl-Beta-D-glucosaminidase	K01227 | K13714 | K23989	Enzyme Assay Analog
+Phosphatase	K01078 | K01093 | K03788 | K09474 | K14379 | K14394 | K14395 | K14410 | K19283 | K19284 | K23458	Enzyme Assay Analog
+Leucine aminopeptidase	K01255 | K11142	Enzyme Assay Analog
+cellobiohydrolase	K01225 | K19668	Enzyme Assay Analog
+alpha-1,4-glucosidase	K01187 | K12047 | K12316 | K12317	Enzyme Assay Analog
+Peroxidase	K05910	Enzyme Assay Analog
+phenoloxidase	K00421 | K05909	Enzyme Assay Analog
+Auxin (IAA)	[K04103 | K00466 | K21801 | K01426 | K03397]	Rhizosphere Transformations
+ACC Deaminase	[K01505]	Rhizosphere Transformations
+Cytokinins	[K10760 | K00279]	Rhizosphere Transformations
+Gibberellins	[K04121 | K20657 | K27636 | K21719 | K04123]	Rhizosphere Transformations
+AA Derivatives	[K00454 | K01723 | K21815 | K09591 | K09587 | K09840 | K09843]	Rhizosphere Transformations
+Nucleotides/Sides	[K22944 | K01769]	Rhizosphere Transformations
+Phenolics	[K01851 | K04781 | K00480]	Rhizosphere Transformations
+Compatible Solutes	[K00108 | K00130 | K02000 | K02001 | K02002 | K02168 | K03451 | K03607 | K03762 | K05020 | K05245 | K05845 | K05846 | K05847 | K10036 | K10037 | K10038 | K11440 | K18896 | K18897 | K00697 | K01087 | K01236 | K06044 | K05342 | K05343 | K00009 | K02798 | K05947 | K17314 | K02781 | K02782 | K02783 | K10109 | K10110 | K10111 | K10227 | K10228 | K10229 | K10230]	Stressors
+Exopolysaccharide (EPS) 	[K16566 | K16557 | K16556 | K16555 | K19290 | K19291 | K19293 | K19295 | K20997 | K21001 | K21154 | K25902 | K25904 | K25906]	Stressors
+Biofilms	[K19290 | K19291 | K19293 | K19294 | K19295 | K19296 | K11936 | K11937 | K21001 | K20997 | K25205 | K21461]	Stressors
+Oxidative Stress	[K03782 | K04564 | K04565 | K01920 | K01921 | K05909 | K00421 | K05910 | K00431 | K00799]	Stressors
+Pesticides	[K01045 | K14449 | K25604 | K05394 | K03382 | K08710 | K15236 | K01563 | K15237 | K06912 | K08719 | K08722 | K20992 | K20993 | K17842 | K23996 | K06164 | K06165 | K06166 | K05780 | K06162 | K06163 | K06167 | K01560 | K03930]	Stressors
+Arsenic	[K07755 | K08356 | K08355 | K00537 | K03741 | K11811 | K03892 | K03325 | K01551 | K03893 | HMM:arsD | HMM:aioR-aoxR | HMM:aioS-aoxS]	Stressors
+Cadmium	[K21903 | K21885 | K07665 | K07644 | K02483 | K22043 | K03088 | K24079 | K24078 | HMM:cadD | K15726 | K15727 | K15725 | HMM:cznB | K21133 | HMM:dmeF | K08970 | K16264 | K01534]	Stressors
+Cobalt	[K07644 | K02483 | HMM:ncrB | HMM:ncrY | K23240 | K24073 | K24079 | K06042 | K03088 | K24078 | K03585 | K18138 | K18139 | HMM:cnrT | K03284 | HMM:corB | K06189 | K12951 | K15726 | K15727 | K15725 | HMM:dmeF | HMM:dmeR | K07785 | K08970 | K23243 | K16264 | K01534]	Stressors
+Copper	[K07156 | K03926 | K06201 | K21609 | K07233 | HMM:pcoE | K07213 | K09796 | K19342 | HMM:cinA | K14588 | HMM:cutO | K22552 | HMM:copL | HMM:copY-tcrY | HMM:corR | K02483 | K21600 | K11923 | K07665 | K07644 | K19591 | K21601 | K21902 | K18992 | K18324 | K03585 | K18138 | K18139 | K17686 | K01533 | K07245 | HMM:copP | HMM:crdA | K12954 | K12956 | K07787 | K07798 | K07796 | K07810 | K03820 | K06079 | HMM:hpcopA | HMM:mctB | K14166 | K08221]	Stressors
+Iron	[K03594 | HMM:dpr-dps | HMM:dpsA | K02217 | K07229 | K03709 | HMM:pmrA | HMM:pmrB | K02012 | K02011 | K02010 | K13283 | K16088 | K03322 | K01552 | HMM:pmrC | K06147 | K11604 | K11607 | K11605 | K11606 | K07224]	Stressors
+Magnesium	[K06042 | K03284 | HMM:corB | K06189 | K01531 | K06213]	Stressors
+Manganese	[K11924 | K12950 | K11707 | K03322 | K23242 | K11604 | K11607 | K11605 | K11606]	Stressors
+Mercury	[K00221 | K00520 | K19057 | K08365 | K19058 | K19059 | K08364 | K08363]	Stressors
+Nickel	[HMM:ncrB | HMM:ncrY | K07722 | K11328 | K23240 | K24073 | K24079 | K03088 | K11330 | K24078 | HMM:cnrT | K12951 | K15726 | K15727 | K15725 | HMM:cznB | HMM:dmeF | HMM:dmeR | HMM:hupE | K01552 | K15584 | K15585 | K15586 | K15587 | K10824 | K07241 | K11326 | K07785 | K08970 | K23243]	Stressors
+Silver	[HMM:silF | K07665 | K07644 | K17686 | K01533 | K07787 | K07798 | K07796 | K07810 | HMM:silE | K23254]	Stressors
+Zinc	[K21904 | HMM:zevA | K07803 | HMM:zinT-yodA | K03765 | K21903 | K07644 | K02483 | K22043 | K13638 | K07713 | K07709 | K09823 | K03709 | K18324 | HMM:cadD | K12950 | K15726 | K15727 | K15725 | HMM:cznB | K21133 | K07799 | K07788 | K07789 | K11707 | K08970 | K11710 | K07238 | K16264 | K01534 | K09815 | K09816 | K09817 | K11708 | K11709]	Stressors
