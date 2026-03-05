@@ -219,6 +219,9 @@ def main(
         fasta_column, BACKUP_FASTA_COLUMNS, name_of_data="annotations", df=anno
     )
     anno = anno.rename({fasta_column: "genome"})
+    # If fasta names are all ints (the samples from users were ints themselves),
+    # we need to cast to strings for later
+    anno = anno.with_columns(pl.col("genome").cast(pl.String))
 
     kw = dict(
         rules=rules_lf,
