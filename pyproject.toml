@@ -56,7 +56,7 @@ include-package-data = true
 include = ["dram_viz*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.tsv"]
+"*" = ["*.tsv", "*.lark"]
 
 [project.scripts]
 "dram_viz" = "dram_viz.__main__:main"
