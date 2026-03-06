@@ -65,6 +65,8 @@ include = ["dram_viz*"]
 [tool.setuptools_scm]
 write_to = "dram_viz/_version.py"
 
+[tool.ruff]
+
 # These are regular expressions (hence the \. is escaping the ., and not a literal \.)
 exclude = [
     "_version.py",
