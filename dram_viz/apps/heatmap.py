@@ -97,7 +97,7 @@ def heatmap(
         tooltips=tooltips,
         # title="\n".join(char for char in title),
         title=title,
-        # title_location="right",
+        title_location="right",
         **fig_kwargs,
     )
 
