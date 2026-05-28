@@ -26,7 +26,6 @@ dependencies = [
     'bokeh >=3.0,<4.0',
     'panel >=1.0,<2.0',
     'click <9.0',
-    'numpy <2.0',
     'networkx >=2,<3',
     'param >=2.0,<3.0',
     'panel-jstree >=0.3.5,<0.4.0',
