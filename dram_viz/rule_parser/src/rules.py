@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import functools
+from dataclasses import dataclass
+from typing import Dict, Tuple, List, Optional, Set, Iterable
 import operator
 import os
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+import functools
 
 import networkx as nx
 import numpy as np
 import polars as pl
-from lark import Lark, LarkError, Transformer
+from lark import Lark, Transformer, LarkError
 
 OP_TO_EXPR = {
     "gt": operator.gt,
@@ -1134,6 +1134,6 @@ def evaluate_rules_on_anno(
         sample_names,
         present_map,
         annotations=annotations,
-        sample_col=sample_col,
+        sample_col=sample_col
     )
     return df
