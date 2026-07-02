@@ -21,7 +21,7 @@ OP_TO_EXPR = {
     "ne": operator.ne,
 }
 ALLOWED_CMPOPS = set(OP_TO_EXPR.keys())
-
+AT_LEAST_MODES = set(["PRESENCE", "COUNTS"])
 
 class RuleError(Exception):
     pass
@@ -71,6 +71,7 @@ ID_EXPR_DICT = {
         .str.split(",")
         .list.eval(pl.element().str.strip_chars().str.split(" ").list.first())
     ),
+    "DEFAULT": lambda col: pl.col(col).cast(pl.Utf8).cast(pl.List(pl.Utf8)),
 }
 
 CALL_FUNCTIONS = {
@@ -159,9 +160,12 @@ class Call(Expr):
             case "not":
                 if n_args != 1:
                     raise RuleError("not(...) expects 1 arg")
-            case "percent" | "at_least":
+            case "percent":
                 if n_args != 2:
                     raise RuleError(f"{self.value}(n, Group) expects 2 args")
+            case "at_least":
+                if n_args != 3:
+                    raise RuleError(f"{self.value}(n, mode, Group) expects 3 args")
             case "column_count_values":
                 if n_args != 5:
                     raise RuleError(
@@ -185,9 +189,9 @@ class Call(Expr):
                         f"column_sum_values op must be one of {sorted(ALLOWED_CMPOPS)}; got {op}"
                     )
             case "filter_contains":
-                if n_args != 2 and n_args != 3:
+                if n_args != 2:
                     raise RuleError(
-                        "filter_contains(column, value, contains=True) expects 2 or 3 args"
+                        "filter_contains(column, value) expects 2"
                     )
             case "filter_compare":
                 if n_args != 3:
@@ -582,57 +586,84 @@ def expand_macros(
 
     return recurse(expr)[0]
 
-
-def build_present_map(
-    lf: pl.DataFrame,
-    sample_col: str,
+def prepare_present_map_df(
+    df: pl.DataFrame,
+    count_col: str,
     besthit_cols: List[str],
     needed_features: Set[str],
     additional_cols: List[str] = None,
-) -> Tuple[List[str], Dict[str, np.ndarray]]:
-    """Build present_map of needed gene_ids from annotations DataFrame"""
+    group_col: str = None,
+
+):
     additional_cols = additional_cols or []
-    besthit_cols = [col for col in besthit_cols if col in lf.columns]
+    index_cols = [count_col, group_col] if group_col else [count_col]
+    besthit_cols = [col for col in besthit_cols if col in df.columns]
+    besthit_cols.extend(
+        [
+            col
+            for col in df.columns
+            if (col.endswith("_id") and col not in besthit_cols and col != "query_id")
+        ]
+    )
     for col in besthit_cols:
-        lf = lf.with_columns(ID_EXPR_DICT[col].alias(col)).explode(col)
-    lf = lf.select([sample_col] + besthit_cols + additional_cols)
+        if col not in ID_EXPR_DICT:
+            explode_col = ID_EXPR_DICT["DEFAULT"](col).alias(col)
+        else:
+            explode_col = ID_EXPR_DICT[col].alias(col)
+        df = df.with_columns(explode_col).explode(col)
+    df = df.select(index_cols + besthit_cols + additional_cols)
 
     # unpivot to long (sample, hit)
     hit_col = "hit"
-    lf = (
-        lf.unpivot(
-            index=[sample_col] + additional_cols,
+    df = (
+        df.unpivot(
+            index=index_cols + additional_cols,
             on=besthit_cols,
             variable_name="db",
             value_name=hit_col,
         )
         .drop("db")
         .drop_nulls()
+        .filter(pl.col(hit_col).is_in(list(needed_features)))
+        .select([*index_cols, hit_col, *additional_cols])
+        .unique(subset=[*index_cols, hit_col, *additional_cols])
     )
+    return df
 
-    samples = lf.select(sample_col).unique().sort(sample_col).to_series().to_list()
 
-    df: pl.DataFrame = lf.select([sample_col, hit_col]).filter(
-        pl.col(hit_col).is_in(list(needed_features))
-    )
+def build_present_map(
+    df: pl.DataFrame,
+    sample_col: str,
+    needed_features: Set[str],
+    value_col: str = None
+) -> Tuple[List[str], Dict[str, np.ndarray]]:
+    """Build present_map of needed gene_ids from annotations DataFrame"""
+    hit_col = "hit"
+
+    df: pl.DataFrame = df.drop_nulls(subset=sample_col)
+
+    samples = df.select(sample_col).unique().sort(sample_col).to_series().to_list()
 
     sample_index = {s: i for i, s in enumerate(samples)}
     n = len(samples)
     present_map: Dict[str, np.ndarray] = {
-        f: np.zeros(n, dtype=bool) for f in needed_features
+        f: np.zeros(n) for f in needed_features
     }
 
     # Group by hit_id and set booleans
-    for hit_id, sub in df.group_by(hit_col, maintain_order=False):
+    for hit_id, sub in df.group_by(hit_col):
         hit = hit_id[0]
         arr = present_map.get(hit)
         if arr is None:
             continue
-        sub_s = sub.select(sample_col).unique().to_series().to_list()
-        for s in sub_s:
-            arr[sample_index[s]] = True
-    if additional_cols:
-        return samples, present_map, lf
+
+        if value_col:
+            # for name, value in sub.select([sample_col, value_col]).iter_rows():
+            for name, value in sub.group_by([sample_col]).agg(pl.col(value_col).sum()).iter_rows():
+                arr[sample_index[name]] = value
+        else:
+            for name, count in sub[sample_col].value_counts().iter_rows():
+                arr[sample_index[name]] = count
     return samples, present_map
 
 
@@ -717,7 +748,7 @@ class Evaluator:
                 f"Expected Steps or Iterable of Expr for cycle evaluation, got {expr}"
             )
         mat = (
-            np.stack(parts, axis=1)
+            np.stack(parts, axis=1, dtype=bool, casting="unsafe")  # unsafe here because we want float -> bool
             if parts
             else np.zeros((len(self.samples), 0), dtype=bool)
         )
@@ -750,7 +781,7 @@ class Evaluator:
                 )
             case "at_least":
                 return self.at_least(
-                    _as_int(args[0]), self.eval_cycle(args[1], simplify=False)
+                    _as_int(args[0]), _as_str(args[1]), self.eval_cycle(args[2], simplify=False)
                 )
             case "column_count_values":
                 return self.column_count_values(
@@ -769,16 +800,7 @@ class Evaluator:
                     **kwargs,
                 )
             case "filter_contains":
-                if len(args) == 2:
-                    return self.filter_contains(
-                        col=_as_str(args[0]), val=_as_str(args[1]), **kwargs
-                    )
-                return self.filter_contains(
-                    col=_as_str(args[0]),
-                    val=_as_str(args[1]),
-                    contains=_as_bool(args[2]),
-                    **kwargs,
-                )
+                return self.filter_contains(col=_as_str(args[0]), val=_as_str(args[1]), **kwargs)
             case "filter_compare":
                 return self.filter_compare(
                     col=_as_str(args[0]),
@@ -833,7 +855,7 @@ class Evaluator:
             if isinstance(x, pl.Expr):
                 x = [x]
             masks = x
-            if len(masks) == 0:
+            if len(masks) == 1:
                 mask = masks[0]
             else:
                 mask = masks[0].and_(*[mask for mask in masks[1:]])
@@ -842,6 +864,7 @@ class Evaluator:
 
     @staticmethod
     def percent(n: int, x: np.ndarray) -> np.ndarray:
+        x = x.astype(bool)
         thr = n / 100.0
         if x.shape[1] == 0:
             return np.zeros(x.shape[0], dtype=bool)
@@ -849,7 +872,11 @@ class Evaluator:
         return cov >= thr
 
     @staticmethod
-    def at_least(k: int, x: np.ndarray) -> np.ndarray:
+    def at_least(k: int, mode: str, x: np.ndarray) -> np.ndarray:
+        if mode.upper() not in AT_LEAST_MODES:
+            raise ValueError(f"Unsupported at_least mode. Use one of {AT_LEAST_MODES}")
+        if mode == "PRESENCE":
+            x = x.astype(bool)
         return x.sum(axis=1) >= k
 
     @eval_filter_dec
@@ -943,7 +970,7 @@ class Evaluator:
                 "steps_present": cycle.sum(
                     axis=tuple(i for i in range(len(cycle.shape)) if i > 0)
                 ),
-                "genome": self.samples,
+                self.sample_col: self.samples,
             }
         )
         df = df.with_columns(
@@ -963,6 +990,7 @@ def evaluate_rules(
     present_map: Dict[str, np.ndarray],
     annotations: Optional[pl.DataFrame] = None,
     sample_col: Optional[str] = None,
+    bool_output: bool = True
 ) -> pl.DataFrame:
     ev = Evaluator(
         samples=samples,
@@ -974,7 +1002,10 @@ def evaluate_rules(
     rule_names = sorted(compiled.rules.keys())
     data = {}
     for rn in rule_names:
-        data[rn] = ev.eval_bool(compiled.rules[rn])
+        out = ev.eval_bool(compiled.rules[rn])
+        if bool_output:
+            out = out.astype(bool)
+        data[rn] = out
 
     df = pl.DataFrame(data)
     df = df.with_columns(pl.Series(sample_col, samples)).select(
@@ -993,7 +1024,10 @@ def evaluate_cycles(
     annotations: Optional[pl.DataFrame] = None,
     sample_col: Optional[str] = None,
     additional_cols: Optional[List[str]] = None,
+    anno_df: pl.DataFrame = None,
+    value_col: str = str
 ) -> pl.DataFrame:
+    assert ((anno_df is None and value_col is None) or (anno_df is not None and value_col is not None)), "anno_df and value_col must both be None or neither be None"
     ev = Evaluator(
         samples=samples,
         present_map=present_map,
@@ -1013,8 +1047,23 @@ def evaluate_cycles(
             expr = compiled.rules[rn]
             out = ev.eval_bool(expr)
             if isinstance(out, np.ndarray):
-                out = pl.DataFrame(dict(present=out, genome=ev.samples))
+                out = pl.DataFrame({"present": out.astype(bool), sample_col: ev.samples})
             out = out.with_columns(pl.lit(rn).alias(label_col))
+            if anno_df is not None:
+                out = (
+                    out.join(
+                        (
+                            anno_df
+                            .filter(pl.col("hit").is_in(compiled.features_by_rules[rn]))
+                            .group_by([sample_col])
+                            .agg(pl.col(value_col).sum())
+                        ),
+                        on=sample_col, 
+                        how="left", 
+                        validate="1:1"
+                    )
+                    .with_columns(pl.col(value_col).fill_null(strategy="zero"))
+                )
             dfs[group].append(out)
 
         assert all(isinstance(df, pl.DataFrame) for df in dfs[group]), (
@@ -1031,9 +1080,10 @@ def evaluate_cycles(
 
 
 def evaluate_rules_on_anno(
+    count_col: str,
     annotations_path: os.PathLike = None,
     annotations: pl.DataFrame = None,
-    sample_col: str = "input_fasta",
+    group_col: str | None = None, 
     *args,
     **kwargs,
 ):
@@ -1051,11 +1101,19 @@ def evaluate_rules_on_anno(
             annotations = pl.read_csv(
                 annotations_path, separator="\t", infer_schema_length=None
             )
+    
+
+    df = prepare_present_map_df(
+        df=annotations,
+        count_col=count_col,
+        besthit_cols=list(ID_EXPR_DICT.keys()),
+        needed_features=compiled.needed_features,
+        group_col=group_col,
+    )
 
     samples, present_map = build_present_map(
-        annotations,
-        sample_col=sample_col,
-        besthit_cols=list(ID_EXPR_DICT.keys()),
+        df=df,
+        sample_col=group_col if group_col else count_col,
         needed_features=compiled.needed_features,
     )
 
@@ -1064,6 +1122,6 @@ def evaluate_rules_on_anno(
         samples,
         present_map,
         annotations=annotations,
-        sample_col=sample_col,
+        sample_col=group_col if group_col else count_col,
     )
     return df
