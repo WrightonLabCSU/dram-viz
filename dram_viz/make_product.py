@@ -37,6 +37,7 @@ from dram_viz.rule_parser.src.rules import (
     CompiledRules,
     build_present_map,
     evaluate_cycles,
+    prepare_present_map_df
 )
 
 logger = logging.getLogger("dram.viz")
@@ -78,6 +79,48 @@ def get_column_name(
     else:
         return name
 
+
+def join_present_map_df_to_mapping_df(
+    df: pl.DataFrame,
+    group_col: str,
+    count_col: str,
+    besthit_cols: list[str],
+    needed_features: set[str],
+    additional_cols: list[str] = None,
+    mapping_df: pl.DataFrame = None
+):
+
+    sample_names = [col for col in mapping_df.columns if col not in [count_col, group_col]]
+    hit_col = "hit"
+    df = (
+        df
+        .join(
+            (
+                mapping_df
+                .with_columns(mean_sample_abundance=pl.mean_horizontal(sample_names))
+                .select([count_col, "mean_sample_abundance"])
+            ),
+            on=count_col)
+    )
+    
+    mapping_df = (
+        df.select([count_col, group_col, hit_col]).join(
+            (
+                mapping_df.unpivot(
+                    index=count_col,
+                    on=sample_names,
+                    variable_name="sample",
+                    value_name="abundance",
+                )
+                .filter(pl.col("abundance").is_not_null() & (pl.col("abundance") != 0))
+            ), 
+            on=count_col, 
+            how="inner", 
+            #validate="1:m"
+        )
+        .with_columns(sample_abundance=pl.col("abundance").sum().over([hit_col, count_col, "sample"]))
+    )
+    return df, mapping_df, sample_names
 
 @click.command()
 @click.option("--annotations", "-a", type=Path, help="Path to the annotations tsv file")
@@ -172,7 +215,7 @@ def main(
     Make a product heatmap visualization from the DRAM output.
     """
     import time
-
+    s = time.time()
     if rules_system and rules_tsv:
         raise click.BadArgumentUsage(
             "You may only supply either a rules system or a custom rules tsv, not both"
@@ -181,8 +224,6 @@ def main(
         rules_tsv = RULES_SYSTEMS[rules_system]
     if not rules_system and not rules_tsv:
         rules_tsv = RULES_SYSTEMS["default"]
-
-    s = time.time()
 
     rules_lf = pl.scan_csv(
         rules_tsv, separator="\t", infer_schema_length=None
@@ -209,19 +250,19 @@ def main(
         pl.col("long_name").fill_null(pl.col(label_column)).alias("long_name")
     )
 
-    anno = pl.read_csv(
+    raw_anno = pl.read_csv(
         annotations,
         separator="\t",
         infer_schema_length=10_000,
         # columns=list(ID_EXPR_DICT.keys()) + [groupby_column]
     )
     fasta_column = get_column_name(
-        fasta_column, BACKUP_FASTA_COLUMNS, name_of_data="annotations", df=anno
+        fasta_column, BACKUP_FASTA_COLUMNS, name_of_data="annotations", df=raw_anno
     )
-    anno = anno.rename({fasta_column: "genome"})
+    raw_anno = raw_anno.rename({fasta_column: "genome"})
     # If fasta names are all ints (the samples from users were ints themselves),
     # we need to cast to strings for later
-    anno = anno.with_columns(pl.col("genome").cast(pl.String))
+    raw_anno = raw_anno.with_columns(pl.col("genome").cast(pl.String))
 
     kw = dict(
         rules=rules_lf,
@@ -233,93 +274,104 @@ def main(
     # kw = dict(rules_path=rules_path, label_col="module", parent_col=alias_column, rules_col="rule")
     compiled = CompiledRules.from_rules(**kw)
     logger.info(f"Compiled rules in {time.time() - s} seconds")
+
+    sample_names = raw_anno.select("genome").unique().sort("genome").to_series().to_list()
+    besthit_cols=list(ID_EXPR_DICT.keys())
+    dfs = {}
+    eval_cycles_kw = {}
     if mapping:
         mapping_df = pl.read_csv(mapping, separator="\t", ignore_errors=True).fill_null(
             0
+        ).rename({"Geneid": "query_id"})
+        mapping_df = mapping_df.join(
+            raw_anno.select(["query_id", "genome"]).unique(),
+            on="query_id",
+            validate="1:1"
         )
-        sample_names = mapping_df.columns[1:]
-        mapping_df = mapping_df.with_columns(
-            summed_sample_abundance=pl.sum_horizontal(sample_names)
-        )
-        anno = anno.join(
-            mapping_df.select(["Geneid", "summed_sample_abundance"]).rename(
-                {"Geneid": "query_id"}
-            ),
-            on=["query_id"],
-            how="left",
-        )
-        del mapping_df
 
-        samples, present_map, anno_df = build_present_map(
-            anno,
-            sample_col="genome",
-            besthit_cols=list(ID_EXPR_DICT.keys()),
+        anno_df = prepare_present_map_df(
+            df=raw_anno,
+            count_col="query_id",
+            group_col="genome",
+            besthit_cols=besthit_cols,
             needed_features=compiled.needed_features,
-            additional_cols=["summed_sample_abundance"],
         )
+        anno_df, mapping_df, sample_names_mapping = join_present_map_df_to_mapping_df(
+            df=anno_df,
+            group_col="genome",
+            count_col="query_id",
+            besthit_cols=besthit_cols,
+            needed_features=compiled.needed_features,
+            mapping_df=mapping_df
+        )
+
+        present_map = build_present_map(
+            df=mapping_df,
+            sample_col="sample",
+            needed_features=compiled.needed_features,
+            sample_names=sample_names_mapping
+        )
+        dfs["sample"] = evaluate_cycles(
+            compiled=compiled,
+            samples=sample_names_mapping,
+            present_map=present_map,
+            annotations=raw_anno,
+            sample_col="sample",
+            #additional_cols=["long_name"],
+            group_col=group_colunm,
+            anno_df=mapping_df,
+            value_col="sample_abundance"
+        )
+        eval_cycles_kw["anno_df"] = anno_df
+        eval_cycles_kw["value_col"] = "mean_sample_abundance"
     else:
-        samples, present_map = build_present_map(
-            anno,
-            sample_col="genome",
-            besthit_cols=list(ID_EXPR_DICT.keys()),
+        anno_df = prepare_present_map_df(
+            df=raw_anno,
+            count_col="query_id",
+            group_col="genome",
+            besthit_cols=besthit_cols,
             needed_features=compiled.needed_features,
         )
+
+    present_map = build_present_map(
+        df=anno_df,
+        sample_col="genome",
+        needed_features=compiled.needed_features,
+        sample_names=sample_names
+    )
 
     logger.info(f"Built present map in {time.time() - s} seconds")
 
-    dfs = evaluate_cycles(
+    dfs["genome"] = evaluate_cycles(
         compiled=compiled,
-        samples=samples,
+        samples=sample_names,
         present_map=present_map,
-        annotations=anno,
+        annotations=raw_anno,
         sample_col="genome",
         additional_cols=["long_name"],
         group_col=group_colunm,
+        **eval_cycles_kw
     )
     logger.info("Evaluated all rules in:")
     logger.info(time.time() - s)
 
-    if mapping:
-        mapped_dfs = {}
-        for group, frame in compiled.df.group_by(group_colunm, maintain_order=True):
-            group = group[0]
-            mapped_dfs[group] = []
-            for rn in frame.select(label_column).unique().to_series():
-                mapped_dfs[group].append(
-                    anno_df.filter(pl.col("hit").is_in(compiled.features_by_rules[rn]))
-                    .group_by("genome")
-                    .agg(pl.col("summed_sample_abundance").sum())
-                    .with_columns(name=pl.lit(rn))
-                )
-            df = (
-                dfs[group]
-                .join(
-                    pl.concat(mapped_dfs[group]),
-                    on=["genome", label_column],
-                    how="left",
-                )
-                .with_columns(pl.col("summed_sample_abundance").fill_null(0))
-            )
-            dfs[group] = df
-            # dfs[group] = dfs[group].join(pl.concat(mapped_dfs[group]), on=["genome", label_column], how="left").with_columns(pl.col("summed_sample_abundance").fill_null(0))
-
     extra_cols = [
-        col for col in ["Completeness", "Contamination"] if col in anno.columns
+        col for col in ["Completeness", "Contamination"] if col in raw_anno.columns
     ]
     if extra_cols:
-        df = anno.unpivot(
+        df = raw_anno.unpivot(
             index="genome", on=extra_cols, variable_name=label_column
         ).unique()
         # df = df.rename({groupby_column: "genome"})
         # We do this reorder the dfs dictionary to ensure that the metadata dataframe is the first one
         d = {"Meta": df}
-        d.update(dfs)
-        dfs = d
+        d.update(dfs["genome"])
+        dfs["genome"] = d
 
     tax_tree_data = None
     selected_tax_tree = None
-    if "taxonomy" in anno:
-        tax_df = build_taxonomy_df_pl(anno, "genome")
+    if "taxonomy" in raw_anno:
+        tax_df = build_taxonomy_df_pl(raw_anno, "genome")
 
         tax_edge_df, tax_df = build_tax_edge_df_pl(tax_df)
 
@@ -330,21 +382,23 @@ def main(
         )
         selected_tax_tree = build_tax_tree_selected_recurse(tax_tree_data)
 
-        for key, df in dfs.items():
-            dfs[key] = tax_df.join(df, on="genome", how="left")
+        for key, df in dfs["genome"].items():
+            dfs["genome"][key] = tax_df.join(df, on="genome", how="left")
 
-    del anno
+    del raw_anno
 
     if save_dataframes:
-        for key, df in dfs.items():
-            df.write_csv(output_dir / f"{key}_df.tsv", separator="\t")
-            logger.info(f"Saved {key} dataframe to {output_dir / f'{key}_df.tsv'}")
+        for df_type, dfs_dict in dfs.items():
+            for key, df in dfs_dict.items():
+                df.write_csv(output_dir / f"{key}_df_{df_type}.tsv", separator="\t")
+                logger.info(f"Saved {key} dataframe to {output_dir / f'{key}_df_{df_type}.tsv'}")
 
     kw = dict(
         dfs=dfs,
         taxanomy_tree_data=tax_tree_data,
         selected_tax_tree=selected_tax_tree,
-        mapping=bool(mapping),
+        output_dir=output_dir
+        # mapping=bool(mapping),
     )
     logger.info(
         f"Finished all processing in: {time.time() - s} seconds, starting visualization"
@@ -355,7 +409,16 @@ def main(
             port=port,
         )
     else:
-        Dashboard(**kw)
+        d = Dashboard(**kw)
+        column_options = d.column_options.options
+        current_option = d.column_options.value
+        for y_col, c_cols in column_options.items():
+            for c_col in c_cols:
+                if y_col == current_option[0] and c_col == current_option[1]:
+                    continue
+                d.column_options.value = {0: y_col, 1: c_col}
+                d.update_plot()
+                d.download_heatmap()
 
 
 if __name__ == "__main__":

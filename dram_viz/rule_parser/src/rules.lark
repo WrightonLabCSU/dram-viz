@@ -34,10 +34,13 @@ list_lit: "[" expr ("," expr)+ "]"   -> step_
         | NUMBER                          -> number
         | STRING                          -> string
 
-name_ref: IDENT ":" IDENT                 -> qualified_name
+name_ref: IDENT "@" IDENT                 -> qualified_name
         | IDENT                           -> simple_name
+        | BTICK_NAME                      -> quoted_name
+        | IDENT "@" BTICK_NAME            -> quoted_name
 
-IDENT: /[A-Za-z0-9_\-\.]+/
+IDENT: /[A-Za-z0-9_\-\.:]+/
+BTICK_NAME: /`([^`\\]|\\.)*`/
 NUMBER: /[0-9]+(\.[0-9]+)?/
 STRING: ESCAPED_STRING
 

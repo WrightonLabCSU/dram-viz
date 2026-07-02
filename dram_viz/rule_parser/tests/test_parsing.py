@@ -2,7 +2,7 @@ from pathlib import Path
 
 import polars as pl
 
-from src.rules import (
+from dram_viz.rule_parser.src.rules import (
     And,
     Call,
     CompiledRules,
@@ -198,7 +198,8 @@ def test_basic_rules_pass_annotation():
     df = evaluate_rules_on_anno(
         rules_path=DATA_DIR / "basic_rules.tsv",
         annotations_path=DATA_DIR / "basic_anno.tsv",
-        sample_col="input_fasta",
+        count_col="query_id",
+        group_col="input_fasta",
     )
 
     true_df = pl.DataFrame(
@@ -222,7 +223,8 @@ def test_compound_rules_pass_annotation():
     df = evaluate_rules_on_anno(
         rules_path=DATA_DIR / "compound_rules.tsv",
         annotations_path=DATA_DIR / "basic_anno.tsv",
-        sample_col="input_fasta",
+        count_col="query_id",
+        group_col="input_fasta",
     )
 
     true_df = pl.DataFrame(

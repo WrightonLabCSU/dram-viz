@@ -173,17 +173,16 @@ class Dashboard(pn.viewable.Viewer):
 
     def __init__(
         self,
-        dfs: dict[str, pd.DataFrame],
+        dfs: dict[str, dict[str, pd.DataFrame]],
         taxanomy_tree_data: Optional[pd.DataFrame] = None,
         selected_tax_tree: Optional[list[str]] = None,
-        mapping: bool = False,
+        output_dir: str | Path = None
     ):
         super().__init__()
         self.dfs = dfs
         self.taxonomy_tree_data = taxanomy_tree_data
-        self._output_dir = Path.cwd()
+        self._output_dir = Path(output_dir) if output_dir else Path.cwd()
         self.plot_view = pn.Row()
-        self._mapping = mapping
         self.download_button = pn.widgets.Button(
             name="Download Heatmap", button_type="primary"
         )
@@ -209,12 +208,7 @@ class Dashboard(pn.viewable.Viewer):
         self.show_tax_box = pn.Column(self.tax_axis_filter, self.tax_axis_rank)
         pn.bind(self.reveal_tax_axis_rank_selector, self.tax_axis_filter, watch=True)
 
-        self.mapping_filter = pn.widgets.Checkbox(
-            name="Switch to Mapping View", value=False
-        )
-        self.show_mapping_box = pn.Column(self.mapping_filter)
-
-        sort_options = ["genome"]
+        sort_options = {k: [k] for k in self.dfs}
         self.taxonomy_filter = None
         if self.taxonomy_tree_data is not None:
             self.taxonomy_filter = Tree(
@@ -224,15 +218,27 @@ class Dashboard(pn.viewable.Viewer):
             # hack to make sure the taxonomy filter tree.value is set since it isn't set on the first load
             # TODO: remove maybe when this is put into panel
             self.taxonomy_filter.value = selected_tax_tree or []
+            sort_options["genome"].extend(list(TAXONOMY_RANKS_REGEX.keys()))
+            # sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
 
-            sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
-
-        if "Metadata" in self.dfs:
-            sort_options.append(
-                col for col in self.dfs["Metadata"].columns if col != "genome"
+        if "Meta" in self.dfs["genome"]:
+            sort_options["genome"].extend(
+                [col for col in self.dfs["genome"]["Meta"].columns if col != "genome"]
             )
 
-        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options)
+        column_options = {k: ["presence/coverage"] for k in self.dfs}
+        abundance_cols = ["sample_abundance", "mean_sample_abundance"]
+        for k, dfs_dict in self.dfs.items():
+            for col in abundance_cols:
+                df = dfs_dict[list(dfs_dict.keys())[-1]]
+                if col in df.columns:
+                    column_options[k].append(col)
+                    break
+
+
+        self.column_options = pn.widgets.NestedSelect(name="Y and C columns", options=column_options, levels=["Y Column", "Color Column"])
+        # self.c_col = pn.widgets.MultiChoice(name="Color Column", options=sort_options["genome"])
+        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options[self.column_options.value["Y Column"]])
 
         self._init_view()
         self.download_heatmap()
@@ -243,9 +249,6 @@ class Dashboard(pn.viewable.Viewer):
     def _init_view(self):
         additional_sidebar = []
         self.update_plot()
-
-        if self._mapping:
-            additional_sidebar.append(self.show_mapping_box)
 
         if self.taxonomy_tree_data is not None:
             additional_sidebar.append(self.show_tax_box)
@@ -263,14 +266,15 @@ class Dashboard(pn.viewable.Viewer):
                             f"{group} df",
                             pn.widgets.Tabulator(df.to_pandas(), page_size=50),
                         )
-                        for group, df in self.dfs.items()
+                        for group, df in self.dfs[self.column_options.value["Y Column"]].items()
                     ],
                 )
             ],
             sidebar=[
                 pn.Row(self.redraw_button, self.reset_button),
                 self.download_button,
-                self.sort_by,
+                pn.Row(self.column_options),
+                #self.sort_by,
                 self.param.min_coverage,
                 *additional_sidebar,
             ],
@@ -282,33 +286,36 @@ class Dashboard(pn.viewable.Viewer):
         """
         None if not self.tax_axis_filter.value else self.tax_axis_rank.value
         charts = []
-        for i, (group, df) in enumerate(self.dfs.items()):
+        y_mode = self.column_options.value["Y Column"]
+        c_mode = self.column_options.value["Color Column"]
+        for i, (group, df) in enumerate(self.dfs[y_mode].items()):
             df = df.to_pandas()
             tooltip_cols = df.columns.tolist()
-            kw = {"y_col": "genome"}
+            kw = {"y_col": y_mode}
             if i == 0 and self.tax_axis_filter.value:
                 kw["y_col"] = "taxonomy"
             if i != 0:
                 kw["y_axis_location"] = None
-            if "coverage_percentage" in df.columns:
-                c_col = "coverage_percentage"
-                if self.min_coverage > 0:
-                    df.loc[
-                        df["coverage_percentage"] < self.min_coverage,
-                        "coverage_percentage",
-                    ] = 0
-            elif "present" in df.columns:
-                c_col = "present"
-            elif "value" in df.columns:
-                c_col = "value"
-            else:
-                raise ValueError(f"No coverage column found in {group} dataframe")
+            if "presence/coverage" in c_mode:
+                if "coverage_percentage" in df.columns:
+                    c_col = "coverage_percentage"
+                    if self.min_coverage > 0:
+                        df.loc[
+                            df["coverage_percentage"] < self.min_coverage,
+                            "coverage_percentage",
+                        ] = 0
+                elif "present" in df.columns:
+                    c_col = "present"
+                elif "value" in df.columns:
+                    c_col = "value"
+                else:
+                    raise ValueError(f"No coverage column found in {group} dataframe")
+            elif "abundance" in c_mode:
+                    c_col = c_mode
+                    kw["c_max"] = df[c_col].max()
+                    if kw["c_max"] == 0:
+                        kw["c_max"] = 1
 
-            if self.mapping_filter.value and "summed_sample_abundance" in df.columns:
-                c_col = "summed_sample_abundance"
-                kw["c_max"] = df[c_col].max()
-                if kw["c_max"] == 0:
-                    kw["c_max"] = 1
 
             df = self.filter_by_taxonomy(df)
             df = self.get_sorted_dfs(df, by=self.sort_by.value)
@@ -382,10 +389,11 @@ class Dashboard(pn.viewable.Viewer):
             return
         self.tax_axis_rank.visible = False
 
-    def get_sorted_dfs(self, df, by="genome"):
+    def get_sorted_dfs(self, df, by=None):
         """
         Sort the dataframes by taxonomy
         """
+        by = by or self.column_options.value["Y Column"]
         return df.sort_values(by=by)
 
     def download_heatmap(self, event=None, output_dir=None):
@@ -393,4 +401,4 @@ class Dashboard(pn.viewable.Viewer):
         Save the heatmap to a file
         """
         output_dir = output_dir or self._output_dir
-        self.plot_view.save(output_dir / "product.html", resources=INLINE)
+        self.plot_view.save(output_dir / f"product_{self.column_options.value["Y Column"].replace("/", "-")}_{self.column_options.value["Color Column"].replace("/", "-")}.html", resources=INLINE)
