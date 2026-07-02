@@ -286,17 +286,17 @@ class Dashboard(pn.viewable.Viewer):
         """
         None if not self.tax_axis_filter.value else self.tax_axis_rank.value
         charts = []
-        mode = self.column_options.value[0]
-        c_col = self.column_options.value[1]
-        for i, (group, df) in enumerate(self.dfs[mode].items()):
+        y_mode = self.column_options.value[0]
+        c_mode = self.column_options.value[1]
+        for i, (group, df) in enumerate(self.dfs[y_mode].items()):
             df = df.to_pandas()
             tooltip_cols = df.columns.tolist()
-            kw = {"y_col": mode}
+            kw = {"y_col": y_mode}
             if i == 0 and self.tax_axis_filter.value:
                 kw["y_col"] = "taxonomy"
             if i != 0:
                 kw["y_axis_location"] = None
-            if "coverage" in c_col:
+            if "coverage" in c_mode:
                 if "coverage_percentage" in df.columns:
                     c_col = "coverage_percentage"
                     if self.min_coverage > 0:
@@ -310,7 +310,8 @@ class Dashboard(pn.viewable.Viewer):
                     c_col = "value"
                 else:
                     raise ValueError(f"No coverage column found in {group} dataframe")
-            elif "abundance" in c_col:
+            elif "abundance" in c_mode:
+                    c_col = c_mode
                     kw["c_max"] = df[c_col].max()
                     if kw["c_max"] == 0:
                         kw["c_max"] = 1

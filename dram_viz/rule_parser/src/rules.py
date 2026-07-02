@@ -1025,7 +1025,7 @@ def evaluate_cycles(
     sample_col: Optional[str] = None,
     additional_cols: Optional[List[str]] = None,
     anno_df: pl.DataFrame = None,
-    value_col: str = str
+    value_col: str = None
 ) -> pl.DataFrame:
     assert ((anno_df is None and value_col is None) or (anno_df is not None and value_col is not None)), "anno_df and value_col must both be None or neither be None"
     ev = Evaluator(

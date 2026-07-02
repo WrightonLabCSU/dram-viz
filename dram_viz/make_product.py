@@ -276,7 +276,8 @@ def main(
     logger.info(f"Compiled rules in {time.time() - s} seconds")
 
     besthit_cols=list(ID_EXPR_DICT.keys())
-    dfs = {"genome": {}, "sample": {}}
+    dfs = {}
+    eval_cycles_kw = {}
     if mapping:
         mapping_df = pl.read_csv(mapping, separator="\t", ignore_errors=True).fill_null(
             0
@@ -319,6 +320,8 @@ def main(
             anno_df=mapping_df,
             value_col="sample_abundance"
         )
+        eval_cycles_kw["anno_df"] = anno_df
+        eval_cycles_kw["value_col"] = "mean_sample_abundance"
     else:
         anno_df = prepare_present_map_df(
             df=raw_anno,
@@ -344,8 +347,7 @@ def main(
         sample_col="genome",
         additional_cols=["long_name"],
         group_col=group_colunm,
-        anno_df=anno_df,
-        value_col="mean_sample_abundance"
+        **eval_cycles_kw
     )
     logger.info("Evaluated all rules in:")
     logger.info(time.time() - s)
