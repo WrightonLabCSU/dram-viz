@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import functools
+from dataclasses import dataclass
+from typing import Dict, Tuple, List, Optional, Set, Iterable
 import operator
 import os
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+import functools
 
 import networkx as nx
 import numpy as np
 import polars as pl
-from lark import Lark, LarkError, Transformer
+from lark import Lark, Transformer, LarkError
 
 OP_TO_EXPR = {
     "gt": operator.gt,
@@ -21,7 +21,7 @@ OP_TO_EXPR = {
     "ne": operator.ne,
 }
 ALLOWED_CMPOPS = set(OP_TO_EXPR.keys())
-
+AT_LEAST_MODES = set(["PRESENCE", "COUNTS"])
 
 class RuleError(Exception):
     pass
@@ -71,6 +71,7 @@ ID_EXPR_DICT = {
         .str.split(",")
         .list.eval(pl.element().str.strip_chars().str.split(" ").list.first())
     ),
+    "DEFAULT": lambda col: pl.col(col).cast(pl.Utf8).cast(pl.List(pl.Utf8)),
 }
 
 CALL_FUNCTIONS = {
@@ -159,9 +160,12 @@ class Call(Expr):
             case "not":
                 if n_args != 1:
                     raise RuleError("not(...) expects 1 arg")
-            case "percent" | "at_least":
+            case "percent":
                 if n_args != 2:
                     raise RuleError(f"{self.value}(n, Group) expects 2 args")
+            case "at_least":
+                if n_args != 3:
+                    raise RuleError(f"{self.value}(n, mode, Group) expects 3 args")
             case "column_count_values":
                 if n_args != 5:
                     raise RuleError(
@@ -185,9 +189,9 @@ class Call(Expr):
                         f"column_sum_values op must be one of {sorted(ALLOWED_CMPOPS)}; got {op}"
                     )
             case "filter_contains":
-                if n_args != 2 and n_args != 3:
+                if n_args != 2:
                     raise RuleError(
-                        "filter_contains(column, value, contains=True) expects 2 or 3 args"
+                        "filter_contains(column, value) expects 2"
                     )
             case "filter_compare":
                 if n_args != 3:
@@ -264,6 +268,15 @@ class ASTTransformer(Transformer):
         db, value = items
         return Name(value=str(value), db=str(db))
 
+    def quoted_name(self, items):
+        val_index = 0 if (len(items) == 1) else 1
+        items[val_index] = (
+            items[val_index][1:-1].replace(r"\`", "`").replace(r"\\", "\\")
+        )  # remove backticks
+        if len(items) == 2:
+            return self.qualified_name(items)
+        return self.simple_name(items)
+
     def number(self, items):
         return Number(float(str(items[0])))
 
@@ -323,7 +336,7 @@ class CompiledRules:
         }
 
         # Expand rules using expanded defs
-        # we need to hit again in case defs is empty (no alias col)
+        # we need to hit again in case defs is empty (no parent col)
         # and we still need to add needed features from rules
         features_by_rules = {k: set() for k in rules.keys()}
         trees_by_rules = {k: nx.DiGraph() for k in rules.keys()}
@@ -351,15 +364,15 @@ def load_rules(
     rules_path: str = None,
     rules: pl.LazyFrame = None,
     label_col: str = "name",
-    alias_col: str = "alias",
+    parent_col: str = "alias",
     rules_col: str = "rule",
     allow_visualize_functions: bool = False,
 ) -> Tuple[Dict[str, Expr], Dict[str, Expr]]:
     """
-    Assumes TSV has columns at least: name, rule
+    Assumes TSV has columns at least: name, parent, child
     Convention used here:
-      - if `name` is non-empty: this is an OUTPUT RULE whose expression is in `rule`
-      - if `name` is empty and `alias` is non-empty: this is a DEFINITION macro: alias := rule
+      - if `name` is non-empty: this is an OUTPUT RULE whose expression is in `child`
+      - if `name` is empty and `parent` is non-empty: this is a DEFINITION macro: parent := child
     If your file uses a slightly different convention, adjust this function only.
     """
     assert (rules_path is not None) != (rules is not None), (
@@ -380,7 +393,7 @@ def load_rules(
             f"rules TSV missing required columns {required}. Found: {lf.columns}"
         )
 
-    has_alias_col = alias_col and (alias_col in cols)
+    has_parent_col = parent_col and (parent_col in cols)
 
     with open(Path(__file__).parent.absolute() / "rules.lark") as f:
         parser = Lark(
@@ -431,11 +444,11 @@ def load_rules(
     }
 
     definitions = {}
-    if has_alias_col:
+    if has_parent_col:
         definitions = {
             a: b
-            for a, b in lf.filter(~pl.col(alias_col).is_null())
-            .select([pl.col(alias_col), pl.col(rules_col)])
+            for a, b in lf.filter(~pl.col(parent_col).is_null())
+            .select([pl.col(parent_col), pl.col(rules_col)])
             .collect()
             .iter_rows()
         }
@@ -567,7 +580,7 @@ def expand_macros(
             out = PipeChain(calls=tuple(calls))
         else:
             raise TypeError(expr)
-        # Some nodes need validation and have to be done after rules are expanded
+        # Some nodes need validation and have to be done after children are expanded
         try:
             out.validate()
         except Exception:
@@ -589,19 +602,32 @@ def build_present_map(
     besthit_cols: List[str],
     needed_features: Set[str],
     additional_cols: List[str] = None,
+    group_col: str = None
 ) -> Tuple[List[str], Dict[str, np.ndarray]]:
     """Build present_map of needed gene_ids from annotations DataFrame"""
     additional_cols = additional_cols or []
+    index_cols = [sample_col, group_col] if group_col else [sample_col]
     besthit_cols = [col for col in besthit_cols if col in lf.columns]
+    besthit_cols.extend(
+        [
+            col
+            for col in lf.columns
+            if (col.endswith("_id") and col not in besthit_cols and col != "query_id")
+        ]
+    )
     for col in besthit_cols:
-        lf = lf.with_columns(ID_EXPR_DICT[col].alias(col)).explode(col)
-    lf = lf.select([sample_col] + besthit_cols + additional_cols)
+        if col not in ID_EXPR_DICT:
+            explode_col = ID_EXPR_DICT["DEFAULT"](col).alias(col)
+        else:
+            explode_col = ID_EXPR_DICT[col].alias(col)
+        lf = lf.with_columns(explode_col).explode(col)
+    lf = lf.select(index_cols + besthit_cols + additional_cols)
 
     # unpivot to long (sample, hit)
     hit_col = "hit"
     lf = (
         lf.unpivot(
-            index=[sample_col] + additional_cols,
+            index=index_cols + additional_cols,
             on=besthit_cols,
             variable_name="db",
             value_name=hit_col,
@@ -610,16 +636,17 @@ def build_present_map(
         .drop_nulls()
     )
 
-    samples = lf.select(sample_col).unique().sort(sample_col).to_series().to_list()
+    col = group_col if group_col else sample_col
+    samples = lf.select(col).unique().sort(col).to_series().to_list()
 
-    df: pl.DataFrame = lf.select([sample_col, hit_col]).filter(
+    df: pl.DataFrame = lf.select([col, hit_col]).filter(
         pl.col(hit_col).is_in(list(needed_features))
     )
 
     sample_index = {s: i for i, s in enumerate(samples)}
     n = len(samples)
     present_map: Dict[str, np.ndarray] = {
-        f: np.zeros(n, dtype=bool) for f in needed_features
+        f: np.zeros(n) for f in needed_features
     }
 
     # Group by hit_id and set booleans
@@ -628,9 +655,9 @@ def build_present_map(
         arr = present_map.get(hit)
         if arr is None:
             continue
-        sub_s = sub.select(sample_col).unique().to_series().to_list()
-        for s in sub_s:
-            arr[sample_index[s]] = True
+
+        for name, count in sub[col].value_counts().iter_rows():
+            arr[sample_index[name]] = count
     if additional_cols:
         return samples, present_map, lf
     return samples, present_map
@@ -750,7 +777,7 @@ class Evaluator:
                 )
             case "at_least":
                 return self.at_least(
-                    _as_int(args[0]), self.eval_cycle(args[1], simplify=False)
+                    _as_int(args[0]), _as_str(args[1]), self.eval_cycle(args[2], simplify=False)
                 )
             case "column_count_values":
                 return self.column_count_values(
@@ -769,16 +796,7 @@ class Evaluator:
                     **kwargs,
                 )
             case "filter_contains":
-                if len(args) == 2:
-                    return self.filter_contains(
-                        col=_as_str(args[0]), val=_as_str(args[1]), **kwargs
-                    )
-                return self.filter_contains(
-                    col=_as_str(args[0]),
-                    val=_as_str(args[1]),
-                    contains=_as_bool(args[2]),
-                    **kwargs,
-                )
+                return self.filter_contains(col=_as_str(args[0]), val=_as_str(args[1]), **kwargs)
             case "filter_compare":
                 return self.filter_compare(
                     col=_as_str(args[0]),
@@ -833,7 +851,7 @@ class Evaluator:
             if isinstance(x, pl.Expr):
                 x = [x]
             masks = x
-            if len(masks) == 0:
+            if len(masks) == 1:
                 mask = masks[0]
             else:
                 mask = masks[0].and_(*[mask for mask in masks[1:]])
@@ -842,6 +860,7 @@ class Evaluator:
 
     @staticmethod
     def percent(n: int, x: np.ndarray) -> np.ndarray:
+        x = x.astype(bool)
         thr = n / 100.0
         if x.shape[1] == 0:
             return np.zeros(x.shape[0], dtype=bool)
@@ -849,7 +868,11 @@ class Evaluator:
         return cov >= thr
 
     @staticmethod
-    def at_least(k: int, x: np.ndarray) -> np.ndarray:
+    def at_least(k: int, mode: str, x: np.ndarray) -> np.ndarray:
+        if mode.upper() not in AT_LEAST_MODES:
+            raise ValueError(f"Unsupported at_least mode. Use one of {AT_LEAST_MODES}")
+        if mode == "PRESENCE":
+            x = x.astype(bool)
         return x.sum(axis=1) >= k
 
     @eval_filter_dec
@@ -963,6 +986,7 @@ def evaluate_rules(
     present_map: Dict[str, np.ndarray],
     annotations: Optional[pl.DataFrame] = None,
     sample_col: Optional[str] = None,
+    bool_output: bool = True
 ) -> pl.DataFrame:
     ev = Evaluator(
         samples=samples,
@@ -974,7 +998,10 @@ def evaluate_rules(
     rule_names = sorted(compiled.rules.keys())
     data = {}
     for rn in rule_names:
-        data[rn] = ev.eval_bool(compiled.rules[rn])
+        out = ev.eval_bool(compiled.rules[rn])
+        if bool_output:
+            out = out.astype(bool)
+        data[rn] = out
 
     df = pl.DataFrame(data)
     df = df.with_columns(pl.Series(sample_col, samples)).select(
@@ -1031,9 +1058,10 @@ def evaluate_cycles(
 
 
 def evaluate_rules_on_anno(
+    count_col: str,
     annotations_path: os.PathLike = None,
     annotations: pl.DataFrame = None,
-    sample_col: str = "input_fasta",
+    group_col: str | None = None, 
     *args,
     **kwargs,
 ):
@@ -1054,9 +1082,10 @@ def evaluate_rules_on_anno(
 
     samples, present_map = build_present_map(
         annotations,
-        sample_col=sample_col,
+        sample_col=count_col,
         besthit_cols=list(ID_EXPR_DICT.keys()),
         needed_features=compiled.needed_features,
+        group_col=group_col
     )
 
     df = evaluate_rules(
@@ -1064,6 +1093,6 @@ def evaluate_rules_on_anno(
         samples,
         present_map,
         annotations=annotations,
-        sample_col=sample_col,
+        sample_col=group_col if group_col else count_col,
     )
     return df
