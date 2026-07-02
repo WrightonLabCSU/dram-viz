@@ -268,6 +268,15 @@ class ASTTransformer(Transformer):
         db, value = items
         return Name(value=str(value), db=str(db))
 
+    def quoted_name(self, items):
+        val_index = 0 if (len(items) == 1) else 1
+        items[val_index] = (
+            items[val_index][1:-1].replace(r"\`", "`").replace(r"\\", "\\")
+        )  # remove backticks
+        if len(items) == 2:
+            return self.qualified_name(items)
+        return self.simple_name(items)
+
     def number(self, items):
         return Number(float(str(items[0])))
 
@@ -540,7 +549,9 @@ def expand_macros(
             # since some call args are just numbers, ops, and columns.
             # needed_features are the genes we need to look for in the annotations.
             for i, arg in enumerate(args):
-                if fn in {"percent", "at_least"}:
+                if fn in {"at_least"}:
+                    add_name = i == 2
+                if fn == "percent":
                     add_name = 1 == i
                 elif fn == "not":
                     add_name = 0 == i
@@ -605,13 +616,13 @@ def prepare_present_map_df(
             if (col.endswith("_id") and col not in besthit_cols and col != "query_id")
         ]
     )
+    df = df.select(index_cols + besthit_cols + additional_cols)
     for col in besthit_cols:
         if col not in ID_EXPR_DICT:
             explode_col = ID_EXPR_DICT["DEFAULT"](col).alias(col)
         else:
             explode_col = ID_EXPR_DICT[col].alias(col)
         df = df.with_columns(explode_col).explode(col)
-    df = df.select(index_cols + besthit_cols + additional_cols)
 
     # unpivot to long (sample, hit)
     hit_col = "hit"
@@ -635,6 +646,7 @@ def build_present_map(
     df: pl.DataFrame,
     sample_col: str,
     needed_features: Set[str],
+    sample_names: list[str],
     value_col: str = None
 ) -> Tuple[List[str], Dict[str, np.ndarray]]:
     """Build present_map of needed gene_ids from annotations DataFrame"""
@@ -642,10 +654,8 @@ def build_present_map(
 
     df: pl.DataFrame = df.drop_nulls(subset=sample_col)
 
-    samples = df.select(sample_col).unique().sort(sample_col).to_series().to_list()
-
-    sample_index = {s: i for i, s in enumerate(samples)}
-    n = len(samples)
+    sample_index = {s: i for i, s in enumerate(sample_names)}
+    n = len(sample_names)
     present_map: Dict[str, np.ndarray] = {
         f: np.zeros(n) for f in needed_features
     }
@@ -664,7 +674,7 @@ def build_present_map(
         else:
             for name, count in sub[sample_col].value_counts().iter_rows():
                 arr[sample_index[name]] = count
-    return samples, present_map
+    return present_map
 
 
 class Evaluator:
@@ -793,7 +803,7 @@ class Evaluator:
                     **kwargs,
                 )
             case "column_sum_values":
-                return self.column_count_values(
+                return self.column_sum_values(
                     col=_as_str(args[0]),
                     op=_as_str(args[1]),
                     thr=_as_float(args[2]),
@@ -1102,7 +1112,8 @@ def evaluate_rules_on_anno(
                 annotations_path, separator="\t", infer_schema_length=None
             )
     
-
+    sample_col=group_col if group_col else count_col
+    sample_names = annotations.select(sample_col).unique().sort(sample_col).to_series().to_list()
     df = prepare_present_map_df(
         df=annotations,
         count_col=count_col,
@@ -1111,17 +1122,18 @@ def evaluate_rules_on_anno(
         group_col=group_col,
     )
 
-    samples, present_map = build_present_map(
+    present_map = build_present_map(
         df=df,
-        sample_col=group_col if group_col else count_col,
+        sample_col=sample_col,
         needed_features=compiled.needed_features,
+        sample_names=sample_names
     )
 
     df = evaluate_rules(
         compiled,
-        samples,
+        sample_names,
         present_map,
         annotations=annotations,
-        sample_col=group_col if group_col else count_col,
+        sample_col=sample_col,
     )
     return df

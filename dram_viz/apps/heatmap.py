@@ -222,23 +222,23 @@ class Dashboard(pn.viewable.Viewer):
             # sort_options = ["genome", *list(TAXONOMY_RANKS_REGEX.keys())]
 
         if "Meta" in self.dfs["genome"]:
-            sort_options["genome"].append(
-                col for col in self.dfs["genome"]["Meta"].columns if col != "genome"
+            sort_options["genome"].extend(
+                [col for col in self.dfs["genome"]["Meta"].columns if col != "genome"]
             )
 
-        column_options = {k: ["coverage"] for k in self.dfs}
+        column_options = {k: ["presence/coverage"] for k in self.dfs}
         abundance_cols = ["sample_abundance", "mean_sample_abundance"]
         for k, dfs_dict in self.dfs.items():
             for col in abundance_cols:
-                df = next(iter(dfs_dict.values()))
+                df = dfs_dict[list(dfs_dict.keys())[-1]]
                 if col in df.columns:
                     column_options[k].append(col)
                     break
 
 
-        self.column_options = pn.widgets.NestedSelect(name="Y and C columns", options=column_options)
+        self.column_options = pn.widgets.NestedSelect(name="Y and C columns", options=column_options, levels=["Y Column", "Color Column"])
         # self.c_col = pn.widgets.MultiChoice(name="Color Column", options=sort_options["genome"])
-        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options[self.column_options.value[0]])
+        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options[self.column_options.value["Y Column"]])
 
         self._init_view()
         self.download_heatmap()
@@ -266,7 +266,7 @@ class Dashboard(pn.viewable.Viewer):
                             f"{group} df",
                             pn.widgets.Tabulator(df.to_pandas(), page_size=50),
                         )
-                        for group, df in self.dfs[self.column_options.value[0]].items()
+                        for group, df in self.dfs[self.column_options.value["Y Column"]].items()
                     ],
                 )
             ],
@@ -274,7 +274,7 @@ class Dashboard(pn.viewable.Viewer):
                 pn.Row(self.redraw_button, self.reset_button),
                 self.download_button,
                 pn.Row(self.column_options),
-                self.sort_by,
+                #self.sort_by,
                 self.param.min_coverage,
                 *additional_sidebar,
             ],
@@ -286,8 +286,8 @@ class Dashboard(pn.viewable.Viewer):
         """
         None if not self.tax_axis_filter.value else self.tax_axis_rank.value
         charts = []
-        y_mode = self.column_options.value[0]
-        c_mode = self.column_options.value[1]
+        y_mode = self.column_options.value["Y Column"]
+        c_mode = self.column_options.value["Color Column"]
         for i, (group, df) in enumerate(self.dfs[y_mode].items()):
             df = df.to_pandas()
             tooltip_cols = df.columns.tolist()
@@ -296,7 +296,7 @@ class Dashboard(pn.viewable.Viewer):
                 kw["y_col"] = "taxonomy"
             if i != 0:
                 kw["y_axis_location"] = None
-            if "coverage" in c_mode:
+            if "presence/coverage" in c_mode:
                 if "coverage_percentage" in df.columns:
                     c_col = "coverage_percentage"
                     if self.min_coverage > 0:
@@ -393,7 +393,7 @@ class Dashboard(pn.viewable.Viewer):
         """
         Sort the dataframes by taxonomy
         """
-        by = by or self.column_options.value[0]
+        by = by or self.column_options.value["Y Column"]
         return df.sort_values(by=by)
 
     def download_heatmap(self, event=None, output_dir=None):
@@ -401,4 +401,4 @@ class Dashboard(pn.viewable.Viewer):
         Save the heatmap to a file
         """
         output_dir = output_dir or self._output_dir
-        self.plot_view.save(output_dir / f"product_{self.column_options.value[0]}_{self.column_options.value[1]}.html", resources=INLINE)
+        self.plot_view.save(output_dir / f"product_{self.column_options.value["Y Column"].replace("/", "-")}_{self.column_options.value["Color Column"].replace("/", "-")}.html", resources=INLINE)

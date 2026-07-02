@@ -116,11 +116,11 @@ def join_present_map_df_to_mapping_df(
             ), 
             on=count_col, 
             how="inner", 
-            validate="1:m"
+            #validate="1:m"
         )
         .with_columns(sample_abundance=pl.col("abundance").sum().over([hit_col, count_col, "sample"]))
     )
-    return df, mapping_df
+    return df, mapping_df, sample_names
 
 @click.command()
 @click.option("--annotations", "-a", type=Path, help="Path to the annotations tsv file")
@@ -275,6 +275,7 @@ def main(
     compiled = CompiledRules.from_rules(**kw)
     logger.info(f"Compiled rules in {time.time() - s} seconds")
 
+    sample_names = raw_anno.select("genome").unique().sort("genome").to_series().to_list()
     besthit_cols=list(ID_EXPR_DICT.keys())
     dfs = {}
     eval_cycles_kw = {}
@@ -295,7 +296,7 @@ def main(
             besthit_cols=besthit_cols,
             needed_features=compiled.needed_features,
         )
-        anno_df, mapping_df = join_present_map_df_to_mapping_df(
+        anno_df, mapping_df, sample_names_mapping = join_present_map_df_to_mapping_df(
             df=anno_df,
             group_col="genome",
             count_col="query_id",
@@ -304,14 +305,15 @@ def main(
             mapping_df=mapping_df
         )
 
-        samples, present_map = build_present_map(
+        present_map = build_present_map(
             df=mapping_df,
             sample_col="sample",
-            needed_features=compiled.needed_features
+            needed_features=compiled.needed_features,
+            sample_names=sample_names_mapping
         )
         dfs["sample"] = evaluate_cycles(
             compiled=compiled,
-            samples=samples,
+            samples=sample_names_mapping,
             present_map=present_map,
             annotations=raw_anno,
             sample_col="sample",
@@ -331,17 +333,18 @@ def main(
             needed_features=compiled.needed_features,
         )
 
-    samples, present_map = build_present_map(
+    present_map = build_present_map(
         df=anno_df,
         sample_col="genome",
-        needed_features=compiled.needed_features
+        needed_features=compiled.needed_features,
+        sample_names=sample_names
     )
 
     logger.info(f"Built present map in {time.time() - s} seconds")
 
     dfs["genome"] = evaluate_cycles(
         compiled=compiled,
-        samples=samples,
+        samples=sample_names,
         present_map=present_map,
         annotations=raw_anno,
         sample_col="genome",
