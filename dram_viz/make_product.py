@@ -282,7 +282,7 @@ def main(
     if mapping:
         mapping_df = pl.read_csv(mapping, separator="\t", ignore_errors=True).fill_null(
             0
-        ).rename({"Geneid": "query_id"})
+        ).rename({"Geneid": "query_id"}).drop(["Chr", "Start", "End", "Strand", "Length"], strict=False)
         mapping_df = mapping_df.join(
             raw_anno.select(["query_id", "genome"]).unique(),
             on="query_id",
