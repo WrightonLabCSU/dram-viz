@@ -411,12 +411,14 @@ def main(
     else:
         d = Dashboard(**kw)
         column_options = d.column_options.options
-        current_option = d.column_options.value
+        current_y = d.y_col
+        current_color_col = d.color_col
         for y_col, c_cols in column_options.items():
             for c_col in c_cols:
-                if y_col == current_option[0] and c_col == current_option[1]:
+                if y_col == current_y and c_col == current_color_col:
                     continue
-                d.column_options.value = {0: y_col, 1: c_col}
+                d.y_col = y_col
+                d.color_col = c_col
                 d.update_plot()
                 d.download_heatmap()
 
