@@ -14,6 +14,7 @@ from pathlib import Path
 import click
 import panel as pn
 import polars as pl
+import polars.selectors as cs
 
 from dram_viz.apps.heatmap import Dashboard
 from dram_viz.definitions import (
@@ -282,7 +283,14 @@ def main(
     if mapping:
         mapping_df = pl.read_csv(mapping, separator="\t", ignore_errors=True).fill_null(
             0
-        ).rename({"Geneid": "query_id"}).drop(["Chr", "Start", "End", "Strand", "Length"], strict=False)
+        )
+        # This renames the first column to query_id regardless of initial form (Genome, GeneId, reference, etc.)
+        # It then drops known additional meta columns that could be there depending on the format
+        # finally does a catch all of keeping only the label column and all floats (sample columns) as a backup
+        mapping_df = (mapping_df
+                      .rename({mapping_df.columns[0]: "query_id"})
+                      .drop(["Chr", "Start", "End", "Strand", "Length", "KO", "Description"], strict=False)
+                      .select(pl.col("query_id"), cs.float()))
         mapping_df = mapping_df.join(
             raw_anno.select(["query_id", "genome"]).unique(),
             on="query_id",
