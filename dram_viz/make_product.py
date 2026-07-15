@@ -290,7 +290,7 @@ def main(
         mapping_df = (mapping_df
                       .rename({mapping_df.columns[0]: "query_id"})
                       .drop(["Chr", "Start", "End", "Strand", "Length", "KO", "Description"], strict=False)
-                      .select(pl.col("query_id"), cs.float()))
+                      .select(pl.col("query_id"), cs.numeric()))
         mapping_df = mapping_df.join(
             raw_anno.select(["query_id", "genome"]).unique(),
             on="query_id",
