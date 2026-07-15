@@ -238,7 +238,7 @@ class Dashboard(pn.viewable.Viewer):
 
         self.column_options = pn.widgets.NestedSelect(name="Y and C columns", options=column_options, levels=["Y Column", "Color Column"])
         # self.c_col = pn.widgets.MultiChoice(name="Color Column", options=sort_options["genome"])
-        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options[self.column_options.value["Y Column"]])
+        self.sort_by = pn.widgets.MultiChoice(name="Sort By", options=sort_options[self.y_col])
 
         self._init_view()
         self.download_heatmap()
@@ -266,7 +266,7 @@ class Dashboard(pn.viewable.Viewer):
                             f"{group} df",
                             pn.widgets.Tabulator(df.to_pandas(), page_size=50),
                         )
-                        for group, df in self.dfs[self.column_options.value["Y Column"]].items()
+                        for group, df in self.dfs[self.y_col].items()
                     ],
                 )
             ],
@@ -279,6 +279,22 @@ class Dashboard(pn.viewable.Viewer):
                 *additional_sidebar,
             ],
         )
+    
+    @property
+    def y_col(self):
+        return self.column_options.value["Y Column"]
+    
+    @y_col.setter
+    def y_col(self, value):
+        self.column_options.value["Y Column"] = value
+
+    @property
+    def color_col(self):
+        return self.column_options.value["Color Column"]
+
+    @color_col.setter
+    def color_col(self, value):
+        self.column_options.value["Color Column"] = value
 
     def update_plot(self, event=None):
         """
@@ -286,8 +302,8 @@ class Dashboard(pn.viewable.Viewer):
         """
         None if not self.tax_axis_filter.value else self.tax_axis_rank.value
         charts = []
-        y_mode = self.column_options.value["Y Column"]
-        c_mode = self.column_options.value["Color Column"]
+        y_mode = self.y_col
+        c_mode = self.color_col
         for i, (group, df) in enumerate(self.dfs[y_mode].items()):
             df = df.to_pandas()
             tooltip_cols = df.columns.tolist()
@@ -393,7 +409,7 @@ class Dashboard(pn.viewable.Viewer):
         """
         Sort the dataframes by taxonomy
         """
-        by = by or self.column_options.value["Y Column"]
+        by = by or self.y_col
         return df.sort_values(by=by)
 
     def download_heatmap(self, event=None, output_dir=None):
@@ -401,4 +417,4 @@ class Dashboard(pn.viewable.Viewer):
         Save the heatmap to a file
         """
         output_dir = output_dir or self._output_dir
-        self.plot_view.save(output_dir / f'product_{self.column_options.value["Y Column"].replace("/", "-")}_{self.column_options.value["Color Column"].replace("/", "-")}.html', resources=INLINE)
+        self.plot_view.save(output_dir / f'product_{self.y_col.replace("/", "-")}_{self.color_col.replace("/", "-")}.html', resources=INLINE)
