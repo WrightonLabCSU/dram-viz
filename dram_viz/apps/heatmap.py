@@ -401,4 +401,4 @@ class Dashboard(pn.viewable.Viewer):
         Save the heatmap to a file
         """
         output_dir = output_dir or self._output_dir
-        self.plot_view.save(output_dir / f"product_{self.column_options.value["Y Column"].replace("/", "-")}_{self.column_options.value["Color Column"].replace("/", "-")}.html", resources=INLINE)
+        self.plot_view.save(output_dir / f'product_{self.column_options.value["Y Column"].replace("/", "-")}_{self.column_options.value["Color Column"].replace("/", "-")}.html', resources=INLINE)
