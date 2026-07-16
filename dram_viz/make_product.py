@@ -93,33 +93,34 @@ def join_present_map_df_to_mapping_df(
 
     sample_names = [col for col in mapping_df.columns if col not in [count_col, group_col]]
     hit_col = "hit"
-    df = (
+    df = (  # Here we join mapping_df to df, to get the mean value accross all samples
         df
-        .join(
-            (
-                mapping_df
-                .with_columns(mean_sample_abundance=pl.mean_horizontal(sample_names))
-                .select([count_col, "mean_sample_abundance"])
-            ),
-            on=count_col)
+        .join(mapping_df, on=count_col)
+        .with_columns(mean_sample_abundance=pl.mean_horizontal(sample_names))
+        .select([count_col, group_col, hit_col, "mean_sample_abundance"])
     )
     
     mapping_df = (
+        # (inner) join anno df to unpivotted mapping df to get `query_id, genome, hit, sample` 
+        # to link sample and query_id in mapping file to specific hits in anno file. 
+        # anno file should already be filtered to anno needed features, so this should be pretty small
         df.select([count_col, group_col, hit_col]).join(
             (
+                # unpivot mapping df to get `count_col, sample, sample_abundance` as a long table of all nonnull nonzero abundances 
+                # we consider the sample_abundance the abundance of a specific sample for a specific count_col, which
+                # we will match later by hit from the anno df
                 mapping_df.unpivot(
                     index=count_col,
                     on=sample_names,
                     variable_name="sample",
-                    value_name="abundance",
+                    value_name="sample_abundance",
                 )
-                .filter(pl.col("abundance").is_not_null() & (pl.col("abundance") != 0))
+                .filter(pl.col("sample_abundance").is_not_null() & (pl.col("sample_abundance") != 0))
             ), 
             on=count_col, 
             how="inner", 
             #validate="1:m"
         )
-        .with_columns(sample_abundance=pl.col("abundance").sum().over([hit_col, count_col, "sample"]))
     )
     return df, mapping_df, sample_names
 

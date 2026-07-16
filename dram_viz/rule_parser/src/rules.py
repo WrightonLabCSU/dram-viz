@@ -1060,8 +1060,18 @@ def evaluate_cycles(
                 out = pl.DataFrame({"present": out.astype(bool), sample_col: ev.samples})
             out = out.with_columns(pl.lit(rn).alias(label_col))
             if anno_df is not None:
+                if "coverage_percentage" in out.columns:
+                    check_col = "coverage_percentage"
+                elif "present" in out.columns:
+                    check_col = "present"
+                else:
+                    raise AssertionError("Rules parsing problem, can't determine check_col for mapping. File github issue")
+
                 out = (
                     out.join(
+                        # We grab the the anno_df that only match the hits
+                        # then we group by the sample col
+                        # and se sum them over the value column
                         (
                             anno_df
                             .filter(pl.col("hit").is_in(compiled.features_by_rules[rn]))
@@ -1072,7 +1082,8 @@ def evaluate_cycles(
                         how="left", 
                         validate="1:1"
                     )
-                    .with_columns(pl.col(value_col).fill_null(strategy="zero"))
+                    # we want to scale the summed value columns by the check column (presence/absence or coverage %)
+                    .with_columns(pl.col(value_col).fill_null(strategy="zero") * pl.col(check_col))
                 )
             dfs[group].append(out)
 
