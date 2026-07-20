@@ -292,11 +292,23 @@ def main(
                       .rename({mapping_df.columns[0]: "query_id"})
                       .drop(["Chr", "Start", "End", "Strand", "Length", "KO", "Description"], strict=False)
                       .select(pl.col("query_id"), cs.numeric()))
-        mapping_df = mapping_df.join(
-            raw_anno.select(["query_id", "genome"]).unique(),
-            on="query_id",
-            validate="1:1"
-        )
+        # if mapping_df col 0 maps to anno query_id col
+        if mapping_df.select(pl.col("query_id").is_in(raw_anno.select(pl.col("query_id")).to_series()).all()).item():
+            mapping_df = mapping_df.join(
+                raw_anno.select(["query_id", "genome"]).unique(),
+                on="query_id",
+                validate="1:1"
+            )        
+        # if mapping_df col 0 maps to anno input_fasta/genome col
+        elif mapping_df.select(pl.col("query_id").is_in(raw_anno.select(pl.col("genome")).to_series()).all()).item():
+            mapping_df = mapping_df.rename({"query_id": "genome"}).join(
+                raw_anno.select(["query_id", "genome"]).unique(),
+                on="genome",
+                validate="1:m"
+            )        
+        else:
+            raise ValueError("First Column in Mapping file can't be mapped to raw annotation file either to query_id column (gene level) or input_fasta (fasta file name, stand in for genome)")
+
 
         anno_df = prepare_present_map_df(
             df=raw_anno,
