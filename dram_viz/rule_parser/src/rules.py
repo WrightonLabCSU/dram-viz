@@ -78,6 +78,7 @@ CALL_FUNCTIONS = {
     "not",
     "percent",
     "at_least",
+    "tax",
     "column_count_values",
     "column_sum_values",
     "filter_contains",
@@ -157,7 +158,7 @@ class Call(Expr):
             raise RuleError(f"Unknown function: {self.value}")
         n_args = len(self.args)
         match self.value:
-            case "not":
+            case "not" | "tax":
                 if n_args != 1:
                     raise RuleError("not(...) expects 1 arg")
             case "percent":
@@ -793,6 +794,8 @@ class Evaluator:
                 return self.at_least(
                     _as_int(args[0]), _as_str(args[1]), self.eval_cycle(args[2], simplify=False)
                 )
+            case "tax":
+                return self.tax(_as_str(args[0]), **kwargs)
             case "column_count_values":
                 return self.column_count_values(
                     col=_as_str(args[0]),
@@ -888,6 +891,12 @@ class Evaluator:
         if mode == "PRESENCE":
             x = x.astype(bool)
         return x.sum(axis=1) >= k
+
+    def tax(self, tax_label, *, df: pl.DataFrame = None):
+        df = self.annotations if df is None else df
+        if "taxonomy" not in df.columns:
+            return np.zeros(len(self.samples), dtype=bool)
+        return self._sort_df_to_ordered_df(df.group_by(self.sample_col).agg(pl.col("taxonomy").str.contains(tax_label).any())).select("taxonomy").to_series().to_numpy()
 
     @eval_filter_dec
     def column_count_values(
