@@ -49,6 +49,9 @@ pn.config.global_loading_spinner = True
 RULES_SYSTEMS = {
     "default": Path(__file__).parent / "data/rules.tsv",
     "ag": Path(__file__).parent / "data/ag_rules.tsv",
+    "bgc": Path(__file__).parent / "data/rules_bgc.tsv",
+    "marine": Path(__file__).parent / "data/rules_marine.tsv",
+    "eng_sys": Path(__file__).parent / "data/rules_eng_sys.tsv",
 }
 
 
@@ -150,7 +153,7 @@ def join_present_map_df_to_mapping_df(
 @click.option(
     "--rules_system",
     "-rs",
-    type=click.Choice(["default", "ag"], case_sensitive=True),
+    type=click.Choice(list(RULES_SYSTEMS.keys()), case_sensitive=True),
     help="Choose alternative in-built rules for the visualization. This option cannot be specified if `--rule_tsv` is specified. Will default to default if neither this or rule_tsv is provided",
 )
 @click.option(
