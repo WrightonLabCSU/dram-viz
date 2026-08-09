@@ -90,7 +90,7 @@ def heatmap(
     p = figure(
         frame_width=HEATMAP_CELL_WIDTH * len(df[x_col].unique()),
         frame_height=HEATMAP_CELL_WIDTH * len(df[y_col].unique()),
-        x_range=sorted(list(df[x_col].unique())),
+        x_range=list(df[x_col].unique()),
         y_range=list(df[y_col].unique()),
         tools="hover",
         toolbar_location=None,
@@ -410,7 +410,7 @@ class Dashboard(pn.viewable.Viewer):
         Sort the dataframes by taxonomy
         """
         by = by or self.y_col
-        return df.sort_values(by=by)
+        return df.sort_values(by=by, kind="stable")
 
     def download_heatmap(self, event=None, output_dir=None):
         """
