@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, Tuple, List, Optional, Set, Iterable
 import operator
@@ -11,6 +12,8 @@ import networkx as nx
 import numpy as np
 import polars as pl
 from lark import Lark, Transformer, LarkError
+
+logger = logging.getLogger("drams.rules")
 
 OP_TO_EXPR = {
     "gt": operator.gt,
@@ -160,18 +163,18 @@ class Call(Expr):
         match self.value:
             case "not" | "tax":
                 if n_args != 1:
-                    raise RuleError("not(...) expects 1 arg")
+                    raise RuleError(f"{self.value} expects 1 arg. args: {self.args}")
             case "percent":
                 if n_args != 2:
-                    raise RuleError(f"{self.value}(n, Group) expects 2 args")
+                    raise RuleError(f"{self.value}(n, Group) expects 2 args. args: {self.args}")
             case "at_least":
                 if n_args != 3:
-                    raise RuleError(f"{self.value}(n, mode, Group) expects 3 args")
+                    raise RuleError(f"{self.value}(n, mode, Group) expects 3 args. args: {self.args}")
             case "column_count_values":
                 if n_args != 5:
                     raise RuleError(
                         "column_count_values(column, val_op, val_threshold, count_op, count_thrreshold)"
-                        " expects 5 args"
+                        f" expects 5 args. args: {self.args}"
                     )
                 for op in (self.args[1], self.args[3]):
                     op = _as_str(op)
@@ -182,7 +185,7 @@ class Call(Expr):
             case "column_sum_values":
                 if n_args != 3:
                     raise RuleError(
-                        "column_sum_values(column, op, threshold) expects 3 args"
+                        f"column_sum_values(column, op, threshold) expects 3 args. args{self.args}"
                     )
                 op = _as_str(self.args[1])
                 if op not in ALLOWED_CMPOPS:
@@ -192,12 +195,12 @@ class Call(Expr):
             case "filter_contains":
                 if n_args != 2:
                     raise RuleError(
-                        "filter_contains(column, value) expects 2"
+                        f"filter_contains(column, value) expects 2. args: {self.args}"
                     )
             case "filter_compare":
                 if n_args != 3:
                     raise RuleError(
-                        "filter_compare(column, op, threshold) expects 3 args"
+                        f"filter_compare(column, op, threshold) expects 3 args. args: {self.args}"
                     )
             case _:
                 raise RuleError(
@@ -422,10 +425,15 @@ def load_rules(
                 raise RuleError(
                     f"Possible ambiguous use of '&' or '|' without surrounding brackets `[ ]`. Check that you don't have a situation like `A | B & C` or `A & B | C`. These are generally not allowed because they can be ambiguous. These should be written as `[A | B] & C` or `[A & B] | C`: {expr_str}."
                 ) from e
-            raise RuleError(
-                f"Error parsing rule expression for unknown reason. Possible hints could be found in the above exceptions from the parsing library Lark: {expr_str}"
-            ) from e
-
+            if hasattr(e, "get_context"):
+                logger.error(e.get_context(expr_str))
+                raise RuleError(
+                    f"Error parsing rule expression for unknown reason. Possible hints could be found from the lark parsing context: {e.get_context(expr_str)}" 
+                ) from e
+            else: 
+                raise RuleError(
+                        f"Error parsing rule expression for unknown reason. Possible hints could be found in the above exceptions from the parsing library Lark: {expr_str}"
+                    ) from e
     lf = lf.with_columns(
         [
             pl.col(rules_col)
@@ -887,7 +895,7 @@ class Evaluator:
     @staticmethod
     def at_least(k: int, mode: str, x: np.ndarray) -> np.ndarray:
         if mode.upper() not in AT_LEAST_MODES:
-            raise ValueError(f"Unsupported at_least mode. Use one of {AT_LEAST_MODES}")
+            raise ValueError(f"Unsupported at_least mode: {mode}. Use one of {AT_LEAST_MODES}")
         if mode == "PRESENCE":
             x = x.astype(bool)
         return x.sum(axis=1) >= k
